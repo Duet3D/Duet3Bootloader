@@ -85,15 +85,14 @@
  * \brief TC configuration type
  */
 struct tc_configuration {
-	uint8_t              number;
-	IRQn_Type            irq;
-	hri_tc_ctrla_reg_t   ctrl_a;
-	hri_tc_evctrl_reg_t  event_ctrl;
-	hri_tc_dbgctrl_reg_t dbg_ctrl;
-
-	hri_tc_per_reg_t  per;
-	hri_tc_cc32_reg_t cc0;
-	hri_tc_cc32_reg_t cc1;
+	uint8_t                number;
+	IRQn_Type              irq;
+	hri_tc_ctrla_reg_t     ctrl_a;
+	hri_tc_evctrl_reg_t    event_ctrl;
+	hri_tc_dbgctrl_reg_t   dbg_ctrl;
+	hri_tccount8_per_reg_t per;
+	hri_tccount32_cc_reg_t cc0;
+	hri_tccount32_cc_reg_t cc1;
 };
 
 /**
@@ -125,23 +124,10 @@ static struct tc_configuration _tcs[] = {
     TC_CONFIGURATION(7),
 #endif
 };
-/**
- * \brief Set of pointer to hal_timer helper functions
- */
-static struct _timer_hpl_interface _tc_timer_functions = {
-    _tc_timer_init,
-    _tc_timer_deinit,
-    _tc_timer_start,
-    _tc_timer_stop,
-    _tc_timer_set_period,
-    _tc_timer_get_period,
-    _tc_timer_is_started,
-    _tc_timer_set_irq,
-};
 
-static struct _pwm_device *_tc0_dev = NULL;
+static struct _pwm_device *_tc3_dev = NULL;
 
-static struct _timer_device *_tc1_dev = NULL;
+static struct _timer_device *_tc6_dev = NULL;
 
 static int8_t         get_tc_index(const void *const hw);
 static void           _tc_init_irq_param(const void *const hw, void *dev);
@@ -149,7 +135,7 @@ static inline uint8_t _get_hardware_offset(const void *const hw);
 /**
  * \brief Initialize TC
  */
-int32_t _tc_timer_init(struct _timer_device *const device, void *const hw)
+int32_t _timer_init(struct _timer_device *const device, void *const hw)
 {
 	int8_t i = get_tc_index(hw);
 
@@ -181,8 +167,7 @@ int32_t _tc_timer_init(struct _timer_device *const device, void *const hw)
 	} else if ((_tcs[i].ctrl_a & TC_CTRLA_MODE_Msk) == TC_CTRLA_MODE_COUNT8) {
 		hri_tccount8_write_CC_reg(hw, 0, (uint8_t)_tcs[i].cc0);
 		hri_tccount8_write_CC_reg(hw, 1, (uint8_t)_tcs[i].cc1);
-
-		hri_tc_write_PER_reg(hw, _tcs[i].per);
+		hri_tccount8_write_PER_reg(hw, _tcs[i].per);
 	}
 	hri_tc_set_INTEN_OVF_bit(hw);
 
@@ -236,7 +221,7 @@ int32_t _pwm_init(struct _pwm_device *const device, void *const hw)
 /**
  * \brief De-initialize TC
  */
-void _tc_timer_deinit(struct _timer_device *const device)
+void _timer_deinit(struct _timer_device *const device)
 {
 	void *const hw = device->hw;
 	int8_t      i  = get_tc_index(hw);
@@ -264,7 +249,7 @@ void _pwm_deinit(struct _pwm_device *const device)
 /**
  * \brief Start hardware timer
  */
-void _tc_timer_start(struct _timer_device *const device)
+void _timer_start(struct _timer_device *const device)
 {
 	hri_tc_set_CTRLA_ENABLE_bit(device->hw);
 }
@@ -278,7 +263,7 @@ void _pwm_enable(struct _pwm_device *const device)
 /**
  * \brief Stop hardware timer
  */
-void _tc_timer_stop(struct _timer_device *const device)
+void _timer_stop(struct _timer_device *const device)
 {
 	hri_tc_clear_CTRLA_ENABLE_bit(device->hw);
 }
@@ -292,7 +277,7 @@ void _pwm_disable(struct _pwm_device *const device)
 /**
  * \brief Set timer period
  */
-void _tc_timer_set_period(struct _timer_device *const device, const uint32_t clock_cycles)
+void _timer_set_period(struct _timer_device *const device, const uint32_t clock_cycles)
 {
 	void *const hw = device->hw;
 
@@ -301,8 +286,7 @@ void _tc_timer_set_period(struct _timer_device *const device, const uint32_t clo
 	} else if (TC_CTRLA_MODE_COUNT16_Val == hri_tc_read_CTRLA_MODE_bf(hw)) {
 		hri_tccount16_write_CC_reg(hw, 0, (uint16_t)clock_cycles);
 	} else if (TC_CTRLA_MODE_COUNT8_Val == hri_tc_read_CTRLA_MODE_bf(hw)) {
-
-		hri_tc_write_PER_reg(hw, (hri_tc_per_reg_t)clock_cycles);
+		hri_tccount8_write_PER_reg(hw, clock_cycles);
 	}
 }
 /**
@@ -360,7 +344,7 @@ uint32_t _pwm_get_duty(const struct _pwm_device *const device)
 /**
  * \brief Retrieve timer period
  */
-uint32_t _tc_timer_get_period(const struct _timer_device *const device)
+uint32_t _timer_get_period(const struct _timer_device *const device)
 {
 	void *const hw = device->hw;
 
@@ -369,8 +353,7 @@ uint32_t _tc_timer_get_period(const struct _timer_device *const device)
 	} else if (TC_CTRLA_MODE_COUNT16_Val == hri_tc_read_CTRLA_MODE_bf(hw)) {
 		return hri_tccount16_read_CC_reg(hw, 0);
 	} else if (TC_CTRLA_MODE_COUNT8_Val == hri_tc_read_CTRLA_MODE_bf(hw)) {
-
-		return hri_tc_read_PER_reg(hw);
+		return hri_tccount8_read_PER_reg(hw);
 	}
 
 	return 0;
@@ -378,7 +361,7 @@ uint32_t _tc_timer_get_period(const struct _timer_device *const device)
 /**
  * \brief Check if timer is running
  */
-bool _tc_timer_is_started(const struct _timer_device *const device)
+bool _timer_is_started(const struct _timer_device *const device)
 {
 	return hri_tc_get_CTRLA_ENABLE_bit(device->hw);
 }
@@ -408,7 +391,7 @@ void _pwm_set_irq_state(struct _pwm_device *const device, const enum _pwm_callba
  */
 struct _timer_hpl_interface *_tc_get_timer(void)
 {
-	return &_tc_timer_functions;
+	return NULL;
 }
 
 /**
@@ -423,7 +406,7 @@ struct _pwm_hpl_interface *_tc_get_pwm(void)
  *
  * \param[in] hw The pointer to hardware instance
  */
-void _tc_timer_set_irq(struct _timer_device *const device)
+void _timer_set_irq(struct _timer_device *const device)
 {
 	void *const hw = device->hw;
 	int8_t      i  = get_tc_index(hw);
@@ -471,17 +454,17 @@ static void tc_pwm_interrupt_handler(struct _pwm_device *device)
 /**
  * \brief TC interrupt handler
  */
-void TC0_Handler(void)
+void TC3_Handler(void)
 {
-	tc_pwm_interrupt_handler(_tc0_dev);
+	tc_pwm_interrupt_handler(_tc3_dev);
 }
 
 /**
  * \brief TC interrupt handler
  */
-void TC1_Handler(void)
+void TC6_Handler(void)
 {
-	tc_interrupt_handler(_tc1_dev);
+	tc_interrupt_handler(_tc6_dev);
 }
 
 /**
@@ -511,11 +494,11 @@ static int8_t get_tc_index(const void *const hw)
  */
 static void _tc_init_irq_param(const void *const hw, void *dev)
 {
-	if (hw == TC0) {
-		_tc0_dev = (struct _pwm_device *)dev;
+	if (hw == TC3) {
+		_tc3_dev = (struct _pwm_device *)dev;
 	}
-	if (hw == TC1) {
-		_tc1_dev = (struct _timer_device *)dev;
+	if (hw == TC6) {
+		_tc6_dev = (struct _timer_device *)dev;
 	}
 }
 

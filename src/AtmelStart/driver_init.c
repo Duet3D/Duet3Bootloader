@@ -11,7 +11,6 @@
 #include <utils.h>
 #include <hal_init.h>
 #include <hal_can_async.h>
-#include <hpl/rtc/hpl_rtc_base.h>
 
 extern uint32_t SystemPeripheralClock;
 
@@ -115,7 +114,7 @@ void system_init(void)
 
 void DeviceInit()
 {
-	USART_0_init();
+//	USART_0_init();
 	CAN_0_init();
 //	WDT_0_init();
 }

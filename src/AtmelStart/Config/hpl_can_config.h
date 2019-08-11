@@ -136,7 +136,7 @@
 // <i> Number of Rx FIFO 0 element
 // <id> can_rxf0c_f0s
 #ifndef CONF_CAN1_RXF0C_F0S
-#define CONF_CAN1_RXF0C_F0S 8
+#define CONF_CAN1_RXF0C_F0S 64
 #endif
 
 // <o> Data Field Size
@@ -263,7 +263,7 @@
 // <i> Number of Extended Message ID filter elements
 // <id> can_xidfc_lss
 #ifndef CONF_CAN1_XIDFC_LSS
-#define CONF_CAN1_XIDFC_LSS 2
+#define CONF_CAN1_XIDFC_LSS 1
 #endif
 
 // <o> Extended ID Mask <0x0000-0x1FFFFFFF>
