@@ -14,6 +14,9 @@
 extern "C" {
 #endif
 
+extern uint32_t SystemCoreClock;			// in system_same51.c
+extern uint32_t SystemPeripheralClock;		// in system_same51.c
+
 #include <hal_atomic.h>
 #include <hal_delay.h>
 #include <hal_gpio.h>
@@ -65,4 +68,5 @@ void DeviceInit(void);
 #ifdef __cplusplus
 }
 #endif
+
 #endif // DRIVER_INIT_INCLUDED

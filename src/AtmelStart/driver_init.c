@@ -12,8 +12,6 @@
 #include <hal_init.h>
 #include <hal_can_async.h>
 
-extern uint32_t SystemPeripheralClock;
-
 /*! The buffer size for USART */
 #define USART_0_BUFFER_SIZE 256
 
