@@ -61,11 +61,17 @@ extern "C" void SysTick_Handler()
 	++tickCount;
 }
 
-void ReportError(const char *text, ErrorCode err)
+void SerialMessage(const char *text)
 {
 	Serial::Send("\n{\"message\":\"");
 	Serial::Send(text);									// should do json escaping here but for now just be careful what messages we send
 	Serial::Send("\"}\n");
+}
+
+void ReportError(const char *text, ErrorCode err)
+{
+	SerialMessage(text);
+
 	for (unsigned int i = 0; i < (unsigned int)err; ++i)
 	{
 		digitalWrite(DiagLedPin, true);
@@ -173,6 +179,10 @@ extern "C" int main()
 	SystemPeripheralClock = SystemCoreClock/2;
 
 	SetPinMode(DiagLedPin, OUTPUT_LOW);
+	for (Pin p : BoardAddressPins)
+	{
+		SetPinMode(p, INPUT_PULLUP);
+	}
 
 	// Initialise systick and serial, needed if we detect that the firmware is invalid
 	SysTick->LOAD = ((SystemCoreClock/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
@@ -273,6 +283,9 @@ bool CheckValidFirmware()
 // Execute the main firmware
 [[noreturn]] void StartFirmware()
 {
+	SerialMessage("Bootloader transferring control to main firmware");
+	delay(3);										// allow last 2 characters to go
+
 	// Disable all IRQs
 	SysTick->CTRL  = SysTick_CTRL_CLKSOURCE_Msk;	// disable the system tick exception
 	__disable_irq();
