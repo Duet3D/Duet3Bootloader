@@ -13,6 +13,7 @@
 namespace Serial
 {
 	void Init();
+	void Disable();
 	void Send(char c);
 	void Send(const char *s);
 }

@@ -156,7 +156,7 @@ void _flash_read(struct _flash_device *const device, const uint32_t src_addr, ui
 /**
  * \brief Writes a number of bytes to a page in the internal Flash.
  */
-void _flash_write(struct _flash_device *const device, const uint32_t dst_addr, uint8_t *buffer, uint32_t length)
+void RAMFUNC _flash_write(struct _flash_device *const device, const uint32_t dst_addr, uint8_t *buffer, uint32_t length)
 {
 	uint8_t  tmp_buffer[NVMCTRL_BLOCK_PAGES][NVMCTRL_PAGE_SIZE];
 	uint32_t block_start_addr, block_end_addr;
@@ -209,14 +209,22 @@ void _flash_append(struct _flash_device *const device, const uint32_t dst_addr, 
 
 	if (dst_addr != page_start_addr) {
 		/* Need to write some data to the end of a page */
+#if 1 // DC
+		size = (length < NVMCTRL_PAGE_SIZE - (dst_addr - page_start_addr)) ? length : NVMCTRL_PAGE_SIZE - (dst_addr - page_start_addr);
+#else
 		size = min(length, NVMCTRL_PAGE_SIZE - (dst_addr - page_start_addr));
+#endif
 		_flash_program(device->hw, dst_addr, buffer, size);
 		page_start_addr += NVMCTRL_PAGE_SIZE;
 		offset += size;
 	}
 
 	while (offset < length) {
+#if 1 // DC
+		size = (length - offset < NVMCTRL_PAGE_SIZE) ? length - offset : NVMCTRL_PAGE_SIZE;
+#else
 		size = min(length - offset, NVMCTRL_PAGE_SIZE);
+#endif
 		_flash_program(device->hw, page_start_addr, buffer + offset, size);
 		page_start_addr += NVMCTRL_PAGE_SIZE;
 		offset += size;
@@ -226,7 +234,7 @@ void _flash_append(struct _flash_device *const device, const uint32_t dst_addr, 
 /**
  * \brief Execute erase in the internal flash
  */
-void _flash_erase(struct _flash_device *const device, uint32_t dst_addr, uint32_t page_nums)
+void RAMFUNC _flash_erase(struct _flash_device *const device, uint32_t dst_addr, uint32_t page_nums)
 {
 	uint8_t  tmp_buffer[NVMCTRL_PAGE_SIZE];
 	uint32_t block_start_addr;
@@ -271,7 +279,7 @@ void _flash_erase(struct _flash_device *const device, uint32_t dst_addr, uint32_
 /**
  * \brief Execute lock in the internal flash
  */
-int32_t _flash_lock(struct _flash_device *const device, const uint32_t dst_addr, uint32_t page_nums)
+int32_t RAMFUNC _flash_lock(struct _flash_device *const device, const uint32_t dst_addr, uint32_t page_nums)
 {
 	uint32_t region_pages;
 	uint32_t block_start_addr;
@@ -296,7 +304,7 @@ int32_t _flash_lock(struct _flash_device *const device, const uint32_t dst_addr,
 /**
  * \brief Execute unlock in the internal flash
  */
-int32_t _flash_unlock(struct _flash_device *const device, const uint32_t dst_addr, uint32_t page_nums)
+int32_t RAMFUNC _flash_unlock(struct _flash_device *const device, const uint32_t dst_addr, uint32_t page_nums)
 {
 	uint32_t region_pages;
 	uint32_t block_start_addr;
@@ -354,7 +362,7 @@ void _flash_set_irq_state(struct _flash_device *const device, const enum _flash_
  * \param[in]  hw            The pointer to hardware instance
  * \param[in]  dst_addr      Destination page address to erase
  */
-static void _flash_erase_block(void *const hw, const uint32_t dst_addr)
+static void RAMFUNC _flash_erase_block(void *const hw, const uint32_t dst_addr)
 {
 	while (!hri_nvmctrl_get_STATUS_READY_bit(hw)) {
 		/* Wait until this module isn't busy */
@@ -373,7 +381,7 @@ static void _flash_erase_block(void *const hw, const uint32_t dst_addr)
  *                           write is stored
  * \param[in] size           The size of data to write to a page
  */
-static void _flash_program(void *const hw, const uint32_t dst_addr, const uint8_t *buffer, const uint16_t size)
+static void RAMFUNC _flash_program(void *const hw, const uint32_t dst_addr, const uint8_t *buffer, const uint16_t size)
 {
 	uint32_t *ptr_read    = (uint32_t *)buffer;
 	uint32_t  nvm_address = dst_addr / 4;

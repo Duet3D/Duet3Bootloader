@@ -12,8 +12,9 @@
 
 namespace Flash
 {
-	void Init();
-	bool UnlockAndErase(uint32_t start, uint32_t length);
+	bool Init();
+	bool Unlock(uint32_t start, uint32_t length);
+	bool Erase(uint32_t start, uint32_t length);
 	bool Lock(uint32_t start, uint32_t length);
 	bool Write(uint32_t start, uint32_t length, uint8_t *data);
 }

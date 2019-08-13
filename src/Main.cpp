@@ -30,7 +30,12 @@ enum class ErrorCode : unsigned int
 	noFile = 4,
 	badOffset = 5,
 	hostOther = 6,
-	noBuffer = 7
+	noBuffer = 7,
+	flashInitFailed = 8,
+	unlockFailed = 9,
+	eraseFailed = 10,
+	writeFailed = 11,
+	lockFailed = 12
 };
 
 static CanAddress boardAddress;
@@ -51,7 +56,7 @@ inline uint32_t millis()
 
 void delay(uint32_t ticks)
 {
-	uint32_t start = millis();
+	const uint32_t start = millis();
 	while (millis() - start < ticks) { }
 }
 
@@ -66,6 +71,7 @@ void SerialMessage(const char *text)
 	Serial::Send("\n{\"message\":\"");
 	Serial::Send(text);									// should do json escaping here but for now just be careful what messages we send
 	Serial::Send("\"}\n");
+	delay(3);											// allow time for the last character to go
 }
 
 void ReportError(const char *text, ErrorCode err)
@@ -103,6 +109,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
 	msg->fileOffset = fileOffset;
 	msg->lengthRequested = numBytes;
+	buf->dataLength = msg->GetActualDataLength();
 	CanInterface::Send(buf);
 }
 
@@ -146,7 +153,7 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 						{
 							bytesReceived = response.fileOffset - startingOffset + bytesToCopy;
 						}
-						if (bytesReceived >= response.fileLength - startingOffset)
+						if (bytesReceived == FlashBlockSize || bytesReceived >= response.fileLength - startingOffset)
 						{
 							// Reached the end of the file
 							memset(blockBuffer + bytesReceived, 0xFF, sizeof(blockBuffer) - bytesReceived);
@@ -211,7 +218,10 @@ extern "C" int main()
 	// Serial port is initialised for diagnostic info.
 	DeviceInit();
 	Serial::Init();
-	Flash::Init();
+	if (!Flash::Init())
+	{
+		ReportErrorAndRestart("Failed to initialize flash controller", ErrorCode::flashInitFailed);
+	}
 	CanInterface::Init((boardAddress == 0) ? CanId::FirmwareUpdateAddress : boardAddress);
 
 	// Loop requesting firmware from the main board and handling any firmware that it sends to us
@@ -224,10 +234,22 @@ extern "C" int main()
 		if (bufferStartOffset == 0)
 		{
 			// First block received, so unlock and erase the firmware
-			roundedUpLength = (fileSize + (FlashBlockSize - 1)) % FlashBlockSize;
-			Flash::UnlockAndErase(FirmwareFlashStart, roundedUpLength);
+			roundedUpLength = ((fileSize + (FlashBlockSize - 1))/FlashBlockSize) * FlashBlockSize;
+			SerialMessage("Unlocking flash");
+			if (!Flash::Unlock(FirmwareFlashStart, roundedUpLength))
+			{
+				ReportErrorAndRestart("Failed to unlock flash", ErrorCode::unlockFailed);
+			}
+			SerialMessage("Erasing flash");
+			if (!Flash::Erase(FirmwareFlashStart, roundedUpLength))
+			{
+				ReportErrorAndRestart("Failed to erase flash", ErrorCode::eraseFailed);
+			}
 		}
-		Flash::Write(FirmwareFlashStart + bufferStartOffset, FlashBlockSize, blockBuffer);
+		if (!Flash::Write(FirmwareFlashStart + bufferStartOffset, FlashBlockSize, blockBuffer))
+		{
+			ReportErrorAndRestart("Failed to write flash", ErrorCode::writeFailed);
+		}
 		bufferStartOffset += FlashBlockSize;
 		if (bufferStartOffset >= fileSize)
 		{
@@ -236,11 +258,23 @@ extern "C" int main()
 	}
 
 	// If we get here, firmware update is complete
-	Flash::Lock(FirmwareFlashStart, roundedUpLength);
+	if (!Flash::Lock(FirmwareFlashStart, roundedUpLength))
+	{
+		ReportErrorAndRestart("Failed to lock flash", ErrorCode::lockFailed);
+	}
+
+	can_async_disable(&CAN_0);			// disable CAN to prevent it receiving packets into RAM
+	delay(2);
+	CAN1->IR.reg = 0xFFFFFFFF;			// clear all interrupt sources for when the device gets enabled by the main firmware
+
+	SerialMessage("Finished firmware update");
+	delay(1000);
+
 	if (!CheckValidFirmware())
 	{
 		ReportErrorAndRestart("Invalid firmware", ErrorCode::invalidFirmware);
 	}
+
 	StartFirmware();
 }
 
@@ -284,20 +318,21 @@ bool CheckValidFirmware()
 [[noreturn]] void StartFirmware()
 {
 	SerialMessage("Bootloader transferring control to main firmware");
-	delay(3);										// allow last 2 characters to go
+	delay(3);											// allow last 2 characters to go
+	Serial::Disable();									// disable serial port so that main firmware can initialise it
 
 	// Disable all IRQs
-	SysTick->CTRL  = SysTick_CTRL_CLKSOURCE_Msk;	// disable the system tick exception
+	SysTick->CTRL = (1 << SysTick_CTRL_CLKSOURCE_Pos);	// disable the system tick exception
 	__disable_irq();
 	for (size_t i = 0; i < 8; i++)
 	{
-		NVIC->ICER[i] = 0xFFFFFFFF;					// Disable IRQs
-		NVIC->ICPR[i] = 0xFFFFFFFF;					// Clear pending IRQs
+		NVIC->ICER[i] = 0xFFFFFFFF;						// Disable IRQs
+		NVIC->ICPR[i] = 0xFFFFFFFF;						// Clear pending IRQs
 	}
 
-	digitalWrite(DiagLedPin, false);				// turn the DIAG LED off
+	digitalWrite(DiagLedPin, false);					// turn the DIAG LED off
 
-	hri_wdt_write_CLEAR_reg(WDT, WDT_CLEAR_CLEAR_KEY);	// reset the watchdog timer
+//	hri_wdt_write_CLEAR_reg(WDT, WDT_CLEAR_CLEAR_KEY);	// reset the watchdog timer
 
 	// Modify vector table location
 	__DSB();
@@ -306,17 +341,15 @@ bool CheckValidFirmware()
 	__DSB();
 	__ISB();
 
-	__enable_irq();
-
 	__asm volatile ("mov r3, %0" : : "r" (FirmwareFlashStart) : "r3");
 
-	// We are using separate process and handler stacks. Put the process stack 1K bytes below the handler stack.
 	__asm volatile ("ldr r1, [r3]");
 	__asm volatile ("msr msp, r1");
-	__asm volatile ("sub r1, #1024");
 	__asm volatile ("mov sp, r1");
 
 	__asm volatile ("isb");
+	__enable_irq();
+
 	__asm volatile ("ldr r1, [r3, #4]");
 	__asm volatile ("orr r1, r1, #1");
 	__asm volatile ("bx r1");
