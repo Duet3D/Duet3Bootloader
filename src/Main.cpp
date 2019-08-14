@@ -20,22 +20,23 @@
 constexpr uint32_t FlashBlockSize = 0x00010000;							// the block size we assume for flash
 constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
 const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 64K for the bootloader
-constexpr const char* BoardTypeName = "DUET3EXP3HC";
+constexpr const char* BoardTypeName = "EXP3HC";
 
 // Error codes, presented as a number of flashes of the DIAG LED
 enum class ErrorCode : unsigned int
 {
 	invalidFirmware = 2,
-	blockReceiveTimeout = 3,
-	noFile = 4,
-	badOffset = 5,
-	hostOther = 6,
-	noBuffer = 7,
-	flashInitFailed = 8,
-	unlockFailed = 9,
-	eraseFailed = 10,
-	writeFailed = 11,
-	lockFailed = 12
+	badCRC = 3,
+	blockReceiveTimeout = 4,
+	noFile = 5,
+	badOffset = 6,
+	hostOther = 7,
+	noBuffer = 8,
+	flashInitFailed = 9,
+	unlockFailed = 10,
+	eraseFailed = 11,
+	writeFailed = 12,
+	lockFailed = 13
 };
 
 static CanAddress boardAddress;
@@ -89,11 +90,17 @@ void ReportError(const char *text, ErrorCode err)
 	delay(1000);
 }
 
+[[noreturn]] void Restart()
+{
+	SCB->AIRCR = (0x5FA << 16) | (1u << 2);				// reset the processor
+	for (;;) { }
+}
+
 [[noreturn]] void ReportErrorAndRestart(const char *text, ErrorCode err)
 {
 	ReportError(text, err);
-	SCB->AIRCR = (0x5FA << 16) | (1u << 2);				// reset the processor
-	for (;;) { }
+	delay(2000);
+	Restart();
 }
 
 void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
@@ -206,10 +213,6 @@ extern "C" int main()
 			// Relocate the vector table and jump into the firmware. If it returns then we execute the bootloader.
 			StartFirmware();
 		}
-		else
-		{
-			ReportError("Invalid firmware", ErrorCode::invalidFirmware);
-		}
 	}
 
 	// If we get here then we are staying in the bootloader
@@ -272,7 +275,7 @@ extern "C" int main()
 
 	if (!CheckValidFirmware())
 	{
-		ReportErrorAndRestart("Invalid firmware", ErrorCode::invalidFirmware);
+		Restart();
 	}
 
 	StartFirmware();
@@ -298,7 +301,7 @@ uint8_t ReadBoardType()
 	return 0;
 }
 
-// Check that valid firmware is installed
+// Check that valid firmware is installed. If not, report the error and return false.
 bool CheckValidFirmware()
 {
 	const DeviceVectors * const vectors = reinterpret_cast<const DeviceVectors*>(FirmwareFlashStart);
@@ -306,12 +309,41 @@ bool CheckValidFirmware()
 		|| reinterpret_cast<uint32_t>(vectors->pfnReset_Handler) >= FLASH_ADDR + FLASH_SIZE
 		|| reinterpret_cast<uint32_t>(vectors->pvStack) < HSRAM_ADDR
 		|| reinterpret_cast<uint32_t>(vectors->pvStack) > HSRAM_ADDR + HSRAM_SIZE
+		|| reinterpret_cast<uint32_t>(vectors->pvReservedM9) < FirmwareFlashStart
+		|| reinterpret_cast<uint32_t>(vectors->pvReservedM9) > FirmwareFlashStart + FLASH_SIZE - 4
 	   )
 	{
+		ReportError("Invalid firmware", ErrorCode::invalidFirmware);
 		return false;
 	}
-	//TODO CRC
-	return true;
+
+	// Fetch the CRC-32 from the file
+	const uint32_t *crcAddr = (const uint32_t*)(vectors->pvReservedM9);
+	const uint32_t storedCRC = *crcAddr;
+
+	// Compute the CRC-32 of the file
+	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_DISABLE | DMAC_CRCCTRL_CRCPOLY_CRC32;	// disable the CRC unit
+	DMAC->CRCCHKSUM.reg = 0xFFFFFFFF;
+	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_IO | DMAC_CRCCTRL_CRCPOLY_CRC32;
+	for (const uint32_t *p = reinterpret_cast<const uint32_t*>(FirmwareFlashStart); p < crcAddr; ++p)
+	{
+		DMAC->CRCDATAIN.reg = *p;
+		asm volatile("nop");
+		asm volatile("nop");
+	}
+
+	DMAC->CRCSTATUS.reg = DMAC_CRCSTATUS_CRCBUSY;
+	asm volatile("nop");
+	const uint32_t actualCRC = DMAC->CRCCHKSUM.reg;
+	if (actualCRC == storedCRC)
+	{
+		return true;
+	}
+
+	String<100> message;
+	message.printf("CRC error: stored %08" PRIx32 ", actual %" PRIx32, storedCRC, actualCRC);
+	ReportError(message.c_str(), ErrorCode::badCRC);
+	return false;
 }
 
 // Execute the main firmware
