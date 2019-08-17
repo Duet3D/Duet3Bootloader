@@ -90,7 +90,7 @@ bool CanInterface::GetCanMessage(CanMessageBuffer *buf)
 
 void CanInterface::Init(CanAddress pBoardAddress)
 {
-	boardAddress = pBoardAddress;
+	boardAddress = (pBoardAddress == CanId::MasterAddress) ? CanId::FirmwareUpdateAddress : pBoardAddress;
 	CanMessageBuffer::Init(NumCanBuffers);
 
 //	can_async_register_callback(&CAN_0, CAN_ASYNC_RX_CB, (FUNC_PTR)CAN_0_rx_callback);
@@ -109,7 +109,7 @@ void CanInterface::Init(CanAddress pBoardAddress)
 	can_async_enable(&CAN_0);
 }
 
-CanAddress GetCanAddress()
+CanAddress CanInterface::GetCanAddress()
 {
 	return boardAddress;
 }

@@ -18,7 +18,7 @@ namespace CanInterface
 {
 	void Init(CanAddress pBoardAddress);
 
-//	CanAddress GetCanAddress();
+	CanAddress GetCanAddress();
 	void Send(CanMessageBuffer *buf);
 	bool GetCanMessage(CanMessageBuffer *buf);
 }

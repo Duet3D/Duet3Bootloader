@@ -39,7 +39,6 @@ enum class ErrorCode : unsigned int
 	lockFailed = 13
 };
 
-static CanAddress boardAddress;
 static uint8_t blockBuffer[FlashBlockSize];
 
 uint8_t ReadBoardId();
@@ -110,7 +109,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 	{
 		ReportErrorAndRestart("No buffers", ErrorCode::noBuffer);
 	}
-	CanMessageFirmwareUpdateRequest *msg = buf->SetupRequestMessage<CanMessageFirmwareUpdateRequest>(boardAddress, 0);
+	CanMessageFirmwareUpdateRequest *msg = buf->SetupRequestMessage<CanMessageFirmwareUpdateRequest>(CanInterface::GetCanAddress(), 0);
 	SafeStrncpy(msg->boardType, BoardTypeName, sizeof(msg->boardType));
 	msg->boardVersion = ReadBoardType();
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
@@ -204,8 +203,8 @@ extern "C" int main()
 	Serial::Init();
 
 	// Check whether address switches are set to zero. If so then we stay in the bootloader
-	boardAddress = ReadBoardId();
-	if (boardAddress != 0)
+	const CanAddress switches = ReadBoardId();
+	if (switches != 0)
 	{
 		// Check whether there is valid firmware installed, if not then stay in the bootloader
 		if (CheckValidFirmware())
@@ -225,7 +224,7 @@ extern "C" int main()
 	{
 		ReportErrorAndRestart("Failed to initialize flash controller", ErrorCode::flashInitFailed);
 	}
-	CanInterface::Init((boardAddress == 0) ? CanId::FirmwareUpdateAddress : boardAddress);
+	CanInterface::Init((switches == 0) ? CanId::FirmwareUpdateAddress : switches);
 
 	// Loop requesting firmware from the main board and handling any firmware that it sends to us
 	uint32_t bufferStartOffset = 0;
