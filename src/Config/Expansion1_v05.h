@@ -24,6 +24,8 @@ const size_t MaxExtraHeaterProtections = 6;
 #define SUPPORT_DHT_SENSOR	0	//TEMP!!!
 #define SUPPORT_SPI_SENSORS	0	//TEMP!!!
 
+#define DIAG_SERCOM_NUMBER	3			// which SERCOM device we use for debugging output
+
 constexpr size_t NumDrivers = 3;
 constexpr size_t MaxSmartDrivers = 3;
 
