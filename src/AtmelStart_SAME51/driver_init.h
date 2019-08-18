@@ -24,12 +24,6 @@ extern uint32_t SystemPeripheralClock;		// in system_same51.c
 #include <hal_io.h>
 #include <hal_sleep.h>
 
-#include <hal_adc_async.h>
-
-#include <hal_ext_irq.h>
-
-#include <hal_usart_async.h>
-
 #include <hal_delay.h>
 
 #include <hal_wdt.h>

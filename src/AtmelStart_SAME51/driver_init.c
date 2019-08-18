@@ -49,8 +49,6 @@ void CAN_0_init(void)
 void system_init(void)
 {
 	init_mcu();
-	SystemCoreClock = 120000000;
-	SystemPeripheralClock = 60000000;
 }
 
 void DeviceInit()

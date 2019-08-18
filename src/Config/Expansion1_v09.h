@@ -9,7 +9,7 @@
 #define SRC_CONFIG_EXPANSION1_V09_H_
 
 #include "RepRapFirmware.h"
-#include "Hardware/SAME5X.h"
+#include "Hardware/Peripherals.h"
 
 const size_t MaxHeaters = 6;
 const size_t MaxExtraHeaterProtections = 6;
@@ -23,6 +23,8 @@ const size_t MaxExtraHeaterProtections = 6;
 #define SUPPORT_TMC51xx		1
 #define SUPPORT_DHT_SENSOR	0	//TEMP!!!
 #define SUPPORT_SPI_SENSORS	1
+
+#define DIAG_SERCOM_NUMBER	3			// which SERCOM device we use for debugging output
 
 constexpr size_t NumDrivers = 3;
 constexpr size_t MaxSmartDrivers = 3;

@@ -9,6 +9,7 @@
 #define SRC_REPRAPFIRMWARE_H_
 
 #include "atmel_start.h"
+#include <cmsis_gcc.h>
 #include "ecv.h"
 #undef value			// needed because we include <optional>
 
@@ -16,8 +17,10 @@
 #include <cinttypes>
 #include <climits>		// for CHAR_BIT
 
-#ifdef __SAME51N19A__
+#if defined(__SAME51N19A__)
 # define SAME51		1
+#elif defined(__SAMC21G18A__)
+# define SAMC21		1
 #endif
 
 typedef uint16_t PwmFrequency;		// type used to represent a PWM frequency. 0 sometimes means "default".
@@ -47,6 +50,8 @@ extern "C" void debugPrintf(const char* fmt, ...) __attribute__ ((format (printf
 #define DEBUG_HERE do { } while (false)
 //#define DEBUG_HERE do { debugPrintf("At " __FILE__ " line %d\n", __LINE__); delay(50); } while (false)
 
+#ifdef SAME51
+
 // Functions to change the base priority, to shut out interrupts up to a priority level
 
 // Get the base priority and shut out interrupts lower than or equal to a specified priority
@@ -68,6 +73,8 @@ inline void SetBasePriority(uint32_t prio)
 {
 	__set_BASEPRI(prio << (8 - __NVIC_PRIO_BITS));
 }
+
+#endif
 
 // Classes to facilitate range-based for loops that iterate from 0 up to just below a limit
 template<class T> class SimpleRangeIterator

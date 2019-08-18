@@ -7,25 +7,48 @@
 
 #include "Serial.h"
 
-#include "SAME5x.h"
+#include "Peripherals.h"
 #include <peripheral_clk_config.h>
 #include <hal_gpio.h>
 #include <atmel_start_pins.h>
 
-#include <hri_sercom_e51.h>
+#if defined(SAME51)
+# include <hri_sercom_e51.h>
+#elif defined(SAMC21)
+# include <hri_sercom_c21.h>
+#else
+# error Unsupported processor
+#endif
 
 constexpr uint32_t DiagBaudRate = 57600;		// the baud rate we use
-#define DIAG_SERCOM	SERCOM3						// which SERCOM device we use
 
 // Initialise the serial port so that we can send messages to an attached PanelDue
 void Serial::Init()
 {
-	// The following code assumes SERCOM3
+
+#if DIAG_SERCOM_NUMBER == 3
+
+	// SAME51 expansion boards use SERCOM3
+# define DIAG_SERCOM		SERCOM3
 	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM3_GCLK_ID_CORE, CONF_GCLK_SERCOM3_CORE_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM3_GCLK_ID_SLOW, CONF_GCLK_SERCOM3_SLOW_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	hri_mclk_set_APBBMASK_SERCOM3_bit(MCLK);
 	gpio_set_pin_function(PB20, PINMUX_PB20C_SERCOM3_PAD0);					// TxD
 	gpio_set_pin_function(PB21, PINMUX_PB21C_SERCOM3_PAD1);					// RxD
+
+#elif DIAG_SERCOM_NUMBER == 4
+
+	// SAMC21 smart tool boards use SERCOM4
+# define DIAG_SERCOM		SERCOM4
+	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM4_GCLK_ID_CORE, CONF_GCLK_SERCOM4_CORE_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
+	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM4_GCLK_ID_SLOW, CONF_GCLK_SERCOM4_SLOW_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
+	hri_mclk_set_APBCMASK_SERCOM4_bit(MCLK);
+	gpio_set_pin_function(PortAPin(12), PINMUX_PA12D_SERCOM4_PAD0);					// TxD
+	gpio_set_pin_function(PortAPin(14), PINMUX_PA13D_SERCOM4_PAD1);					// RxD
+
+#else
+# error unsupported diag sercom
+#endif
 
 	// The remaining code should work with the SERCOM that DIAG_SERCOM is defined as
 	const uint32_t ctrla = (1u << SERCOM_USART_CTRLA_DORD_Pos)				// MSB first
@@ -36,8 +59,10 @@ void Serial::Init()
 						 | (3u << SERCOM_USART_CTRLA_RXPO_Pos)				// receive data on pad 3
 						 | (0u << SERCOM_USART_CTRLA_TXPO_Pos)				// transmit on pad 0
 						 | (0u << SERCOM_USART_CTRLA_SAMPR_Pos)				// 16x over sampling, normal baud rate generation
+#ifdef SAME51
 						 | (0u << SERCOM_USART_CTRLA_RXINV_Pos)				// don't invert receive data
 						 | (0u << SERCOM_USART_CTRLA_TXINV_Pos)				// don't invert transmitted data
+#endif
 						 | (0u << SERCOM_USART_CTRLA_IBON_Pos)				// don't report buffer overflow early
 						 | (0u << SERCOM_USART_CTRLA_RUNSTDBY_Pos)			// don't clock during standby
 						 | (1u << SERCOM_USART_CTRLA_MODE_Pos)				// use internal clock

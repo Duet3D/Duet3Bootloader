@@ -15,12 +15,20 @@
 #include <General/StringRef.h>
 #include <CanId.h>
 #include <CanMessageBuffer.h>
-#include <core_cm4.h>
 
+#if defined(SAME51)
 constexpr uint32_t FlashBlockSize = 0x00010000;							// the block size we assume for flash
 constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
 const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 64K for the bootloader
 constexpr const char* BoardTypeName = "EXP3HC";
+#elif defined(SAMC21)
+constexpr uint32_t FlashBlockSize = 0x00004000;							// the block size we assume for flash
+constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
+const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 16K for the bootloader
+constexpr const char* BoardTypeName = "TOOL1LC";
+#else
+# error Unsupported processor
+#endif
 
 // Error codes, presented as a number of flashes of the DIAG LED
 enum class ErrorCode : unsigned int
@@ -189,13 +197,23 @@ extern "C" int main()
 {
 	atmel_start_init();
 	SystemCoreClock = CONF_CPU_FREQUENCY;
+
+#if defined(SAME51)
 	SystemPeripheralClock = SystemCoreClock/2;
+#elif defined(SAMC21)
+	SystemPeripheralClock = SystemCoreClock;
+#else
+# error Unsupported processor
+#endif
 
 	SetPinMode(DiagLedPin, OUTPUT_LOW);
+
+#ifdef SAME51
 	for (Pin p : BoardAddressPins)
 	{
 		SetPinMode(p, INPUT_PULLUP);
 	}
+#endif
 
 	// Initialise systick and serial, needed if we detect that the firmware is invalid
 	SysTick->LOAD = ((SystemCoreClock/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
@@ -283,6 +301,9 @@ extern "C" int main()
 // Read the board address
 uint8_t ReadBoardId()
 {
+#ifdef SAMC21
+	return 10;		//TODO get board address from NVRAM or something
+#else
 	uint8_t rslt = 0;
 	for (unsigned int i = 0; i < 4; ++i)
 	{
@@ -292,6 +313,7 @@ uint8_t ReadBoardId()
 		}
 	}
 	return rslt;
+#endif
 }
 
 uint8_t ReadBoardType()
@@ -321,9 +343,18 @@ bool CheckValidFirmware()
 	const uint32_t storedCRC = *crcAddr;
 
 	// Compute the CRC-32 of the file
+#if defined(SAME51)
 	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_DISABLE | DMAC_CRCCTRL_CRCPOLY_CRC32;	// disable the CRC unit
+#elif defined(SAMC21)
+	DMAC->CTRL.bit.CRCENABLE = 0;
+#else
+# error Unsupported processor
+#endif
 	DMAC->CRCCHKSUM.reg = 0xFFFFFFFF;
 	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_IO | DMAC_CRCCTRL_CRCPOLY_CRC32;
+#if defined(SAMC21)
+	DMAC->CTRL.bit.CRCENABLE = 1;
+#endif
 	for (const uint32_t *p = reinterpret_cast<const uint32_t*>(FirmwareFlashStart); p < crcAddr; ++p)
 	{
 		DMAC->CRCDATAIN.reg = *p;
@@ -355,11 +386,18 @@ bool CheckValidFirmware()
 	// Disable all IRQs
 	SysTick->CTRL = (1 << SysTick_CTRL_CLKSOURCE_Pos);	// disable the system tick exception
 	__disable_irq();
+#if defined(SAME51)
 	for (size_t i = 0; i < 8; i++)
 	{
 		NVIC->ICER[i] = 0xFFFFFFFF;						// Disable IRQs
 		NVIC->ICPR[i] = 0xFFFFFFFF;						// Clear pending IRQs
 	}
+#elif defined(SAMC21)
+	NVIC->ICER[0] = 0xFFFFFFFF;						// Disable IRQs
+	NVIC->ICPR[0] = 0xFFFFFFFF;						// Clear pending IRQs
+#else
+# error Unsupported processor
+#endif
 
 	digitalWrite(DiagLedPin, false);					// turn the DIAG LED off
 
@@ -382,7 +420,14 @@ bool CheckValidFirmware()
 	__enable_irq();
 
 	__asm volatile ("ldr r1, [r3, #4]");
+#if defined(SAME51)
 	__asm volatile ("orr r1, r1, #1");
+#elif defined(SAMC21)
+	__asm volatile ("movs r2, #1");
+	__asm volatile ("orr r1, r1, r2");
+#else
+# error Unsupported processor
+#endif
 	__asm volatile ("bx r1");
 
 	// This point is unreachable, but gcc doesn't seem to know that

@@ -117,7 +117,7 @@ CanAddress CanInterface::GetCanAddress()
 // Send a CAN message and free the buffer
 void CanInterface::Send(CanMessageBuffer *buf)
 {
-	struct can_message msg;
+	can_message msg;
 	msg.id = buf->id.GetWholeId();
 	msg.type = CAN_TYPE_DATA;
 	msg.data = buf->msg.raw;
