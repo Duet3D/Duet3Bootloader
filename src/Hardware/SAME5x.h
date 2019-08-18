@@ -9,7 +9,7 @@
 #define SRC_HARDWARE_SAME5X_H_
 
 #include <cstdint>
-#include "atmel_start_pins.h"					// for GPIO_PIN_FUNCTION_x
+#include <atmel_start_pins.h>					// for GPIO_PIN_FUNCTION_x
 
 extern "C" uint32_t SystemCoreClock;			// in system_same51.c
 extern "C" uint32_t SystemPeripheralClock;		// in system_same51.c
