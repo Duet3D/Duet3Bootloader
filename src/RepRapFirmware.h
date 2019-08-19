@@ -17,20 +17,12 @@
 #include <cinttypes>
 #include <climits>		// for CHAR_BIT
 
-#if defined(__SAME51N19A__)
-# define SAME51		1
-#elif defined(__SAMC21G18A__)
-# define SAMC21		1
-#endif
-
 typedef uint16_t PwmFrequency;		// type used to represent a PWM frequency. 0 sometimes means "default".
 typedef double floatc_t;
 
-//#include "Configuration.h"
 #include "General/StringRef.h"
 #include "General/StringFunctions.h"
 #include "General/BitMap.h"
-//#include "MessageType.h"
 
 // Warn of what's to come, so we can use pointers to classes without including the entire header files
 class Move;
@@ -240,10 +232,6 @@ private:
 
 // Macro to give us the highest valid index into an array i.e. one less than the size
 #define ARRAY_UPB(_x)	(ARRAY_SIZE(_x) - 1)
-
-#ifdef __SAME51N19A__
-# define SAME51		1
-#endif
 
 typedef uint8_t Pin;
 constexpr Pin NoPin = 0xFF;

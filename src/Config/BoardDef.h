@@ -20,8 +20,8 @@ constexpr float DefaultThermistorC = 0.0;
 # include "Expansion1_v05.h"
 #endif
 
-#ifdef SMART_TOOL_1_V01
-# include "SmartTool1_v01.h"
+#ifdef TOOL_1_V01
+# include "Tool1_v01.h"
 #endif
 
 #define SUPPORT_CAN_EXPANSION	1
