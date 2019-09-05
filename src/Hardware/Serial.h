@@ -5,8 +5,8 @@
  *      Author: David
  */
 
-#ifndef SRC_HARDWARE_SERIAL_H_
-#define SRC_HARDWARE_SERIAL_H_
+#ifndef SRC_SERIAL_H_
+#define SRC_SERIAL_H_
 
 #include "RepRapFirmware.h"
 
@@ -18,4 +18,4 @@ namespace Serial
 	void Send(const char *s);
 }
 
-#endif /* SRC_HARDWARE_SERIAL_H_ */
+#endif /* SRC_SERIAL_H_ */

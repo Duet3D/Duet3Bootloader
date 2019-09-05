@@ -117,7 +117,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 	{
 		ReportErrorAndRestart("No buffers", ErrorCode::noBuffer);
 	}
-	CanMessageFirmwareUpdateRequest *msg = buf->SetupRequestMessage<CanMessageFirmwareUpdateRequest>(CanInterface::GetCanAddress(), 0);
+	CanMessageFirmwareUpdateRequest *msg = buf->SetupRequestMessage<CanMessageFirmwareUpdateRequest>(0, CanInterface::GetCanAddress(), CanId::MasterAddress);
 	SafeStrncpy(msg->boardType, BoardTypeName, sizeof(msg->boardType));
 	msg->boardVersion = ReadBoardType();
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
