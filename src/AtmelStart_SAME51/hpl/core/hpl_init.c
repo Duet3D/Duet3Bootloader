@@ -36,7 +36,7 @@
 #include "../gclk/hpl_gclk_base.h"
 #include <hpl_mclk_config.h>
 
-#include <hpl_dma.h>
+//DC #include <hpl_dma.h>
 #include <hpl_dmac_config.h>
 #include <hpl_cmcc_config.h>
 #include <hal_cache.h>

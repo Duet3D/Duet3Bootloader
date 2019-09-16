@@ -13,7 +13,7 @@
 // <i> Enable CAN FD operation
 // <id> can_cccr_fdoe
 #ifndef CONF_CAN1_CCCR_FDOE
-#define CONF_CAN1_CCCR_FDOE 0
+#define CONF_CAN1_CCCR_FDOE 1
 #endif
 
 // <q> Bit Rate Switch Enable
@@ -40,7 +40,7 @@
 // <3=> Critical latency
 // <id> can_mrcfg_dqos
 #ifndef CONF_CAN1_MRCFG_DQOS
-#define CONF_CAN1_MRCFG_DQOS 0
+#define CONF_CAN1_MRCFG_DQOS 2
 #endif
 
 // </h>
@@ -51,21 +51,21 @@
 // <i> Baud Rate Prescale
 // <id> can_btp_brp
 #ifndef CONF_CAN1_BTP_BRP
-#define CONF_CAN1_BTP_BRP 3
+#define CONF_CAN1_BTP_BRP 2
 #endif
 
 // <o> time segment before sample point <2-256>
 // <i> time segment before sample point
 // <id> can_btp_tseg1
 #ifndef CONF_CAN1_BTP_TSEG1
-#define CONF_CAN1_BTP_TSEG1 11
+#define CONF_CAN1_BTP_TSEG1 13
 #endif
 
 // <o> time segment after sample point <1-128>
 // <i> time segment after sample point
 // <id> can_btp_tseg2
 #ifndef CONF_CAN1_BTP_TSEG2
-#define CONF_CAN1_BTP_TSEG2 8
+#define CONF_CAN1_BTP_TSEG2 10
 #endif
 
 // <o> Data (Re)Syncronization Jump Width <1-128>
@@ -138,7 +138,7 @@
 // <i> Number of Rx FIFO 0 element
 // <id> can_rxf0c_f0s
 #ifndef CONF_CAN1_RXF0C_F0S
-#define CONF_CAN1_RXF0C_F0S 2
+#define CONF_CAN1_RXF0C_F0S 16
 #endif
 
 // <o> Data Field Size
@@ -153,7 +153,7 @@
 // <7=> 64 byte data field.
 // <id> can_rxesc_f0ds
 #ifndef CONF_CAN1_RXESC_F0DS
-#define CONF_CAN1_RXESC_F0DS 0
+#define CONF_CAN1_RXESC_F0DS 7
 #endif
 
 /* Bytes size for CAN FIFO 0 element, plus 8 bytes for R0,R1 */
@@ -169,7 +169,7 @@
 // <i> Number of Tx Buffers used for Tx FIFO
 // <id> can_txbc_tfqs
 #ifndef CONF_CAN1_TXBC_TFQS
-#define CONF_CAN1_TXBC_TFQS 2
+#define CONF_CAN1_TXBC_TFQS 4
 #endif
 
 // <o> Tx Buffer Data Field Size
@@ -184,7 +184,7 @@
 // <7=> 64 byte data field.
 // <id> can_txesc_tbds
 #ifndef CONF_CAN1_TXESC_TBDS
-#define CONF_CAN1_TXESC_TBDS 0
+#define CONF_CAN1_TXESC_TBDS 7
 #endif
 
 /* Bytes size for CAN Transmit Buffer element, plus 8 bytes for R0,R1 */

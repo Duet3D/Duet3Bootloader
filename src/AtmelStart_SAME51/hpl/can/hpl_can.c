@@ -38,9 +38,9 @@
 // DC: these buffers must be within the first 64kB of RAM. So we now declare them all "static". Otherwise they end up in the COMMON segment at the end of RAM.
 #ifdef CONF_CAN0_ENABLED
 COMPILER_ALIGNED(4)
-uint8_t can0_rx_fifo[CONF_CAN0_F0DS * CONF_CAN0_RXF0C_F0S];
+static uint8_t can0_rx_fifo[CONF_CAN0_F0DS * CONF_CAN0_RXF0C_F0S];
 COMPILER_ALIGNED(4)
-uint8_t can0_tx_fifo[CONF_CAN0_TBDS * CONF_CAN0_TXBC_TFQS];
+static uint8_t can0_tx_fifo[CONF_CAN0_TBDS * CONF_CAN0_TXBC_TFQS];
 COMPILER_ALIGNED(4)
 static struct _can_tx_event_entry can0_tx_event_fifo[CONF_CAN0_TXEFC_EFS];
 COMPILER_ALIGNED(4)

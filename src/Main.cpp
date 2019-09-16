@@ -16,18 +16,18 @@
 #include <CanId.h>
 #include <CanMessageBuffer.h>
 
-#if defined(SAME51)
+#if defined(EXP3HC_V09)
 constexpr uint32_t FlashBlockSize = 0x00010000;							// the block size we assume for flash
 constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
 const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 64K for the bootloader
 constexpr const char* BoardTypeName = "EXP3HC";
-#elif defined(SAMC21)
+#elif defined(TOOL1LC_V04)
 constexpr uint32_t FlashBlockSize = 0x00004000;							// the block size we assume for flash
 constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
 const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 16K for the bootloader
 constexpr const char* BoardTypeName = "TOOL1LC";
 #else
-# error Unsupported processor
+# error Unsupported board
 #endif
 
 // Error codes, presented as a number of flashes of the DIAG LED
