@@ -286,7 +286,11 @@ int32_t _can_async_write(struct _can_async_device *const dev, struct can_message
 
 	memcpy(f->data, msg->data, msg->len);
 
+#if 1	//dc42
+	hri_can_write_TXBAR_reg(dev->hw, 1 << put_index);
+#else
 	hri_can_write_TXBAR_reg(dev->hw, 1 << hri_can_read_TXFQS_TFQPI_bf(dev->hw));
+#endif
 	return ERR_NONE;
 }
 
@@ -389,9 +393,9 @@ int32_t _can_async_set_filter(struct _can_async_device *const dev, uint8_t index
 /*
  * \brief CAN interrupt handler
  */
-void CAN1_Handler(void)
+void CAN0_Handler(void)
 {
-	struct _can_async_device *dev = _can1_dev;
+	struct _can_async_device *dev = _can0_dev;
 	uint32_t                  ir;
 	ir = hri_can_read_IR_reg(dev->hw);
 

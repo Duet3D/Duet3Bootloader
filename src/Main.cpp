@@ -285,7 +285,11 @@ extern "C" int main()
 
 	can_async_disable(&CAN_0);			// disable CAN to prevent it receiving packets into RAM
 	delay(2);
+#if SAMC21
+	CAN0->IR.reg = 0xFFFFFFFF;			// clear all interrupt sources for when the device gets enabled by the main firmware
+#else
 	CAN1->IR.reg = 0xFFFFFFFF;			// clear all interrupt sources for when the device gets enabled by the main firmware
+#endif
 
 	SerialMessage("Finished firmware update");
 	delay(1000);
@@ -376,7 +380,7 @@ bool CheckValidFirmware()
 	return false;
 }
 
-// Execute the main firmware
+// Execute the main firmware CAN1
 [[noreturn]] void StartFirmware()
 {
 	SerialMessage("Bootloader transferring control to main firmware");
