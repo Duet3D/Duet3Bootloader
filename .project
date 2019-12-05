@@ -3,6 +3,8 @@
 	<name>Duet3Bootloader</name>
 	<comment></comment>
 	<projects>
+		<project>CANlib</project>
+		<project>RRFLibraries</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

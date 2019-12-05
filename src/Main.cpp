@@ -25,7 +25,8 @@ constexpr const char* BoardTypeName = "EXP3HC";
 constexpr uint32_t FlashBlockSize = 0x00004000;							// the block size we assume for flash
 constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
 const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 16K for the bootloader
-constexpr const char* BoardTypeName = "TOOL1LC";
+constexpr const char* BoardTypeName_Low = "TOOL1LC";					// board type name if board type pin is low
+constexpr const char* BoardTypeName_High = "TOOL1XD";					// board type name if board type pin is high
 #else
 # error Unsupported board
 #endif
@@ -46,6 +47,10 @@ enum class ErrorCode : unsigned int
 	writeFailed = 12,
 	lockFailed = 13
 };
+
+#if defined(TOOL1LC_V04)
+const char *BoardTypeName;
+#endif
 
 static uint8_t blockBuffer[FlashBlockSize];
 
@@ -146,7 +151,7 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 		const bool ok = CanInterface::GetCanMessage(buf);
 		if (ok)
 		{
-			if (buf->id.MsgType() == CanMessageType::FirmwareBlockResponse)
+			if (buf->id.MsgType() == CanMessageType::firmwareBlockResponse)
 			{
 				const CanMessageFirmwareUpdateResponse& response = buf->msg.firmwareUpdateResponse;
 				switch (response.err)
@@ -244,6 +249,12 @@ extern "C" int main()
 	}
 	CanInterface::Init((switches == 0) ? CanId::FirmwareUpdateAddress : switches);
 
+#if defined(TOOL1LC_V04)
+	// The board type pin is meant to be an analog input, but for simplicity we use it as a digital input for now
+	SetPinMode(BoardTypePin, INPUT);
+	BoardTypeName = (digitalRead(BoardTypePin)) ? BoardTypeName_High : BoardTypeName_Low;
+#endif
+
 	// Loop requesting firmware from the main board and handling any firmware that it sends to us
 	uint32_t bufferStartOffset = 0;
 	uint32_t roundedUpLength;
@@ -285,7 +296,7 @@ extern "C" int main()
 
 	can_async_disable(&CAN_0);			// disable CAN to prevent it receiving packets into RAM
 	delay(2);
-#if SAMC21
+#ifdef SAMC21
 	CAN0->IR.reg = 0xFFFFFFFF;			// clear all interrupt sources for when the device gets enabled by the main firmware
 #else
 	CAN1->IR.reg = 0xFFFFFFFF;			// clear all interrupt sources for when the device gets enabled by the main firmware
