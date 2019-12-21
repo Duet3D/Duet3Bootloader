@@ -13,19 +13,6 @@
 
 struct can_async_descriptor CAN_0;
 
-struct flash_descriptor FLASH_0;
-
-void FLASH_0_CLOCK_init(void)
-{
-	hri_mclk_set_AHBMASK_NVMCTRL_bit(MCLK);
-}
-
-void FLASH_0_init(void)
-{
-	FLASH_0_CLOCK_init();
-	flash_init(&FLASH_0, NVMCTRL);
-}
-
 void CAN_0_PORT_init(void)
 {
 	gpio_set_pin_function(PA25, PINMUX_PA25G_CAN0_RX);
@@ -50,9 +37,4 @@ void system_init(void)
 	init_mcu();
 }
 
-void DeviceInit()
-{
-	CAN_0_init();
-//	FLASH_0_init();
-//	WDT_0_init();
-}
+// End

@@ -45,15 +45,10 @@ void CAN_0_init(void)
 	CAN_0_PORT_init();
 }
 
-
 void system_init(void)
 {
 	init_mcu();
-}
 
-void DeviceInit()
-{
-	CAN_0_init();
 //	WDT_0_init();
 }
 

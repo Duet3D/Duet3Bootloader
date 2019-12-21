@@ -241,7 +241,6 @@ extern "C" int main()
 	// Initialise the CAN subsystem and systick.
 	// We don't use the DMAC so no need to initialise that.
 	// Serial port is initialised for diagnostic info.
-	DeviceInit();
 	Serial::Init();
 	if (!Flash::Init())
 	{
@@ -295,12 +294,15 @@ extern "C" int main()
 	}
 
 	can_async_disable(&CAN_0);			// disable CAN to prevent it receiving packets into RAM
+
 	delay(2);
-#ifdef SAMC21
+
+	NVIC_DisableIRQ(CAN0_IRQn);
+	NVIC_DisableIRQ(CAN1_IRQn);
 	CAN0->IR.reg = 0xFFFFFFFF;			// clear all interrupt sources for when the device gets enabled by the main firmware
-#else
+	CAN0->ILE.reg = 0;
 	CAN1->IR.reg = 0xFFFFFFFF;			// clear all interrupt sources for when the device gets enabled by the main firmware
-#endif
+	CAN1->ILE.reg = 0;
 
 	SerialMessage("Finished firmware update");
 	delay(1000);
@@ -408,8 +410,8 @@ bool CheckValidFirmware()
 		NVIC->ICPR[i] = 0xFFFFFFFF;						// Clear pending IRQs
 	}
 #elif defined(SAMC21)
-	NVIC->ICER[0] = 0xFFFFFFFF;						// Disable IRQs
-	NVIC->ICPR[0] = 0xFFFFFFFF;						// Clear pending IRQs
+	NVIC->ICER[0] = 0xFFFFFFFF;							// Disable IRQs
+	NVIC->ICPR[0] = 0xFFFFFFFF;							// Clear pending IRQs
 #else
 # error Unsupported processor
 #endif

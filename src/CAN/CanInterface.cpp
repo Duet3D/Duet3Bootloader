@@ -5,12 +5,15 @@
  *      Author: David
  */
 
-#include <CAN/CanInterface.h>
+#include "CanInterface.h"
+
+#include <CanSettings.h>
 #include "CanMessageFormats.h"
 #include "CanMessageBuffer.h"
 
 const unsigned int NumCanBuffers = 4;
 
+static CanUserAreaData canConfigData;
 static CanAddress boardAddress;
 
 class CanMessageQueue
@@ -90,11 +93,22 @@ bool CanInterface::GetCanMessage(CanMessageBuffer *buf)
 
 void CanInterface::Init(CanAddress pBoardAddress)
 {
-	boardAddress = (pBoardAddress == CanId::MasterAddress) ? CanId::FirmwareUpdateAddress : pBoardAddress;
-	CanMessageBuffer::Init(NumCanBuffers);
+	// Read the CAN timing data from the top part of the NVM User Row
+#if defined(SAME51)
+	canConfigData = *reinterpret_cast<const CanUserAreaData*>(NVMCTRL_USER + 512 - sizeof(CanUserAreaData));
+#elif defined(SAMC21)
+	canConfigData = *reinterpret_cast<const CanUserAreaData*>(NVMCTRL_USER + 256 - sizeof(CanUserAreaData));
+#endif
+	CanTiming timing;
+	canConfigData.GetTiming(timing);
 
-//	can_async_register_callback(&CAN_0, CAN_ASYNC_RX_CB, (FUNC_PTR)CAN_0_rx_callback);
-//	can_async_register_callback(&CAN_0, CAN_ASYNC_TX_CB, (FUNC_PTR)CAN_0_tx_callback);
+	// Initialise the CAN hardware
+	// TODO use the timing data if it was valid
+	(void)timing;
+	CAN_0_init();
+
+	boardAddress = canConfigData.GetCanAddress(pBoardAddress);
+	CanMessageBuffer::Init(NumCanBuffers);
 
 	// Set up CAN receiver filtering
 	can_filter filter;
@@ -104,7 +118,7 @@ void CanInterface::Init(CanAddress pBoardAddress)
 	filter.mask = CanId::BoardAddressMask << CanId::DstAddressShift;
 	can_async_set_filter(&CAN_0, 0, CAN_FMT_EXTID, &filter);
 
-	// We ignore broadcast messages so on need to set up a filter for them
+	// We ignore broadcast messages so no need to set up a filter for them
 
 	can_async_enable(&CAN_0);
 }
