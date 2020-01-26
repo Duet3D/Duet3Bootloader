@@ -11,6 +11,7 @@
 #include "atmel_start.h"
 #include <cmsis_gcc.h>
 #include "ecv.h"
+#undef array
 #undef value			// needed because we include <optional>
 
 #include <cmath>
@@ -20,9 +21,9 @@
 typedef uint16_t PwmFrequency;		// type used to represent a PWM frequency. 0 sometimes means "default".
 typedef double floatc_t;
 
-#include "General/StringRef.h"
-#include "General/StringFunctions.h"
-#include "General/BitMap.h"
+#include <General/String.h>
+#include <General/StringFunctions.h>
+#include <General/BitMap.h>
 
 // Warn of what's to come, so we can use pointers to classes without including the entire header files
 class Move;
