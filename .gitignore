@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# Misc
+.settings/language.settings.xml
+
+# Output folders
+/EXP3HC-v0.9-Debug/
+/EXP3HC-v0.9/
+/TOOL1LC-v0.4-Debug/
+/TOOL1LC-v0.4/
