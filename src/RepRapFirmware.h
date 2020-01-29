@@ -18,20 +18,9 @@
 #include <cinttypes>
 #include <climits>		// for CHAR_BIT
 
-typedef uint16_t PwmFrequency;		// type used to represent a PWM frequency. 0 sometimes means "default".
-typedef double floatc_t;
-
 #include <General/String.h>
 #include <General/StringFunctions.h>
 #include <General/BitMap.h>
-
-// Warn of what's to come, so we can use pointers to classes without including the entire header files
-class Move;
-class DDA;
-class DriveMovement;
-class Kinematics;
-class TemperatureSensor;
-class FilamentMonitor;
 
 // These three are implemented in Tasks.cpp
 void delay(uint32_t ms);
@@ -42,6 +31,12 @@ uint64_t millis64();
 extern "C" void debugPrintf(const char* fmt, ...) __attribute__ ((format (printf, 1, 2)));
 #define DEBUG_HERE do { } while (false)
 //#define DEBUG_HERE do { debugPrintf("At " __FILE__ " line %d\n", __LINE__); delay(50); } while (false)
+
+#if defined(__SAME51N19A__)
+# define SAME51		1
+#elif defined(__SAMC21G18A__)
+# define SAMC21		1
+#endif
 
 #ifdef SAME51
 
@@ -236,11 +231,6 @@ private:
 
 typedef uint8_t Pin;
 constexpr Pin NoPin = 0xFF;
-
-typedef uint16_t PwmFrequency;
-typedef uint32_t AxesBitmap;				// Type of a bitmap representing a set of axes
-typedef uint32_t DriversBitmap;				// Type of a bitmap representing a set of driver numbers
-typedef uint32_t FansBitmap;				// Type of a bitmap representing a set of fan numbers
 
 #define PortAPin(_n)	(GPIO(GPIO_PORTA, (_n)))
 #define PortBPin(_n)	(GPIO(GPIO_PORTB, (_n)))
