@@ -327,10 +327,12 @@
 #define CONF_CAN0_MRCFG_REG CAN_MRCFG_QOS(CONF_CAN0_MRCFG_DQOS)
 #endif
 
+#if 0	//DC42
 #ifndef CONF_CAN0_BTP_REG
 #define CONF_CAN0_BTP_REG                                                                                              \
 	CAN_NBTP_NBRP(CONF_CAN0_BTP_BRP - 1) | CAN_NBTP_NTSEG1(CONF_CAN0_BTP_TSEG1 - 1)                                    \
 	    | CAN_NBTP_NTSEG2(CONF_CAN0_BTP_TSEG2 - 1) | CAN_NBTP_NSJW(CONF_CAN0_BTP_SJW - 1)
+#endif
 #endif
 
 #ifndef CONF_CAN0_DBTP_REG

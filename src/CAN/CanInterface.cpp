@@ -12,6 +12,7 @@
 #include <CanMessageBuffer.h>
 #include <Hardware/CanDriver.h>
 #include <peripheral_clk_config.h>
+#include <hpl_user_area.h>
 
 const unsigned int NumCanBuffers = 4;
 
@@ -73,11 +74,11 @@ static struct can_async_descriptor CAN_0;
  *
  * Enables CAN peripheral, clocks and initializes CAN driver
  */
-void CAN_0_init(void)
+void CAN_0_init(const CanTiming& timing)
 {
 	hri_mclk_set_AHBMASK_CAN1_bit(MCLK);
 	hri_gclk_write_PCHCTRL_reg(GCLK, CAN1_GCLK_ID, CONF_GCLK_CAN1_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
-	can_async_init(&CAN_0, CAN1);
+	can_async_init(&CAN_0, CAN1, timing);
 	gpio_set_pin_function(PB13, PINMUX_PB13H_CAN1_RX);
 	gpio_set_pin_function(PB12, PINMUX_PB12H_CAN1_TX);
 }
@@ -91,11 +92,11 @@ void CAN_0_init(void)
  *
  * Enables CAN peripheral, clocks and initializes CAN driver
  */
-static void CAN_0_init()
+static void CAN_0_init(const CanTiming& timing)
 {
 	hri_mclk_set_AHBMASK_CAN0_bit(MCLK);
 	hri_gclk_write_PCHCTRL_reg(GCLK, CAN0_GCLK_ID, CONF_GCLK_CAN0_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
-	can_async_init(&CAN_0, CAN0);
+	can_async_init(&CAN_0, CAN0, timing);
 	gpio_set_pin_function(PA25, PINMUX_PA25G_CAN0_RX);
 	gpio_set_pin_function(PA24, PINMUX_PA24G_CAN0_TX);
 }
@@ -117,23 +118,30 @@ bool CanInterface::GetCanMessage(CanMessageBuffer *buf)
 	return false;
 }
 
-void CanInterface::Init(CanAddress pBoardAddress)
+void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset)
 {
 	// Read the CAN timing data from the top part of the NVM User Row
 #if defined(SAME51)
-	canConfigData = *reinterpret_cast<const CanUserAreaData*>(NVMCTRL_USER + 512 - sizeof(CanUserAreaData));
+	const uint32_t CanUserAreaDataOffset = 512 - sizeof(CanUserAreaData);
 #elif defined(SAMC21)
-	canConfigData = *reinterpret_cast<const CanUserAreaData*>(NVMCTRL_USER + 256 - sizeof(CanUserAreaData));
+	const uint32_t CanUserAreaDataOffset = 256 - sizeof(CanUserAreaData);
 #endif
+
+	canConfigData = *reinterpret_cast<CanUserAreaData*>(NVMCTRL_USER + CanUserAreaDataOffset);
+
+	if (doHardwareReset)
+	{
+		canConfigData.Clear();
+		_user_area_write(reinterpret_cast<void*>(NVMCTRL_USER), CanUserAreaDataOffset, reinterpret_cast<const uint8_t*>(&canConfigData), sizeof(canConfigData));
+	}
 	CanTiming timing;
 	canConfigData.GetTiming(timing);
 
 	// Initialise the CAN hardware
 	// TODO use the timing data if it was valid
-	(void)timing;
-	CAN_0_init();
+	CAN_0_init(timing);
 
-	boardAddress = canConfigData.GetCanAddress(pBoardAddress);
+	boardAddress = canConfigData.GetCanAddress(defaultBoardAddress);
 	CanMessageBuffer::Init(NumCanBuffers);
 
 	// Set up CAN receiver filtering

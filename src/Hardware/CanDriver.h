@@ -34,7 +34,7 @@
 #ifndef SRC_CAN_CANDRIVER_H_
 #define SRC_CAN_CANDRIVER_H_
 
-//#include <utils.h>
+#include <CanSettings.h>
 #include <hpl_irq.h>
 
 typedef void (*FUNC_PTR)(void);
@@ -315,29 +315,7 @@ struct _can_async_device {
 	void *                     context; /*!< CAN hardware context */
 };
 
-/**
- * \brief Initialize CAN.
- *
- * This function initializes the given CAN device descriptor.
- *
- * \param[in, out] dev   A CAN device descriptor to initialize
- * \param[in]      hw    The pointer to hardware instance
- *
- * \return Initialization status.
- */
-int32_t _can_async_init(struct _can_async_device *const dev, Can *const hw);
-
-/**
- * \brief Deinitialize CAN.
- *
- * This function deinitializes the given can device descriptor.
- *
- * \param[in] dev The CAN device descriptor to deinitialize
- *
- * \return De-initialization status.
- */
-int32_t _can_async_deinit(struct _can_async_device *const dev);
-
+#if 0
 /**
  * \brief Enable CAN
  *
@@ -437,6 +415,7 @@ int32_t _can_async_set_mode(struct _can_async_device *const dev, enum can_mode m
  */
 int32_t _can_async_set_filter(struct _can_async_device *const dev, uint8_t index, enum can_format fmt,
                               struct can_filter *filter);
+#endif
 
 /**@}*/
 
@@ -479,7 +458,7 @@ struct can_async_descriptor {
  *
  * \return Initialization status.
  */
-int32_t can_async_init(struct can_async_descriptor *const descr, Can *const hw);
+int32_t can_async_init(struct can_async_descriptor *const descr, Can *const hw, const CanTiming& timing);
 
 /**
  * \brief Deinitialize CAN.

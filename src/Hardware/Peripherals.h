@@ -143,10 +143,11 @@ static inline void delayMicroseconds(uint32_t usec)
     if (usec == 0) return;
     uint32_t n = usec * (SystemCoreClock / 3000000);
     asm volatile(
-        "L_%=_delayMicroseconds:"       "\n\t"
-        "subs   %0, #1"                 "\n\t"
-        "bne    L_%=_delayMicroseconds" "\n"
-        : "+r" (n) :
+		".syntax unified"				"\n\t"
+		"L_%=_delayMicroseconds:"       "\n\t"
+		"subs   %0, #1"   				"\n\t"
+		"bne    L_%=_delayMicroseconds" "\n"
+		: "+r" (n) :
     );
 }
 

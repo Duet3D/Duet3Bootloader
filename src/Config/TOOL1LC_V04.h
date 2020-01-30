@@ -51,6 +51,7 @@ constexpr Pin DirectionPins[NumDrivers] = { PortAPin(28) };
 constexpr Pin OutPins[NumOutputPorts] = { PortAPin(11), PortAPin(10), PortBPin(11) };
 
 constexpr Pin BoardTypePin = PortAPin(5);
+constexpr Pin ButtonPins[2] = { PortBPin(22), PortBPin(23) };
 
 constexpr Pin VinMonitorPin = PortAPin(8);
 constexpr float VinDividerRatio = (60.4 + 4.7)/4.7;

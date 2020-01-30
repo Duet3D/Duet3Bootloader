@@ -59,7 +59,10 @@ const char *BoardTypeName;
 
 static uint8_t blockBuffer[FlashBlockSize];
 
-uint8_t ReadBoardId();
+#ifdef SAME51
+uint8_t ReadBoardAddress();
+#endif
+
 uint8_t ReadBoardType();
 
 bool CheckValidFirmware();
@@ -140,7 +143,11 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 // Get a buffer of data from the host
 void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 {
-	RequestFirmwareBlock(startingOffset, FlashBlockSize);			// ask for 64K from the starting offset
+	digitalWrite(DiagLedPin, true);
+	delay(25);														// flash the LED briefly to indicate we are requesting a new flash block
+	digitalWrite(DiagLedPin, false);
+
+	RequestFirmwareBlock(startingOffset, FlashBlockSize);			// ask for 16K or 64K from the starting offset
 
 	CanMessageBuffer *buf = CanMessageBuffer::Allocate();
 	if (buf == nullptr)
@@ -203,43 +210,69 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 	CanMessageBuffer::Free(buf);
 }
 
+// Clock configuration:
+// ATSAME51:
+//	XOSC1 = 12MHz crystal oscillator
+//	FDPLL0 = takes XOSC1 divide by 4 (3MHz), multiplies by 40 to get 120MHz main clock
+//	FDPLL1 = takes XOSC1 divide by 4 (3MHz), multiplies by 12 to get 48MHz CAN clock
+//	GCLK0 = takes FDPLL0 output, no divisor, giving 120MHz main clock used by CPU
+//	GCLK1 = takes FDPLL0 output, divides by 2 to get 60MHz clock used by most peripherals
+//	GCLK2 = takes FDPLL1 output, no divisor, giving 48MHz CAN clock
+// ATSAMC21:
+//	XOSC1 = 12MHz crystal oscillator
+//	FDPLL = takes XOSC1 divide by ? (?MHz), multiplies by ? to get 48MHz main clock
+//	GCLK0 = takes FDPLL0 output, no divisor, giving 48MHz main clock used by CPU and most peripherals
 extern "C" int main()
 {
 	atmel_start_init();
 	SystemCoreClock = CONF_CPU_FREQUENCY;
 
 #if defined(SAME51)
-	SystemPeripheralClock = SystemCoreClock/2;
+
+	SystemPeripheralClock = CONF_CPU_FREQUENCY/2;
+
+	for (Pin p : BoardAddressPins)
+	{
+		SetPinMode(p, INPUT_PULLUP);
+	}
+
 #elif defined(SAMC21)
+
 	SystemPeripheralClock = SystemCoreClock;
+
+	SetPinMode(ButtonPins[0], INPUT_PULLUP);
+	SetPinMode(ButtonPins[1], INPUT_PULLUP);
+
 #else
 # error Unsupported processor
 #endif
 
 	SetPinMode(DiagLedPin, OUTPUT_LOW);
 
-#ifdef SAME51
-	for (Pin p : BoardAddressPins)
-	{
-		SetPinMode(p, INPUT_PULLUP);
-	}
-#endif
-
 	// Initialise systick and serial, needed if we detect that the firmware is invalid
-	SysTick->LOAD = ((SystemCoreClock/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
+	SysTick->LOAD = ((CONF_CPU_FREQUENCY/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
 	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
 	Serial::Init();
 
-	// Check whether address switches are set to zero. If so then we stay in the bootloader
-	const CanAddress switches = ReadBoardId();
-	if (switches != 0)
+#if defined(SAME51)
+
+	// Check whether address switches are set to zero. If so then reset and load new firmware
+	const CanAddress switches = ReadBoardAddress();
+	const bool doHardwareReset = (switches == 0);
+	const CanAddress defaultAddress = (doHardwareReset) ? CanId::ExpansionBoardFirmwareUpdateAddress : switches;
+
+#elif defined(SAMC21)
+
+	// If both button pins are pressed, reset and load new firmware
+	constexpr CanAddress defaultAddress = CanId::ToolBoardDefaultAddress;
+	const bool doHardwareReset = !digitalRead(ButtonPins[0]) && !digitalRead(ButtonPins[1]);
+
+#endif
+
+	if (!doHardwareReset && CheckValidFirmware())
 	{
-		// Check whether there is valid firmware installed, if not then stay in the bootloader
-		if (CheckValidFirmware())
-		{
-			// Relocate the vector table and jump into the firmware. If it returns then we execute the bootloader.
-			StartFirmware();
-		}
+		// Relocate the vector table and jump into the firmware. If it returns then we execute the bootloader.
+		StartFirmware();
 	}
 
 	// If we get here then we are staying in the bootloader
@@ -251,7 +284,7 @@ extern "C" int main()
 	{
 		ReportErrorAndRestart("Failed to initialize flash controller", ErrorCode::flashInitFailed);
 	}
-	CanInterface::Init((switches == 0) ? CanId::FirmwareUpdateAddress : switches);
+	CanInterface::Init(defaultAddress, doHardwareReset);
 
 #if defined(TOOL1LC_V04) || defined(TOOL1LC_V06)
 	// The board type pin is meant to be an analog input, but for simplicity we use it as a digital input for now
@@ -320,12 +353,11 @@ extern "C" int main()
 	StartFirmware();
 }
 
+#ifdef SAME51
+
 // Read the board address
-uint8_t ReadBoardId()
+uint8_t ReadBoardAddress()
 {
-#ifdef SAMC21
-	return 10;		//TODO get board address from NVRAM or something
-#else
 	uint8_t rslt = 0;
 	for (unsigned int i = 0; i < 4; ++i)
 	{
@@ -335,8 +367,9 @@ uint8_t ReadBoardId()
 		}
 	}
 	return rslt;
-#endif
 }
+
+#endif
 
 uint8_t ReadBoardType()
 {

@@ -33,6 +33,7 @@
 
 #include "CanDriver.h"
 
+#include <Hardware/Peripherals.h>
 #include <hpl_can_config.h>
 #include <cstring>
 
@@ -77,13 +78,34 @@ static struct _can_async_device *_can1_dev     = NULL; /*!< Pointer to hpl devic
 /**
  * \brief Initialize CAN.
  */
-int32_t _can_async_init(struct _can_async_device *const dev, Can *const hw)
+int32_t _can_async_init(struct _can_async_device *const dev, Can *const hw, const CanTiming& timing)
 {
 	dev->hw = hw;
 	hri_can_set_CCCR_INIT_bit(dev->hw);
-	while (hri_can_get_CCCR_INIT_bit(dev->hw) == 0)
-		;
+	while (hri_can_get_CCCR_INIT_bit(dev->hw) == 0) { }
 	hri_can_set_CCCR_CCE_bit(dev->hw);
+
+	// Sort out the bit timing
+	uint32_t period = timing.period;
+	uint32_t tseg1 = timing.tseg1;
+	uint32_t jumpWidth = timing.jumpWidth;
+	uint32_t prescaler = 1;						// 48MHz main clock
+	uint32_t tseg2;
+
+	for (;;)
+	{
+		tseg2 = period - tseg1 - 1;
+		if (tseg1 <= 32 && tseg2 <= 16 && jumpWidth <= 16)
+		{
+			break;
+		}
+		prescaler <<= 1;
+		period >>= 1;
+		tseg1 >>= 1;
+		jumpWidth >>= 1;
+	}
+
+	const uint32_t nbtp = CAN_NBTP_NBRP(prescaler - 1) | CAN_NBTP_NTSEG1(tseg1 - 1) | CAN_NBTP_NTSEG2(tseg2 - 1) | CAN_NBTP_NSJW(jumpWidth - 1);
 
 #ifdef CONF_CAN0_ENABLED
 	if (hw == CAN0) {
@@ -91,7 +113,7 @@ int32_t _can_async_init(struct _can_async_device *const dev, Can *const hw)
 		dev->context = (void *)&_can0_context;
 		hri_can_set_CCCR_reg(dev->hw, CONF_CAN0_CCCR_REG);
 		hri_can_write_MRCFG_reg(dev->hw, CONF_CAN0_MRCFG_REG);
-		hri_can_write_NBTP_reg(dev->hw, CONF_CAN0_BTP_REG);
+		hri_can_write_NBTP_reg(dev->hw, nbtp);
 		hri_can_write_DBTP_reg(dev->hw, CONF_CAN0_DBTP_REG);
 		hri_can_write_RXF0C_reg(dev->hw, CONF_CAN0_RXF0C_REG | CAN_RXF0C_F0SA((uint32_t)can0_rx_fifo));
 		hri_can_write_RXESC_reg(dev->hw, CONF_CAN0_RXESC_REG);
@@ -116,7 +138,7 @@ int32_t _can_async_init(struct _can_async_device *const dev, Can *const hw)
 		dev->context = (void *)&_can1_context;
 		hri_can_set_CCCR_reg(dev->hw, CONF_CAN1_CCCR_REG);
 		hri_can_write_MRCFG_reg(dev->hw, CONF_CAN1_MRCFG_REG);
-		hri_can_write_NBTP_reg(dev->hw, CONF_CAN1_BTP_REG);
+		hri_can_write_NBTP_reg(dev->hw, nbtp);
 		hri_can_write_DBTP_reg(dev->hw, CONF_CAN1_DBTP_REG);
 		hri_can_write_RXF0C_reg(dev->hw, CONF_CAN1_RXF0C_REG | CAN_RXF0C_F0SA((uint32_t)can1_rx_fifo));
 		hri_can_write_RXESC_reg(dev->hw, CONF_CAN1_RXESC_REG);
@@ -505,12 +527,11 @@ static void can_irq_handler(struct _can_async_device *dev, enum can_async_interr
 /**
  * \brief Initialize CAN.
  */
-int32_t can_async_init(struct can_async_descriptor *const descr, Can *const hw)
+int32_t can_async_init(struct can_async_descriptor *const descr, Can *const hw, const CanTiming& timing)
 {
-	int32_t rc;
-
-	rc = _can_async_init(&descr->dev, hw);
-	if (rc) {
+	const int32_t rc = _can_async_init(&descr->dev, hw, timing);
+	if (rc)
+	{
 		return rc;
 	}
 	descr->dev.cb.tx_done     = can_tx_done;
