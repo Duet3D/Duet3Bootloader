@@ -137,8 +137,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset)
 	CanTiming timing;
 	canConfigData.GetTiming(timing);
 
-	// Initialise the CAN hardware
-	// TODO use the timing data if it was valid
+	// Initialise the CAN hardware, using the timing data if it was valid
 	CAN_0_init(timing);
 
 	boardAddress = canConfigData.GetCanAddress(defaultBoardAddress);
