@@ -238,7 +238,11 @@ extern "C" int main()
 
 #elif defined(SAMC21)
 
-	SystemPeripheralClock = SystemCoreClock;
+	SystemPeripheralClock = CONF_CPU_FREQUENCY;
+
+	SetPinMode(OutPins[0], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
+	SetPinMode(OutPins[1], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
+	SetPinMode(OutPins[2], OUTPUT_HIGH);				// this is intended for the hot end fan, so turn it on just as the tool board firmware does
 
 	SetPinMode(ButtonPins[0], INPUT_PULLUP);
 	SetPinMode(ButtonPins[1], INPUT_PULLUP);
