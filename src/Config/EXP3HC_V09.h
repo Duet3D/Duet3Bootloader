@@ -11,9 +11,6 @@
 #include "RepRapFirmware.h"
 #include "Hardware/Peripherals.h"
 
-const size_t MaxHeaters = 6;
-const size_t MaxExtraHeaterProtections = 6;
-
 #define HAS_SMART_DRIVERS	1
 #define HAS_STALL_DETECT	1
 #define HAS_VREF_MONITOR	1
@@ -29,11 +26,6 @@ const size_t MaxExtraHeaterProtections = 6;
 constexpr size_t NumDrivers = 3;
 constexpr size_t MaxSmartDrivers = 3;
 
-constexpr size_t MaxAxes = 3;			//TEMP we won't need this
-
-constexpr size_t NumOutputPorts = 9;
-constexpr size_t NumIoPorts = 6;
-constexpr size_t NumTachoInputs = 3;
 constexpr size_t NumThermistorInputs = 3;
 constexpr size_t NumAddressBits = 4;
 constexpr size_t NumBoardTypeBits = 3;
@@ -50,8 +42,6 @@ PortGroup * const StepPio = &(PORT->Group[0]);		// the PIO that all the step pin
 constexpr Pin StepPins[NumDrivers] = { PortAPin(25), PortAPin(27), PortAPin(1) };
 constexpr Pin DirectionPins[NumDrivers] = { PortAPin(23), PortCPin(28), PortAPin(0) };
 
-constexpr Pin OutPins[NumOutputPorts] = { PortAPin(18), PortAPin(19), PortAPin(24), PortBPin(8), PortAPin(4), PortAPin(8), PortAPin(10), PortBPin(10), PortAPin(12) };
-
 constexpr Pin BoardTypePins[NumBoardTypeBits] = { PortBPin(18), PortCPin(19), PortCPin(16) };
 
 constexpr Pin VinMonitorPin = PortAPin(10);
@@ -63,9 +53,6 @@ constexpr Pin VssaPin = PortBPin(6);
 
 constexpr Pin BoardAddressPins[4] = { PortCPin(11), PortCPin(12), PortCPin(14), PortCPin(15) };
 constexpr Pin TempSensePins[NumThermistorInputs] = { PortCPin(3), PortBPin(8), PortBPin(7) };
-constexpr Pin TachoInputPins[NumTachoInputs] = { PortAPin(13), PortBPin(19), PortCPin(21) };			// tachos are on output connectors 6-8
-constexpr Pin IoInPins[NumIoPorts] = { PortAPin(2), PortCPin(2), PortCPin(0), PortAPin(3), PortCPin(3), PortCPin(1) };
-constexpr Pin IoOutPins[NumIoPorts] = { PortAPin(16), PortBPin(16), PortBPin(20), PortAPin(5), PortBPin(0), PortAPin(20) };
 
 // Shared SPI
 Sercom * const SERCOM_SSPI = SERCOM6;
