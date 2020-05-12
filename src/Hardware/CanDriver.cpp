@@ -250,22 +250,23 @@ int32_t _can_async_read(_can_async_device *const dev, struct can_message *msg)
  */
 int32_t _can_async_write(_can_async_device *const dev, struct can_message *msg)
 {
-	struct _can_tx_fifo_entry *f = NULL;
-	hri_can_txfqs_reg_t        put_index;
-
-	if (hri_can_get_TXFQS_TFQF_bit(dev->hw)) {
+	if (hri_can_get_TXFQS_TFQF_bit(dev->hw))
+	{
 		return ERR_NO_RESOURCE;
 	}
 
-	put_index = hri_can_read_TXFQS_TFQPI_bf(dev->hw);
+	hri_can_txfqs_reg_t put_index = hri_can_read_TXFQS_TFQPI_bf(dev->hw);
+	struct _can_tx_fifo_entry *f = NULL;
 
 #ifdef CONF_CAN0_ENABLED
-	if (dev->hw == CAN0) {
+	if (dev->hw == CAN0)
+	{
 		f = (struct _can_tx_fifo_entry *)(can0_tx_fifo + put_index * CONF_CAN0_TBDS);
 	}
 #endif
 #ifdef CONF_CAN1_ENABLED
-	if (dev->hw == CAN1) {
+	if (dev->hw == CAN1)
+	{
 		f = (struct _can_tx_fifo_entry *)(can1_tx_fifo + put_index * CONF_CAN1_TBDS);
 	}
 #endif
