@@ -32,10 +32,10 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 SEARCH_DIR(.)
 
-/* Memory Spaces Definitions */
+/* Memory Spaces Definitions. We allow up to 16K for the SAMC21 bootloader. */
 MEMORY
 {
-  rom      (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00040000
+  rom      (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00004000
   ram      (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00008000
 }
 

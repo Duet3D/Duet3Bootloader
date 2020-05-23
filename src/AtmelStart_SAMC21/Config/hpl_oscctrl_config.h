@@ -247,7 +247,11 @@
 // <i> This Clock divider is only for XOSC clock input to DPLL
 // <id> fdpll96m_clock_div
 #ifndef CONF_DPLL_DIV
-#define CONF_DPLL_DIV 2
+# ifdef SAMMYC21				// if using Sammy-C21 prototyping board from chip45.com
+#  define CONF_DPLL_DIV 3		// division ratio is 2 * (CONF_DPLL_DIV + 1) = 8 to get 2MHz input to DPLL from 16MHz crystal. Maximum allowed is 2MHz.
+# else
+#  define CONF_DPLL_DIV 2		// division ratio is 2 * (CONF_DPLL_DIV + 1) = 6 to get 2MHz input to DPLL from 12MHz crystal. Maximum allowed is 2MHz.
+# endif
 #endif
 
 // <q> Lock Bypass

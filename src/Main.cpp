@@ -17,20 +17,25 @@
 #include <CanId.h>
 #include <CanMessageBuffer.h>
 
-#if defined(EXP3HC_V09)
+#if defined(SAME51)
 
 constexpr uint32_t FlashBlockSize = 0x00010000;							// the block size we assume for flash
 constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
 const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 64K for the bootloader
 constexpr const char* BoardTypeName = "EXP3HC";
 
-#elif defined(TOOL1LC_V04)
+#elif defined(SAMC21)
 
 constexpr uint32_t FlashBlockSize = 0x00004000;							// the block size we assume for flash
 constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
 const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 16K for the bootloader
+
+# ifdef SAMMYC21
+constexpr const char* BoardTypeName = "SAMMYC21";
+# else
 constexpr const char* BoardTypeName_Low = "TOOL1LC";					// board type name if board type pin is low
 constexpr const char* BoardTypeName_High = "TOOL1XD";					// board type name if board type pin is high
+# endif
 
 #else
 # error Unsupported board
@@ -53,7 +58,7 @@ enum class ErrorCode : unsigned int
 	lockFailed = 13
 };
 
-#if defined(TOOL1LC_V04) || defined(TOOL1LC_V06)
+#if defined(SAMC21) && !defined(SAMMYC21)
 const char *BoardTypeName;
 #endif
 
@@ -81,6 +86,14 @@ void delay(uint32_t ticks)
 	while (millis() - start < ticks) { }
 }
 
+static inline void WriteLed(uint8_t ledNumber, bool turnOn)
+{
+	if (ledNumber < ARRAY_SIZE(LedPins))
+	{
+		digitalWrite(LedPins[ledNumber], (LedActiveHigh) ? turnOn : !turnOn);
+	}
+}
+
 // System tick ISR, used for timing functions
 extern "C" void SysTick_Handler()
 {
@@ -101,9 +114,9 @@ void ReportError(const char *text, ErrorCode err)
 
 	for (unsigned int i = 0; i < (unsigned int)err; ++i)
 	{
-		digitalWrite(DiagLedPin, true);
+		WriteLed(0, true);
 		delay(200);
-		digitalWrite(DiagLedPin, false);
+		WriteLed(0, false);
 		delay(200);
 	}
 
@@ -143,9 +156,9 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 // Get a buffer of data from the host
 void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 {
-	digitalWrite(DiagLedPin, true);
+	WriteLed(0, true);
 	delay(25);														// flash the LED briefly to indicate we are requesting a new flash block
-	digitalWrite(DiagLedPin, false);
+	WriteLed(0, false);
 
 	RequestFirmwareBlock(startingOffset, FlashBlockSize);			// ask for 16K or 64K from the starting offset
 
@@ -216,12 +229,12 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 //	FDPLL0 = takes XOSC1 divide by 4 (3MHz), multiplies by 40 to get 120MHz main clock
 //	FDPLL1 = takes XOSC1 divide by 4 (3MHz), multiplies by 12 to get 48MHz CAN clock
 //	GCLK0 = takes FDPLL0 output, no divisor, giving 120MHz main clock used by CPU
-//	GCLK1 = takes FDPLL0 output, divides by 2 to get 60MHz clock used by most peripherals
+//	GCLK1 = takes FDPLL0 output, divided by 2 to get 60MHz clock used by most peripherals
 //	GCLK2 = takes FDPLL1 output, no divisor, giving 48MHz CAN clock
 // ATSAMC21:
-//	XOSC1 = 12MHz crystal oscillator
-//	FDPLL = takes XOSC1 divide by ? (?MHz), multiplies by ? to get 48MHz main clock
-//	GCLK0 = takes FDPLL0 output, no divisor, giving 48MHz main clock used by CPU and most peripherals
+//	XOSC1 = 12MHz crystal oscillator (16MHz on Sammy-C21 board)
+//	FDPLL = takes XOSC1 divide by 6 (8 for Sammy-C21) (2MHz), multiplied by 24 to get 48MHz main clock
+//	GCLK0 = takes FDPLL output, no divisor, giving 48MHz main clock used by CPU and most peripherals
 extern "C" int main()
 {
 	atmel_start_init();
@@ -240,18 +253,33 @@ extern "C" int main()
 
 	SystemPeripheralClock = CONF_CPU_FREQUENCY;
 
+	// Establish the board type and initialise pins
+
+# ifdef SAMMYC21
+	SetPinMode(ButtonPins[0], INPUT_PULLUP);
+# else
+	// The board type pin is meant to be an analog input, but for simplicity we use it as a digital input for now
+	SetPinMode(BoardTypePin, INPUT);
+	BoardTypeName = (digitalRead(BoardTypePin)) ? BoardTypeName_High : BoardTypeName_Low;
+
+	//TODO the following will depend on the board type
 	SetPinMode(OutPins[0], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
 	SetPinMode(OutPins[1], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
 	SetPinMode(OutPins[2], OUTPUT_HIGH);				// this is intended for the hot end fan, so turn it on just as the tool board firmware does
 
 	SetPinMode(ButtonPins[0], INPUT_PULLUP);
 	SetPinMode(ButtonPins[1], INPUT_PULLUP);
+#endif
 
 #else
 # error Unsupported processor
 #endif
 
-	SetPinMode(DiagLedPin, OUTPUT_LOW);
+	//TODO LedPins will depend on the board type
+	for (Pin pin : LedPins)
+	{
+		SetPinMode(pin, (LedActiveHigh) ? OUTPUT_LOW : OUTPUT_HIGH);
+	}
 
 	// Initialise systick and serial, needed if we detect that the firmware is invalid
 	SysTick->LOAD = ((CONF_CPU_FREQUENCY/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
@@ -267,10 +295,14 @@ extern "C" int main()
 
 #elif defined(SAMC21)
 
+# ifdef SAMMYC21
+	const CanAddress defaultAddress = CanId::SammyC21DefaultAddress;
+	const bool doHardwareReset = !digitalRead(ButtonPins[0]);
+# else
 	// If both button pins are pressed, reset and load new firmware
 	constexpr CanAddress defaultAddress = CanId::ToolBoardDefaultAddress;
 	const bool doHardwareReset = !digitalRead(ButtonPins[0]) && !digitalRead(ButtonPins[1]);
-
+# endif
 #endif
 
 	if (!doHardwareReset && CheckValidFirmware())
@@ -290,10 +322,8 @@ extern "C" int main()
 	}
 	CanInterface::Init(defaultAddress, doHardwareReset);
 
-#if defined(TOOL1LC_V04) || defined(TOOL1LC_V06)
-	// The board type pin is meant to be an analog input, but for simplicity we use it as a digital input for now
-	SetPinMode(BoardTypePin, INPUT);
-	BoardTypeName = (digitalRead(BoardTypePin)) ? BoardTypeName_High : BoardTypeName_Low;
+#if defined SAMMYC21
+	SetPinMode(CanStandbyPin, OUTPUT_LOW);			// take the CAN drivers out of standby
 #endif
 
 	// Loop requesting firmware from the main board and handling any firmware that it sends to us
@@ -458,7 +488,7 @@ bool CheckValidFirmware()
 # error Unsupported processor
 #endif
 
-	digitalWrite(DiagLedPin, false);					// turn the DIAG LED off
+	WriteLed(0, false);									// turn the DIAG LED off
 
 //	hri_wdt_write_CLEAR_reg(WDT, WDT_CLEAR_CLEAR_KEY);	// reset the watchdog timer
 

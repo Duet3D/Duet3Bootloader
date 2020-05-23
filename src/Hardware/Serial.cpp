@@ -26,25 +26,28 @@ constexpr uint32_t DiagBaudRate = 57600;		// the baud rate we use
 void Serial::Init()
 {
 
-#if DIAG_SERCOM_NUMBER == 3
-
-	// SAME51 expansion boards use SERCOM3
+#if defined(SAME51) && DIAG_SERCOM_NUMBER == 3
 # define DIAG_SERCOM		SERCOM3
-	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM3_GCLK_ID_CORE, CONF_GCLK_SERCOM3_CORE_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
-	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM3_GCLK_ID_SLOW, CONF_GCLK_SERCOM3_SLOW_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
+	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM3_GCLK_ID_CORE, GCLK_PCHCTRL_GEN_GCLK1 | (1 << GCLK_PCHCTRL_CHEN_Pos));
+	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM3_GCLK_ID_SLOW, GCLK_PCHCTRL_GEN_GCLK3 | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	hri_mclk_set_APBBMASK_SERCOM3_bit(MCLK);
 	gpio_set_pin_function(PB20, PINMUX_PB20C_SERCOM3_PAD0);					// TxD
 	gpio_set_pin_function(PB21, PINMUX_PB21C_SERCOM3_PAD1);					// RxD
 
-#elif DIAG_SERCOM_NUMBER == 4
-
-	// SAMC21 smart tool boards use SERCOM4
+#elif defined(SAMC21) && DIAG_SERCOM_NUMBER == 4
 # define DIAG_SERCOM		SERCOM4
-	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM4_GCLK_ID_CORE, CONF_GCLK_SERCOM4_CORE_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
-	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM4_GCLK_ID_SLOW, CONF_GCLK_SERCOM4_SLOW_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
+	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM4_GCLK_ID_CORE, GCLK_PCHCTRL_GEN_GCLK0 | (1 << GCLK_PCHCTRL_CHEN_Pos));
+	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM4_GCLK_ID_SLOW, GCLK_PCHCTRL_GEN_GCLK3 | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	hri_mclk_set_APBCMASK_SERCOM4_bit(MCLK);
 	gpio_set_pin_function(PortAPin(12), PINMUX_PA12D_SERCOM4_PAD0);					// TxD
 	gpio_set_pin_function(PortAPin(14), PINMUX_PA13D_SERCOM4_PAD1);					// RxD
+#elif defined(SAMC21) && DIAG_SERCOM_NUMBER == 5
+# define DIAG_SERCOM		SERCOM5
+	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM5_GCLK_ID_CORE, GCLK_PCHCTRL_GEN_GCLK0 | (1 << GCLK_PCHCTRL_CHEN_Pos));
+	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM5_GCLK_ID_SLOW, GCLK_PCHCTRL_GEN_GCLK3 | (1 << GCLK_PCHCTRL_CHEN_Pos));
+	hri_mclk_set_APBCMASK_SERCOM5_bit(MCLK);
+	gpio_set_pin_function(PortBPin(2), PINMUX_PB02D_SERCOM5_PAD0);					// TxD
+	gpio_set_pin_function(PortBPin(3), PINMUX_PB03D_SERCOM5_PAD1);					// RxD
 
 #else
 # error unsupported diag sercom

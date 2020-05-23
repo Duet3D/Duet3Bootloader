@@ -35,7 +35,9 @@
 .settings/language.settings.xml
 
 # Output folders
-/EXP3HC-v0.9-Debug/
-/EXP3HC-v0.9/
-/TOOL1LC-v0.4-Debug/
-/TOOL1LC-v0.4/
+/SAMC21/
+/SAMC21-Debug/
+/SAMMYC21/
+/SAMMYC21-Debug/
+/SAME51/
+/SAME51-Debug/
