@@ -322,10 +322,6 @@ extern "C" int main()
 	}
 	CanInterface::Init(defaultAddress, doHardwareReset);
 
-#if defined SAMMYC21
-	SetPinMode(CanStandbyPin, OUTPUT_LOW);			// take the CAN drivers out of standby
-#endif
-
 	// Loop requesting firmware from the main board and handling any firmware that it sends to us
 	uint32_t bufferStartOffset = 0;
 	uint32_t roundedUpLength;
