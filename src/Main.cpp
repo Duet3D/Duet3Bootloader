@@ -102,9 +102,16 @@ extern "C" void SysTick_Handler()
 
 void SerialMessage(const char *text)
 {
+#ifdef SAMMYC21
+	// Messages go to the USB port, so send them raw
+	Serial::Send(text);
+	Serial::Send("\n");
+#else
+	// Assume a PanelDue is connected, so encapsulate the message
 	Serial::Send("\n{\"message\":\"");
 	Serial::Send(text);									// should do json escaping here but for now just be careful what messages we send
 	Serial::Send("\"}\n");
+#endif
 	delay(3);											// allow time for the last character to go
 }
 
@@ -483,6 +490,25 @@ bool CheckValidFirmware()
 #else
 # error Unsupported processor
 #endif
+
+	// Switch back to the OSC48M clock divided to 4MHz
+#if 1
+	// 2020-06-03: on the SammyC21 board the software reset of GCLK never completed, so reset it manually
+	OSCCTRL->OSC48MCTRL.reg = OSCCTRL_OSC48MCTRL_ENABLE;				// make sure OSC48M is enabled, clear the on-demand bit
+	while ((OSCCTRL->STATUS.reg & OSCCTRL_STATUS_OSC48MRDY) == 0) { }	// wait for it to become ready
+
+	GCLK->GENCTRL[0].reg = 0x00000106;									// this is the reset default
+
+	OSCCTRL->OSC48MCTRL.reg = OSCCTRL_OSC48MCTRL_ENABLE | OSCCTRL_OSC48MCTRL_ONDEMAND;		// back to reset default
+#else
+	// The following code works on Duet3D boards, but it hangs on the SammyC21
+	GCLK->CTRLA.reg = GCLK_CTRLA_SWRST;
+	while ((GCLK->CTRLA.reg & GCLK_CTRLA_SWRST) != 0) { }
+#endif
+
+	// Disable the DPLL so that it can be reprogrammed by the main firmware
+	OSCCTRL->DPLLCTRLA.bit.ENABLE = 0;
+	while (OSCCTRL->DPLLSYNCBUSY.bit.ENABLE) { }
 
 	WriteLed(0, false);									// turn the DIAG LED off
 
