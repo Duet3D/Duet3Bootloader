@@ -20,7 +20,11 @@
 # error Unsupported processor
 #endif
 
-constexpr uint32_t DiagBaudRate = 57600;		// the baud rate we use
+#ifdef SAMMYC21
+constexpr uint32_t DiagBaudRate = 115200;		// the baud rate we use, default for serial-over-USB
+#else
+constexpr uint32_t DiagBaudRate = 57600;		// the baud rate we use, default for PanelDue
+#endif
 
 // Initialise the serial port so that we can send messages to an attached PanelDue
 void Serial::Init()
