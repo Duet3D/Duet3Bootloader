@@ -478,37 +478,50 @@ bool CheckValidFirmware()
 	// Disable all IRQs
 	SysTick->CTRL = (1 << SysTick_CTRL_CLKSOURCE_Pos);	// disable the system tick exception
 	__disable_irq();
+
 #if defined(SAME51)
+
 	for (size_t i = 0; i < 8; i++)
 	{
 		NVIC->ICER[i] = 0xFFFFFFFF;						// Disable IRQs
 		NVIC->ICPR[i] = 0xFFFFFFFF;						// Clear pending IRQs
 	}
+
+	// Reset the generic clock generator. This sets all clock generators to default values and the CPU clock to the 48MHz DFLL output.
+	GCLK->CTRLA.reg = GCLK_CTRLA_SWRST;
+	while ((GCLK->CTRLA.reg & GCLK_CTRLA_SWRST) != 0) { }
+
+	// Disable DPLL0 and DPLL1 so hat they can be reprogrammed by the main firmware
+	OSCCTRL->Dpll[0].DPLLCTRLA.bit.ENABLE = 0;
+	while (OSCCTRL->Dpll[0].DPLLSYNCBUSY.bit.ENABLE) { }
+	OSCCTRL->Dpll[1].DPLLCTRLA.bit.ENABLE = 0;
+	while (OSCCTRL->Dpll[1].DPLLSYNCBUSY.bit.ENABLE) { }
+
 #elif defined(SAMC21)
+
 	NVIC->ICER[0] = 0xFFFFFFFF;							// Disable IRQs
 	NVIC->ICPR[0] = 0xFFFFFFFF;							// Clear pending IRQs
-#else
-# error Unsupported processor
-#endif
 
 	// Switch back to the OSC48M clock divided to 4MHz
-#if 1
+# if 1
 	// 2020-06-03: on the SammyC21 board the software reset of GCLK never completed, so reset it manually
 	OSCCTRL->OSC48MCTRL.reg = OSCCTRL_OSC48MCTRL_ENABLE;				// make sure OSC48M is enabled, clear the on-demand bit
 	while ((OSCCTRL->STATUS.reg & OSCCTRL_STATUS_OSC48MRDY) == 0) { }	// wait for it to become ready
-
 	GCLK->GENCTRL[0].reg = 0x00000106;									// this is the reset default
-
 	OSCCTRL->OSC48MCTRL.reg = OSCCTRL_OSC48MCTRL_ENABLE | OSCCTRL_OSC48MCTRL_ONDEMAND;		// back to reset default
-#else
-	// The following code works on Duet3D boards, but it hangs on the SammyC21
+# else
+	// The following code works on Duet3D boards, but it hangs on the SammyC21 with device ID 0x11010405 (SAMC21G18A die revision E)
 	GCLK->CTRLA.reg = GCLK_CTRLA_SWRST;
 	while ((GCLK->CTRLA.reg & GCLK_CTRLA_SWRST) != 0) { }
-#endif
+# endif
 
 	// Disable the DPLL so that it can be reprogrammed by the main firmware
 	OSCCTRL->DPLLCTRLA.bit.ENABLE = 0;
 	while (OSCCTRL->DPLLSYNCBUSY.bit.ENABLE) { }
+
+#else
+# error Unsupported processor
+#endif
 
 	WriteLed(0, false);									// turn the DIAG LED off
 
