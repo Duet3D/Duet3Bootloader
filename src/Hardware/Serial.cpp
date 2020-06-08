@@ -35,8 +35,8 @@ void Serial::Init()
 	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM3_GCLK_ID_CORE, GCLK_PCHCTRL_GEN_GCLK1 | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM3_GCLK_ID_SLOW, GCLK_PCHCTRL_GEN_GCLK3 | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	hri_mclk_set_APBBMASK_SERCOM3_bit(MCLK);
-	gpio_set_pin_function(PB20, PINMUX_PB20C_SERCOM3_PAD0);					// TxD
-	gpio_set_pin_function(PB21, PINMUX_PB21C_SERCOM3_PAD1);					// RxD
+	gpio_set_pin_function(PortBPin(20), PINMUX_PB20C_SERCOM3_PAD0);					// TxD
+	gpio_set_pin_function(PortBPin(21), PINMUX_PB21C_SERCOM3_PAD1);					// RxD
 
 #elif defined(SAMC21) && DIAG_SERCOM_NUMBER == 4
 # define DIAG_SERCOM		SERCOM4
