@@ -15,6 +15,18 @@
 
 void SimpleAnalogIn::Init(Adc * device)
 {
+	// Enable ADC clocks
+	if (device == ADC0)
+	{
+		hri_mclk_set_APBCMASK_ADC0_bit(MCLK);
+		hri_gclk_write_PCHCTRL_reg(GCLK, ADC0_GCLK_ID, GCLK_PCHCTRL_GEN_GCLK0_Val | (1 << GCLK_PCHCTRL_CHEN_Pos));
+	}
+	else
+	{
+		hri_mclk_set_APBCMASK_ADC1_bit(MCLK);
+		hri_gclk_write_PCHCTRL_reg(GCLK, ADC1_GCLK_ID, GCLK_PCHCTRL_GEN_GCLK0_Val | (1 << GCLK_PCHCTRL_CHEN_Pos));
+	}
+
 	if (!hri_adc_is_syncing(device, ADC_SYNCBUSY_SWRST))
 	{
 		if (hri_adc_get_CTRLA_reg(device, ADC_CTRLA_ENABLE))

@@ -38,14 +38,26 @@ constexpr Pin JumperPin_Exp1XD = PortAPin(27);
 
 #endif
 
-// Diagnostic LED
+// Diagnostic LEDs
 #ifdef SAMMYC21
+
 constexpr Pin LedPins[] = { PortAPin(28) };
 constexpr bool LedActiveHigh = true;
+constexpr unsigned int NumLedPins = 1;
+
 #else
-// TODO these now depend on which board we are running on
-constexpr Pin LedPins[] = { PortAPin(0), PortAPin(1) };
-constexpr bool LedActiveHigh = true;
+
+constexpr Pin LedPins_Tool1LC[] = { PortAPin(0), PortAPin(1) };
+constexpr bool LedActiveHigh_Tool1LC = true;
+
+constexpr Pin LedPins_Exp1XD[] = { PortAPin(19), PortAPin(18) };
+constexpr bool LedActiveHigh_Exp1XD = true;
+
+constexpr Pin LedPins_Exp1HCE[] = { PortAPin(30), PortAPin(31) };
+constexpr bool LedActiveHigh_Exp1HCE = false;
+
+constexpr unsigned int NumLedPins = 2;					// currently all boards supported by this build have 2 LEDs
+
 #endif
 
 // Interrupt priorities, lower means higher priority. 0 can't make RTOS calls.

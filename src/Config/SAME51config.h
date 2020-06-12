@@ -26,6 +26,7 @@ constexpr Pin BoardAddressPins[NumAddressBits] = { PortCPin(11), PortCPin(12), P
 
 // Diagnostic LED
 constexpr Pin LedPins[] = { PortCPin(10) };
+constexpr size_t NumLedPins = ARRAY_SIZE(LedPins);
 constexpr bool LedActiveHigh = true;
 
 // Available UART ports

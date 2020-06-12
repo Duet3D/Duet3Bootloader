@@ -65,6 +65,20 @@ enum class BoardId : unsigned int
 	exp1xd_v0
 };
 
+constexpr const Pin *LedPinsTables[] =
+{
+	LedPins_Tool1LC,
+	LedPins_Exp1HCE,
+	LedPins_Exp1XD
+};
+
+constexpr bool LedActiveHigh[] =
+{
+	LedActiveHigh_Tool1LC,
+	LedActiveHigh_Exp1HCE,
+	LedActiveHigh_Exp1XD
+};
+
 // This table of floats is only used at compile time, so it shouldn't cause the floating point library to be pulled in
 constexpr float BoardTypeFractions[] =
 {
@@ -75,6 +89,8 @@ constexpr float BoardTypeFractions[] =
 
 static_assert(ARRAY_SIZE(BoardTypeNames) == ARRAY_SIZE(BoardTypeFractions));
 static_assert(ARRAY_SIZE(BoardTypeVersions) == ARRAY_SIZE(BoardTypeFractions));
+static_assert(ARRAY_SIZE(LedPinsTables) == ARRAY_SIZE(BoardTypeFractions));
+static_assert(ARRAY_SIZE(LedActiveHigh) == ARRAY_SIZE(BoardTypeFractions));
 
 inline constexpr bool IsIncreasing(const float *arr, size_t length)
 {
@@ -140,7 +156,31 @@ enum class ErrorCode : unsigned int
 };
 
 #if defined(SAMC21) && !defined(SAMMYC21)
+
 unsigned int boardTypeIndex;
+
+inline Pin GetLedPin(unsigned int ledNumber)
+{
+	return LedPinsTables[boardTypeIndex][ledNumber];
+}
+
+inline bool GetLedActiveHigh()
+{
+	return LedActiveHigh[boardTypeIndex];
+}
+
+#else
+
+inline Pin GetLedPin(unsigned int ledNumber)
+{
+	return LedPins[ledNumber];
+}
+
+inline bool GetLedActiveHigh()
+{
+	return LedActiveHigh;
+}
+
 #endif
 
 static uint8_t blockBuffer[FlashBlockSize];
@@ -167,9 +207,9 @@ void delay(uint32_t ticks)
 
 static inline void WriteLed(uint8_t ledNumber, bool turnOn)
 {
-	if (ledNumber < ARRAY_SIZE(LedPins))
+	if (ledNumber < NumLedPins)
 	{
-		digitalWrite(LedPins[ledNumber], (LedActiveHigh) ? turnOn : !turnOn);
+		digitalWrite(GetLedPin(ledNumber), (GetLedActiveHigh()) ? turnOn : !turnOn);
 	}
 }
 
@@ -247,9 +287,10 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 // Get a buffer of data from the host
 void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 {
-	WriteLed(0, true);
+	constexpr Pin CanLedNumber = (NumLedPins >= 2) ? 1 : 0;
+	WriteLed(CanLedNumber, true);
 	delay(25);														// flash the LED briefly to indicate we are requesting a new flash block
-	WriteLed(0, false);
+	WriteLed(CanLedNumber, false);
 
 	RequestFirmwareBlock(startingOffset, FlashBlockSize);			// ask for 16K or 64K from the starting offset
 
@@ -344,6 +385,11 @@ extern "C" int main()
 
 	SystemPeripheralClock = CONF_CPU_FREQUENCY;
 
+	// Initialise systick (needed for delay calls) and serial
+	SysTick->LOAD = ((CONF_CPU_FREQUENCY/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
+	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
+	Serial::Init();
+
 	// Establish the board type and initialise pins
 
 # ifdef SAMMYC21
@@ -353,6 +399,10 @@ extern "C" int main()
 	// Read the board type pin, which is an analog input fed from a resistor network
 	SimpleAnalogIn::Init(CommonAdcDevice);
 	gpio_set_pin_function(BoardTypePin, GPIO_PIN_FUNCTION_B);
+
+	// To get a valid reading here, we need a short delay AND we need to read the pin twice
+	delay(2);
+	(void) SimpleAnalogIn::ReadChannel(CommonAdcDevice, BoardTypeAdcChannel);	// the first time we read from the ADC, we get zero back
 	const uint16_t reading = SimpleAnalogIn::ReadChannel(CommonAdcDevice, BoardTypeAdcChannel);
 
 	boardTypeIndex = 0;
@@ -389,16 +439,10 @@ extern "C" int main()
 # error Unsupported processor
 #endif
 
-	//TODO LedPins will depend on the board type
-	for (Pin pin : LedPins)
+	for (unsigned int ledNumber = 0; ledNumber < NumLedPins; ++ledNumber)
 	{
-		SetPinMode(pin, (LedActiveHigh) ? OUTPUT_LOW : OUTPUT_HIGH);
+		SetPinMode(GetLedPin(ledNumber), (GetLedActiveHigh()) ? OUTPUT_LOW : OUTPUT_HIGH);
 	}
-
-	// Initialise systick and serial, needed if we detect that the firmware is invalid
-	SysTick->LOAD = ((CONF_CPU_FREQUENCY/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
-	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
-	Serial::Init();
 
 #if defined(SAME51)
 
@@ -657,7 +701,10 @@ bool CheckValidFirmware()
 # error Unsupported processor
 #endif
 
-	WriteLed(0, false);									// turn the DIAG LED off
+	for (size_t i = 0; i < NumLedPins; ++i)
+	{
+		WriteLed(i, false);								// turn all LEDs off
+	}
 
 //	hri_wdt_write_CLEAR_reg(WDT, WDT_CLEAR_CLEAR_KEY);	// reset the watchdog timer
 
