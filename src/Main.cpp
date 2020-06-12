@@ -230,7 +230,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 		ReportErrorAndRestart("No buffers", ErrorCode::noBuffer);
 	}
 	CanMessageFirmwareUpdateRequest * const msg = buf->SetupRequestMessage<CanMessageFirmwareUpdateRequest>(0, CanInterface::GetCanAddress(), CanId::MasterAddress);
-#ifdef SAMMYC21
+#if defined(SAMMYC21) || defined(SAME51)
 	SafeStrncpy(msg->boardType, BoardTypeName, sizeof(msg->boardType));
 	msg->boardVersion = 0;
 #else
