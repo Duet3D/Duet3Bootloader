@@ -400,9 +400,6 @@ extern "C" int main()
 	SimpleAnalogIn::Init(CommonAdcDevice);
 	gpio_set_pin_function(BoardTypePin, GPIO_PIN_FUNCTION_B);
 
-	// To get a valid reading here, we need a short delay AND we need to read the pin twice
-	delay(2);
-	(void) SimpleAnalogIn::ReadChannel(CommonAdcDevice, BoardTypeAdcChannel);	// the first time we read from the ADC, we get zero back
 	const uint16_t reading = SimpleAnalogIn::ReadChannel(CommonAdcDevice, BoardTypeAdcChannel);
 
 	boardTypeIndex = 0;

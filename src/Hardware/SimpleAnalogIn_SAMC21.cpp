@@ -15,7 +15,7 @@
 
 void SimpleAnalogIn::Init(Adc * device)
 {
-	// Enable ADC clocks
+	// Enable ADC clock
 	if (device == ADC0)
 	{
 		hri_mclk_set_APBCMASK_ADC0_bit(MCLK);
@@ -26,6 +26,8 @@ void SimpleAnalogIn::Init(Adc * device)
 		hri_mclk_set_APBCMASK_ADC1_bit(MCLK);
 		hri_gclk_write_PCHCTRL_reg(GCLK, ADC1_GCLK_ID, GCLK_PCHCTRL_GEN_GCLK0_Val | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	}
+
+	delayMicroseconds(10);
 
 	if (!hri_adc_is_syncing(device, ADC_SYNCBUSY_SWRST))
 	{
@@ -38,13 +40,13 @@ void SimpleAnalogIn::Init(Adc * device)
 	}
 	hri_adc_wait_for_sync(device, ADC_SYNCBUSY_SWRST);
 
-	hri_adc_write_CTRLB_reg(device, ADC_CTRLB_PRESCALER_DIV4);			// Max ADC clock is 16MHz. GCLK0 is 48MHz, divided by 4 is 12MHz
-	hri_adc_write_CTRLC_reg(device, ADC_CTRLC_RESSEL_16BIT);			// 16 bit result
+	hri_adc_write_CTRLB_reg(device, ADC_CTRLB_PRESCALER_DIV4);					// Max ADC clock is 16MHz. GCLK0 is 48MHz, divided by 4 is 12MHz
+	hri_adc_write_CTRLC_reg(device, ADC_CTRLC_RESSEL_16BIT | ADC_CTRLC_R2R);	// 16 bit result, rail-to-rail
 	hri_adc_write_REFCTRL_reg(device,  ADC_REFCTRL_REFSEL_INTVCC2);
 	hri_adc_write_EVCTRL_reg(device, ADC_EVCTRL_RESRDYEO);
 	hri_adc_write_INPUTCTRL_reg(device, ADC_INPUTCTRL_MUXNEG_GND);
-	hri_adc_write_AVGCTRL_reg(device, ADC_AVGCTRL_SAMPLENUM_64);		// average 64 measurements
-	hri_adc_write_SAMPCTRL_reg(device, ADC_SAMPCTRL_OFFCOMP);			// enable comparator offset compensation, sampling time is fixed at 4 ADC clocks
+	hri_adc_write_AVGCTRL_reg(device, ADC_AVGCTRL_SAMPLENUM_64);				// average 64 measurements
+	hri_adc_write_SAMPCTRL_reg(device, ADC_SAMPCTRL_OFFCOMP);					// enable comparator offset compensation, sampling time is fixed at 4 ADC clocks
 	hri_adc_write_WINLT_reg(device, 0);
 	hri_adc_write_WINUT_reg(device, 0xFFFF);
 	hri_adc_write_GAINCORR_reg(device, 1u << 11);
@@ -78,9 +80,11 @@ void SimpleAnalogIn::Init(Adc * device)
 
 uint16_t SimpleAnalogIn::ReadChannel(Adc * device, uint8_t channel)
 {
-	device->SEQCTRL.reg = 1ul << channel;
+	device->SEQCTRL.reg = 0;								// disable sequence
+	device->INPUTCTRL.bit.MUXPOS = channel;
+	device->INTFLAG.reg = ADC_INTFLAG_RESRDY;				// clear RESRDY bit
 	device->SWTRIG.reg = ADC_SWTRIG_START;
-	while (device->SEQSTATUS.bit.SEQBUSY) { }
+	while (!device->INTFLAG.bit.RESRDY) { }
 	return device->RESULT.reg;
 }
 
