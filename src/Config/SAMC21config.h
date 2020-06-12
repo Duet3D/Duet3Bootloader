@@ -18,13 +18,24 @@
 #endif
 
 #ifdef SAMMYC21
+
 constexpr Pin ButtonPins[] = { PortBPin(9) };
 constexpr Pin CanStandbyPin = PortAPin(27);
+
 #else
-constexpr Pin GlobalTmc22xxEnablePin = PortBPin(2);
-constexpr Pin OutPins[] = { PortAPin(11), PortAPin(10), PortBPin(11) };
+
+Adc * const CommonAdcDevice = ADC0;						// ADC device used for the board type pin, also for the buttons on the EXP1HCE
 constexpr Pin BoardTypePin = PortAPin(5);
-constexpr Pin ButtonPins[] = { PortBPin(22), PortBPin(23) };
+constexpr uint8_t BoardTypeAdcChannel = 5;
+constexpr Pin ButtonsPin_Exp1HCE = PortAPin(9);
+constexpr uint8_t ButtonsAdcChannel_Exp1HCE = 9;
+
+constexpr Pin GlobalTmc22xxEnablePin_Tool1LC = PortBPin(2);
+constexpr Pin OutPins_Tool1LC[] = { PortAPin(11), PortAPin(10), PortBPin(11) };
+constexpr Pin ButtonPins_Tool1LC[] = { PortBPin(22), PortBPin(23) };
+
+constexpr Pin JumperPin_Exp1XD = PortAPin(27);
+
 #endif
 
 // Diagnostic LED

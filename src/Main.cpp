@@ -31,10 +31,91 @@ constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout mi
 const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 16K for the bootloader
 
 # ifdef SAMMYC21
+
 constexpr const char* BoardTypeName = "SAMMYC21";
+
 # else
-constexpr const char* BoardTypeName_Low = "TOOL1LC";					// board type name if board type pin is low
-constexpr const char* BoardTypeName_High = "TOOL1XD";					// board type name if board type pin is high
+
+#include <Hardware/SimpleAnalogIn.h>
+
+// Board ID analog pin handling
+constexpr uint32_t AdcRange = 1 << 16;			// we use the ADC in 16-bit mode
+
+// Names and board ID pin resistor ratios for the board we support
+// The expected ADC readings must be in increasing order, and the board names must be in the corresponding order
+constexpr const char * BoardTypeNames[] =
+{
+	"TOOL1LC",
+	"EXP1HCE",
+	"EXP1XD"
+};
+
+constexpr unsigned int BoardTypeVersions[] =
+{
+	0,
+	0,
+	0
+};
+
+// The board type and version as an enumeration
+enum class BoardId : unsigned int
+{
+	tool1lc_v0,
+	exp1hce_v0,
+	exp1xd_v0
+};
+
+// This table of floats is only used at compile time, so it shouldn't cause the floating point library to be pulled in
+constexpr float BoardTypeFractions[] =
+{
+	1.0/(1.0 + 10.0),						// TOOL1LC has 1K lower resistor, 10K upper
+	4.7/(4.7 + 27.0),						// EXP1HCE has 4K7 lower resistor, 27K upper
+	4.7/(4.7 + 4.7),						// EXP1XD has 4K7 lower resistor, 4K7 upper
+};
+
+static_assert(ARRAY_SIZE(BoardTypeNames) == ARRAY_SIZE(BoardTypeFractions));
+static_assert(ARRAY_SIZE(BoardTypeVersions) == ARRAY_SIZE(BoardTypeFractions));
+
+inline constexpr bool IsIncreasing(const float *arr, size_t length)
+{
+	return length < 2 || (arr[1] > arr[0] && IsIncreasing(arr + 1, length - 1));
+}
+
+static_assert(IsIncreasing(BoardTypeFractions, ARRAY_SIZE(BoardTypeFractions)));
+
+// Table of halfway points that we use to decide what board type a reading corresponds to
+constexpr uint16_t BoardIdDecisionPoints[] =
+{
+	(uint16_t)((BoardTypeFractions[0] + BoardTypeFractions[1]) * (AdcRange/2)),
+	(uint16_t)((BoardTypeFractions[1] + BoardTypeFractions[2]) * (AdcRange/2))
+};
+
+static_assert(ARRAY_SIZE(BoardIdDecisionPoints) + 1 == ARRAY_SIZE(BoardTypeFractions));
+
+// Buttons pin ADC handling for EXP1HCE board
+
+constexpr float BothButtonsDownRgnd = (4.7 * 10.0)/(4.7 + 10.0);
+
+constexpr float ButtonsExpectedFractions[] =
+{
+	BothButtonsDownRgnd/(BothButtonsDownRgnd + 10.0),
+	4.7/(4.7 + 10.0),
+	10.0/(1.00 + 10.0),
+	1.0
+};
+
+static_assert(IsIncreasing(ButtonsExpectedFractions, ARRAY_SIZE(ButtonsExpectedFractions)));
+
+// Table of halfway points that we use to decide what board type a reading corresponds to
+constexpr uint16_t ButtonsDecisionPoints[] =
+{
+	(uint16_t)((ButtonsExpectedFractions[0] + ButtonsExpectedFractions[1]) * (AdcRange/2)),
+	(uint16_t)((ButtonsExpectedFractions[1] + ButtonsExpectedFractions[2]) * (AdcRange/2)),
+	(uint16_t)((ButtonsExpectedFractions[2] + ButtonsExpectedFractions[3]) * (AdcRange/2))
+};
+
+static_assert(ARRAY_SIZE(ButtonsDecisionPoints) + 1 == ARRAY_SIZE(ButtonsExpectedFractions));
+
 # endif
 
 #else
@@ -59,7 +140,7 @@ enum class ErrorCode : unsigned int
 };
 
 #if defined(SAMC21) && !defined(SAMMYC21)
-const char *BoardTypeName;
+unsigned int boardTypeIndex;
 #endif
 
 static uint8_t blockBuffer[FlashBlockSize];
@@ -67,8 +148,6 @@ static uint8_t blockBuffer[FlashBlockSize];
 #ifdef SAME51
 uint8_t ReadBoardAddress();
 #endif
-
-uint8_t ReadBoardType();
 
 bool CheckValidFirmware();
 void StartFirmware();
@@ -150,9 +229,14 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 	{
 		ReportErrorAndRestart("No buffers", ErrorCode::noBuffer);
 	}
-	CanMessageFirmwareUpdateRequest *msg = buf->SetupRequestMessage<CanMessageFirmwareUpdateRequest>(0, CanInterface::GetCanAddress(), CanId::MasterAddress);
+	CanMessageFirmwareUpdateRequest * const msg = buf->SetupRequestMessage<CanMessageFirmwareUpdateRequest>(0, CanInterface::GetCanAddress(), CanId::MasterAddress);
+#ifdef SAMMYC21
 	SafeStrncpy(msg->boardType, BoardTypeName, sizeof(msg->boardType));
-	msg->boardVersion = ReadBoardType();
+	msg->boardVersion = 0;
+#else
+	SafeStrncpy(msg->boardType, BoardTypeNames[boardTypeIndex], sizeof(msg->boardType));
+	msg->boardVersion = BoardTypeVersions[boardTypeIndex];
+#endif
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
 	msg->fileOffset = fileOffset;
 	msg->lengthRequested = numBytes;
@@ -265,17 +349,40 @@ extern "C" int main()
 # ifdef SAMMYC21
 	SetPinMode(ButtonPins[0], INPUT_PULLUP);
 # else
-	// The board type pin is meant to be an analog input, but for simplicity we use it as a digital input for now
-	SetPinMode(BoardTypePin, INPUT);
-	BoardTypeName = (digitalRead(BoardTypePin)) ? BoardTypeName_High : BoardTypeName_Low;
 
-	//TODO the following will depend on the board type
-	SetPinMode(OutPins[0], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
-	SetPinMode(OutPins[1], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
-	SetPinMode(OutPins[2], OUTPUT_HIGH);				// this is intended for the hot end fan, so turn it on just as the tool board firmware does
+	// Read the board type pin, which is an analog input fed from a resistor network
+	SimpleAnalogIn::Init(CommonAdcDevice);
+	gpio_set_pin_function(BoardTypePin, GPIO_PIN_FUNCTION_B);
+	const uint16_t reading = SimpleAnalogIn::ReadChannel(CommonAdcDevice, BoardTypeAdcChannel);
 
-	SetPinMode(ButtonPins[0], INPUT_PULLUP);
-	SetPinMode(ButtonPins[1], INPUT_PULLUP);
+	boardTypeIndex = 0;
+	while (boardTypeIndex < ARRAY_SIZE(BoardIdDecisionPoints) && reading > BoardIdDecisionPoints[boardTypeIndex])
+	{
+		++boardTypeIndex;
+	}
+
+	switch ((BoardId)boardTypeIndex)
+	{
+	case BoardId::tool1lc_v0:
+		SetPinMode(OutPins_Tool1LC[0], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
+		SetPinMode(OutPins_Tool1LC[1], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
+		SetPinMode(OutPins_Tool1LC[2], OUTPUT_HIGH);				// this is intended for the hot end fan, so turn it on just as the tool board firmware does
+
+		SetPinMode(ButtonPins_Tool1LC[0], INPUT_PULLUP);
+		SetPinMode(ButtonPins_Tool1LC[1], INPUT_PULLUP);
+
+		SetPinMode(GlobalTmc22xxEnablePin_Tool1LC, OUTPUT_HIGH);
+		break;
+
+	case BoardId::exp1xd_v0:
+		SetPinMode(JumperPin_Exp1XD, INPUT_PULLUP);
+		break;
+
+	case BoardId::exp1hce_v0:
+		//TODO the buttons are read via analog inputs
+		break;
+	}
+
 #endif
 
 #else
@@ -306,11 +413,44 @@ extern "C" int main()
 	const CanAddress defaultAddress = CanId::SammyC21DefaultAddress;
 	const bool doHardwareReset = !digitalRead(ButtonPins[0]);
 # else
-	// If both button pins are pressed, reset and load new firmware
-	constexpr CanAddress defaultAddress = CanId::ToolBoardDefaultAddress;
-	const bool doHardwareReset = !digitalRead(ButtonPins[0]) && !digitalRead(ButtonPins[1]);
+
+	bool doHardwareReset;
+	CanAddress defaultAddress;
+
+	switch ((BoardId)boardTypeIndex)
+	{
+	case BoardId::tool1lc_v0:
+	default:
+		// If both button pins are pressed, reset and load new firmware
+		defaultAddress = CanId::ToolBoardDefaultAddress;
+		doHardwareReset = !digitalRead(ButtonPins_Tool1LC[0]) && !digitalRead(ButtonPins_Tool1LC[1]);
+		break;
+
+	case BoardId::exp1xd_v0:
+		defaultAddress = CanId::Exp1XDBoardDefaultAddress;
+		doHardwareReset = !digitalRead(JumperPin_Exp1XD);
+		break;
+
+	case BoardId::exp1hce_v0:
+		defaultAddress = CanId::Exp1HCEBoardDefaultAddress;
+		{
+			gpio_set_pin_function(ButtonsPin_Exp1HCE, GPIO_PIN_FUNCTION_B);
+			const uint16_t reading = SimpleAnalogIn::ReadChannel(CommonAdcDevice, ButtonsAdcChannel_Exp1HCE);
+			unsigned int buttonState = 0;
+			while (buttonState < ARRAY_SIZE(ButtonsDecisionPoints) && reading > ButtonsDecisionPoints[buttonState])
+			{
+				++buttonState;
+			}
+			doHardwareReset = (buttonState == 0);
+		}
+		break;
+	}
+
+	SimpleAnalogIn::Disable(CommonAdcDevice);			// finished using the ADC
+
 # endif
 #endif
+
 
 	if (!doHardwareReset && CheckValidFirmware())
 	{
@@ -407,12 +547,6 @@ uint8_t ReadBoardAddress()
 }
 
 #endif
-
-uint8_t ReadBoardType()
-{
-	//TODO
-	return 0;
-}
 
 // Check that valid firmware is installed. If not, report the error and return false.
 bool CheckValidFirmware()
