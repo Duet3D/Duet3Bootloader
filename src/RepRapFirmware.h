@@ -238,6 +238,8 @@ constexpr Pin NoPin = 0xFF;
 #define PortDPin(_n)	(GPIO(GPIO_PORTD, (_n)))
 
 typedef uint8_t DmaChannel;
+typedef uint8_t DmaPriority;
+typedef uint32_t NvicPriority;
 
 #include "Config/BoardDef.h"
 

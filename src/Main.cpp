@@ -373,8 +373,17 @@ extern "C" int main()
 	SystemCoreClock = CONF_CPU_FREQUENCY;
 
 #if defined(SAME51)
-
 	SystemPeripheralClock = CONF_CPU_FREQUENCY/2;
+#elif defined(SAMC21)
+	SystemPeripheralClock = CONF_CPU_FREQUENCY;
+#endif
+
+	// Initialise systick (needed for delay calls) and serial
+	SysTick->LOAD = ((CONF_CPU_FREQUENCY/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
+	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
+	Serial::Init();
+
+#if defined(SAME51)
 
 	for (Pin p : BoardAddressPins)
 	{
@@ -382,13 +391,6 @@ extern "C" int main()
 	}
 
 #elif defined(SAMC21)
-
-	SystemPeripheralClock = CONF_CPU_FREQUENCY;
-
-	// Initialise systick (needed for delay calls) and serial
-	SysTick->LOAD = ((CONF_CPU_FREQUENCY/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
-	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
-	Serial::Init();
 
 	// Establish the board type and initialise pins
 
