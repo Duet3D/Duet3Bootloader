@@ -15,9 +15,13 @@ extern "C" uint32_t SystemCoreClock;			// in system_samxxx.c
 extern "C" uint32_t SystemPeripheralClock;		// in system_samxxx.c
 
 #if defined(__SAME51N19A__)
-# define SAME51		1
+# define SAME5x		1
+# define SAMC21		0
 #elif defined(__SAMC21G18A__)
+# define SAME5x		0
 # define SAMC21		1
+#else
+# error Unsupported processor
 #endif
 
 // Timer identifiers used in assigning PWM control devices
@@ -29,7 +33,7 @@ enum class TcOutput : uint8_t
 	tc2_0, tc2_1,
 	tc3_0, tc3_1,
 	tc4_0, tc4_1,
-#ifdef SAME51
+#if SAME5x
 	tc5_0, tc5_1,
 	tc6_0, tc6_1,
 	tc7_0, tc7_1,
@@ -43,7 +47,7 @@ static inline constexpr unsigned int GetOutputNumber(TcOutput tc) { return (uint
 
 enum class TccOutput : uint8_t
 {
-#ifdef SAME51
+#if SAME5x
 	// TCC devices on peripheral F
 	tcc0_0F = 0x00, tcc0_1F, tcc0_2F, tcc0_3F, tcc0_4F, tcc0_5F,
 	tcc1_0F = 0x08, tcc1_1F, tcc1_2F, tcc1_3F, tcc1_4F, tcc1_5F,
@@ -61,7 +65,7 @@ enum class TccOutput : uint8_t
 	tcc5_0G = 0xA8, tcc5_1G, tcc5_2G, tcc5_3G, tcc5_4G, tcc5_5G,
 #endif
 
-#ifdef SAMC21
+#if SAMC21
 	// TCC devices on peripheral E
 	tcc0_0E = 0x00, tcc0_1E, tcc0_2E, tcc0_3E, tcc0_4E, tcc0_5E,
 	tcc1_0E = 0x08, tcc1_1E, tcc1_2E, tcc1_3E, tcc1_4E, tcc1_5E,
@@ -79,9 +83,9 @@ static inline constexpr unsigned int GetOutputNumber(TccOutput tcc) { return (ui
 
 static inline constexpr unsigned int GetPeriNumber(TccOutput tcc)
 {
-#if defined(SAME51)
+#if SAME5x
 	return ((uint8_t)tcc >= 0x80) ? GPIO_PIN_FUNCTION_G : GPIO_PIN_FUNCTION_F;		// peripheral G or F
-#elif defined(SAMC21)
+#elif SAMC21
 	return ((uint8_t)tcc >= 0x80) ? GPIO_PIN_FUNCTION_F : GPIO_PIN_FUNCTION_E;		// peripheral F or E
 #else
 # error Unsupported processor
@@ -106,14 +110,14 @@ enum class SercomIo : uint8_t
 	// SERCOM pins on peripheral C
 	sercom0c = 0x00,
 	sercom1c, sercom2c, sercom3c, sercom4c, sercom5c,
-#ifdef SAME51
+#if SAME5x
 	sercom6c, sercom7c,
 #endif
 
 	// SERCOM pins on peripheral D
 	sercom0d = 0x80,
 	sercom1d, sercom2d, sercom3d, sercom4d, sercom5d,
-#ifdef SAME51
+#if SAME5x
 	sercom6d, sercom7d,
 #endif
 

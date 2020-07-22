@@ -12,9 +12,9 @@
 #include <hal_gpio.h>
 #include <atmel_start_pins.h>
 
-#if defined(SAME51)
+#if SAME5x
 # include <hri_sercom_e51.h>
-#elif defined(SAMC21)
+#elif SAMC21
 # include <hri_sercom_c21.h>
 #else
 # error Unsupported processor
@@ -30,7 +30,7 @@ constexpr uint32_t DiagBaudRate = 57600;		// the baud rate we use, default for P
 void Serial::Init()
 {
 
-#if defined(SAME51) && DIAG_SERCOM_NUMBER == 3
+#if SAME5x && DIAG_SERCOM_NUMBER == 3
 # define DIAG_SERCOM		SERCOM3
 	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM3_GCLK_ID_CORE, GCLK_PCHCTRL_GEN_GCLK1 | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM3_GCLK_ID_SLOW, GCLK_PCHCTRL_GEN_GCLK3 | (1 << GCLK_PCHCTRL_CHEN_Pos));
@@ -38,14 +38,14 @@ void Serial::Init()
 	gpio_set_pin_function(PortBPin(20), PINMUX_PB20C_SERCOM3_PAD0);					// TxD
 	gpio_set_pin_function(PortBPin(21), PINMUX_PB21C_SERCOM3_PAD1);					// RxD
 
-#elif defined(SAMC21) && DIAG_SERCOM_NUMBER == 4
+#elif SAMC21 && DIAG_SERCOM_NUMBER == 4
 # define DIAG_SERCOM		SERCOM4
 	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM4_GCLK_ID_CORE, GCLK_PCHCTRL_GEN_GCLK0 | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM4_GCLK_ID_SLOW, GCLK_PCHCTRL_GEN_GCLK3 | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	hri_mclk_set_APBCMASK_SERCOM4_bit(MCLK);
 	gpio_set_pin_function(PortAPin(12), PINMUX_PA12D_SERCOM4_PAD0);					// TxD
 	gpio_set_pin_function(PortAPin(14), PINMUX_PA13D_SERCOM4_PAD1);					// RxD
-#elif defined(SAMC21) && DIAG_SERCOM_NUMBER == 5
+#elif SAMC21 && DIAG_SERCOM_NUMBER == 5
 # define DIAG_SERCOM		SERCOM5
 	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM5_GCLK_ID_CORE, GCLK_PCHCTRL_GEN_GCLK0 | (1 << GCLK_PCHCTRL_CHEN_Pos));
 	hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM5_GCLK_ID_SLOW, GCLK_PCHCTRL_GEN_GCLK3 | (1 << GCLK_PCHCTRL_CHEN_Pos));
@@ -66,7 +66,7 @@ void Serial::Init()
 						 | (3u << SERCOM_USART_CTRLA_RXPO_Pos)				// receive data on pad 3
 						 | (0u << SERCOM_USART_CTRLA_TXPO_Pos)				// transmit on pad 0
 						 | (0u << SERCOM_USART_CTRLA_SAMPR_Pos)				// 16x over sampling, normal baud rate generation
-#ifdef SAME51
+#if SAME5x
 						 | (0u << SERCOM_USART_CTRLA_RXINV_Pos)				// don't invert receive data
 						 | (0u << SERCOM_USART_CTRLA_TXINV_Pos)				// don't invert transmitted data
 #endif

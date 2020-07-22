@@ -68,7 +68,7 @@ static CanMessageQueue PendingCommands;
 
 static struct can_async_descriptor CAN_0;
 
-#ifdef SAME51
+#if SAME5x
 
 /**
  * \brief CAN initialization function
@@ -86,7 +86,7 @@ void CAN_0_init(const CanTiming& timing)
 
 #endif
 
-#ifdef SAMC21
+#if SAMC21
 
 /**
  * \brief CAN initialization function
@@ -128,9 +128,9 @@ bool CanInterface::GetCanMessage(CanMessageBuffer *buf)
 void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset)
 {
 	// Read the CAN timing data from the top part of the NVM User Row
-#if defined(SAME51)
+#if SAME5x
 	const uint32_t CanUserAreaDataOffset = 512 - sizeof(CanUserAreaData);
-#elif defined(SAMC21)
+#elif SAMC21
 	const uint32_t CanUserAreaDataOffset = 256 - sizeof(CanUserAreaData);
 #endif
 

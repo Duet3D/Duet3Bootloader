@@ -12,11 +12,11 @@ constexpr float DefaultThermistorR25 = 100000.0;
 constexpr float DefaultThermistorbeta = 4388.0;
 constexpr float DefaultThermistorC = 0.0;
 
-#ifdef SAME51
+#if SAME5x
 # include "SAME51config.h"
 #endif
 
-#ifdef SAMC21
+#if SAMC21
 # include "SAMC21config.h"
 #endif
 

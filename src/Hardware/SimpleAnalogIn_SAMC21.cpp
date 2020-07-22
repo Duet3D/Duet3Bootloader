@@ -7,7 +7,7 @@
 
 #include "Peripherals.h"
 
-#ifdef SAMC21
+#if SAMC21
 
 #include "SimpleAnalogIn.h"
 

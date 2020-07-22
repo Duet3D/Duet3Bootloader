@@ -17,14 +17,14 @@
 #include <CanId.h>
 #include <CanMessageBuffer.h>
 
-#if defined(SAME51)
+#if SAME5x
 
 constexpr uint32_t FlashBlockSize = 0x00010000;							// the block size we assume for flash
 constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
 const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 64K for the bootloader
 constexpr const char* BoardTypeName = "EXP3HC";
 
-#elif defined(SAMC21)
+#elif SAMC21
 
 constexpr uint32_t FlashBlockSize = 0x00004000;							// the block size we assume for flash
 constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
@@ -155,7 +155,7 @@ enum class ErrorCode : unsigned int
 	lockFailed = 13
 };
 
-#if defined(SAMC21) && !defined(SAMMYC21)
+#if SAMC21 && !defined(SAMMYC21)
 
 unsigned int boardTypeIndex;
 
@@ -185,7 +185,7 @@ inline bool GetLedActiveHigh()
 
 static uint8_t blockBuffer[FlashBlockSize];
 
-#ifdef SAME51
+#if SAME5x
 uint8_t ReadBoardAddress();
 #endif
 
@@ -270,7 +270,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 		ReportErrorAndRestart("No buffers", ErrorCode::noBuffer);
 	}
 	CanMessageFirmwareUpdateRequest * const msg = buf->SetupRequestMessage<CanMessageFirmwareUpdateRequest>(0, CanInterface::GetCanAddress(), CanId::MasterAddress);
-#if defined(SAMMYC21) || defined(SAME51)
+#if defined(SAMMYC21) || SAME5x
 	SafeStrncpy(msg->boardType, BoardTypeName, sizeof(msg->boardType));
 	msg->boardVersion = 0;
 #else
@@ -372,9 +372,9 @@ extern "C" int main()
 	atmel_start_init();
 	SystemCoreClock = CONF_CPU_FREQUENCY;
 
-#if defined(SAME51)
+#if SAME5x
 	SystemPeripheralClock = CONF_CPU_FREQUENCY/2;
-#elif defined(SAMC21)
+#elif SAMC21
 	SystemPeripheralClock = CONF_CPU_FREQUENCY;
 #endif
 
@@ -383,14 +383,14 @@ extern "C" int main()
 	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
 	Serial::Init();
 
-#if defined(SAME51)
+#if SAME5x
 
 	for (Pin p : BoardAddressPins)
 	{
 		SetPinMode(p, INPUT_PULLUP);
 	}
 
-#elif defined(SAMC21)
+#elif SAMC21
 
 	// Establish the board type and initialise pins
 
@@ -443,14 +443,14 @@ extern "C" int main()
 		SetPinMode(GetLedPin(ledNumber), (GetLedActiveHigh()) ? OUTPUT_LOW : OUTPUT_HIGH);
 	}
 
-#if defined(SAME51)
+#if SAME5x
 
 	// Check whether address switches are set to zero. If so then reset and load new firmware
 	const CanAddress switches = ReadBoardAddress();
 	const bool doHardwareReset = (switches == 0);
 	const CanAddress defaultAddress = (doHardwareReset) ? CanId::ExpansionBoardFirmwareUpdateAddress : switches;
 
-#elif defined(SAMC21)
+#elif SAMC21
 
 # ifdef SAMMYC21
 	const CanAddress defaultAddress = CanId::SammyC21DefaultAddress;
@@ -573,7 +573,7 @@ extern "C" int main()
 	StartFirmware();
 }
 
-#ifdef SAME51
+#if SAME5x
 
 // Read the board address
 uint8_t ReadBoardAddress()
@@ -612,16 +612,16 @@ bool CheckValidFirmware()
 	const uint32_t storedCRC = *crcAddr;
 
 	// Compute the CRC-32 of the file
-#if defined(SAME51)
+#if SAME5x
 	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_DISABLE | DMAC_CRCCTRL_CRCPOLY_CRC32;	// disable the CRC unit
-#elif defined(SAMC21)
+#elif SAMC21
 	DMAC->CTRL.bit.CRCENABLE = 0;
 #else
 # error Unsupported processor
 #endif
 	DMAC->CRCCHKSUM.reg = 0xFFFFFFFF;
 	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_IO | DMAC_CRCCTRL_CRCPOLY_CRC32;
-#if defined(SAMC21)
+#if SAMC21
 	DMAC->CTRL.bit.CRCENABLE = 1;
 #endif
 	for (const uint32_t *p = reinterpret_cast<const uint32_t*>(FirmwareFlashStart); p < crcAddr; ++p)
@@ -656,7 +656,7 @@ bool CheckValidFirmware()
 	SysTick->CTRL = (1 << SysTick_CTRL_CLKSOURCE_Pos);	// disable the system tick exception
 	__disable_irq();
 
-#if defined(SAME51)
+#if SAME5x
 
 	for (size_t i = 0; i < 8; i++)
 	{
@@ -674,7 +674,7 @@ bool CheckValidFirmware()
 	OSCCTRL->Dpll[1].DPLLCTRLA.bit.ENABLE = 0;
 	while (OSCCTRL->Dpll[1].DPLLSYNCBUSY.bit.ENABLE) { }
 
-#elif defined(SAMC21)
+#elif SAMC21
 
 	NVIC->ICER[0] = 0xFFFFFFFF;							// Disable IRQs
 	NVIC->ICPR[0] = 0xFFFFFFFF;							// Clear pending IRQs
@@ -724,9 +724,9 @@ bool CheckValidFirmware()
 	__enable_irq();
 
 	__asm volatile ("ldr r1, [r3, #4]");
-#if defined(SAME51)
+#if SAME5x
 	__asm volatile ("orr r1, r1, #1");
-#elif defined(SAMC21)
+#elif SAMC21
 	__asm volatile ("movs r2, #1");
 	__asm volatile ("orr r1, r1, r2");
 #else
