@@ -9,7 +9,6 @@
 #define SRC_CONFIG_SAMC21CONFIG_H_
 
 #include "RepRapFirmware.h"
-#include "Hardware/Peripherals.h"
 
 #ifdef SAMMYC21
 # define DIAG_SERCOM_NUMBER	5							// which SERCOM device we use for debugging output

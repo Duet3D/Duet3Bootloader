@@ -9,7 +9,6 @@
 #define SRC_CONFIG_EXPANSION1_V09_H_
 
 #include "RepRapFirmware.h"
-#include "Hardware/Peripherals.h"
 
 #define DIAG_SERCOM_NUMBER	3			// which SERCOM device we use for debugging output
 
