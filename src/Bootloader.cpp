@@ -356,6 +356,11 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 //	GCLK0 = takes FDPLL output, no divisor, giving 48MHz main clock used by CPU and most peripherals
 extern "C" void AppMain()
 {
+	// Initialise systick (needed for delay calls to work)
+	SysTick->LOAD = ((CONF_CPU_FREQUENCY/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
+	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
+	NVIC_EnableIRQ(SysTick_IRQn);
+
 	DeviceInit();
 
 #if SAME5x
