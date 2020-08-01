@@ -475,6 +475,7 @@ extern "C" void AppMain()
 # endif
 #endif
 
+	uart0.begin(57600);
 
 	if (!doHardwareReset && CheckValidFirmware())
 	{
@@ -484,7 +485,6 @@ extern "C" void AppMain()
 
 	// If we get here then we are staying in the bootloader
 	// Initialise the CAN subsystem
-	uart0.begin(57600);
 	if (!Flash::Init())
 	{
 		ReportErrorAndRestart("Failed to initialize flash controller", ErrorCode::flashInitFailed);
@@ -562,7 +562,7 @@ uint8_t ReadBoardAddress()
 	{
 		if (!digitalRead(BoardAddressPins[i]))
 		{
-			rslt |= 1 << i;
+			rslt |= 1u << i;
 		}
 	}
 	return rslt;
