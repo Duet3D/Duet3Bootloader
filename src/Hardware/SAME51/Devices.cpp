@@ -9,6 +9,8 @@
 
 #if SAME5x
 
+#ifdef DEBUG
+
 Uart uart0(3, 3, 512, 512);
 
 extern "C" void SERCOM3_0_Handler()
@@ -26,12 +28,16 @@ extern "C" void SERCOM3_3_Handler()
 	uart0.Interrupt3();
 }
 
+#endif
+
 void DeviceInit() noexcept
 {
+#ifdef DEBUG
 	gpio_set_pin_function(PortBPin(20), PINMUX_PB20C_SERCOM3_PAD0);		// TxD
 # if 0	// we don't use the receiver, but if we did we would need to do this:
 	gpio_set_pin_function(PortBPin(21), PINMUX_PB21C_SERCOM3_PAD1);		// RxD
 # endif
+#endif
 }
 
 #endif

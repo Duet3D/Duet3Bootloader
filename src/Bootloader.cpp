@@ -208,17 +208,20 @@ extern "C" void SysTick_Handler()
 
 void SerialMessage(const char *text)
 {
-#ifdef SAMMYC21
+#ifdef DEBUG
+# ifdef SAMMYC21
 	// Messages go to the USB port, so send them raw
 	uart0.print(text);
 	uart0.print("\n");
-#else
+# else
 	// Assume a PanelDue is connected, so encapsulate the message
 	uart0.print("\n{\"message\":\"");
 	uart0.print(text);									// should do json escaping here but for now just be careful what messages we send
 	uart0.print("\"}\n");
-#endif
+# endif
+	uart0.flush();
 	delay(3);											// allow time for the last character to go
+#endif
 }
 
 void ReportError(const char *text, ErrorCode err)
@@ -475,7 +478,9 @@ extern "C" void AppMain()
 # endif
 #endif
 
+#ifdef DEBUG
 	uart0.begin(57600);
+#endif
 
 	if (!doHardwareReset && CheckValidFirmware())
 	{
@@ -627,9 +632,10 @@ bool CheckValidFirmware()
 // Execute the main firmware CAN1
 [[noreturn]] void StartFirmware()
 {
+#ifdef DEBUG
 	SerialMessage("Bootloader transferring control to main firmware");
-	delay(3);											// allow last 2 characters to go
 	uart0.end();										// disable serial port so that main firmware can initialise it
+#endif
 
 	// Disable all IRQs
 	SysTick->CTRL = (1 << SysTick_CTRL_CLKSOURCE_Pos);	// disable the system tick exception

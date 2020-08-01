@@ -11,7 +11,9 @@
 #include <CoreIO.h>
 #include <Uart.h>
 
+#ifdef DEBUG
 extern Uart uart0;
+#endif
 
 void DeviceInit();
 
