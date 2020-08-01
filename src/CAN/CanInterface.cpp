@@ -67,7 +67,7 @@ CanMessageBuffer *CanMessageQueue::GetMessage()
 static CanMessageQueue PendingMoves;
 static CanMessageQueue PendingCommands;
 
-static struct can_async_descriptor CAN_0;
+static struct can_async_descriptor CAN_0 = { 0 };
 
 #if SAME5x
 

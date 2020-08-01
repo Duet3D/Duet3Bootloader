@@ -244,6 +244,7 @@ void ReportError(const char *text, ErrorCode err)
 
 [[noreturn]] void ReportErrorAndRestart(const char *text, ErrorCode err)
 {
+	CanInterface::Disable();
 	ReportError(text, err);
 	delay(2000);
 	Restart();
@@ -482,9 +483,7 @@ extern "C" void AppMain()
 	}
 
 	// If we get here then we are staying in the bootloader
-	// Initialise the CAN subsystem and systick.
-	// We don't use the DMAC so no need to initialise that.
-	// Serial port is initialised for diagnostic info.
+	// Initialise the CAN subsystem
 	uart0.begin(57600);
 	if (!Flash::Init())
 	{

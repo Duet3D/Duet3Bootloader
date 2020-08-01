@@ -5,6 +5,7 @@
 	<projects>
 		<project>CANlib</project>
 		<project>RRFLibraries</project>
+		<project>CoreN2G</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
