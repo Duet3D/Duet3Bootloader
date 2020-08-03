@@ -358,7 +358,7 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 //	XOSC1 = 12MHz crystal oscillator (16MHz on Sammy-C21 board)
 //	FDPLL = takes XOSC1 divide by 6 (8 for Sammy-C21) (2MHz), multiplied by 24 to get 48MHz main clock
 //	GCLK0 = takes FDPLL output, no divisor, giving 48MHz main clock used by CPU and most peripherals
-extern "C" void AppMain()
+void AppMain()
 {
 	// Initialise systick (needed for delay calls to work)
 	SysTick->LOAD = ((CONF_CPU_FREQUENCY/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
