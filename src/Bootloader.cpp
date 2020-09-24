@@ -8,10 +8,8 @@
 #include <RepRapFirmware.h>
 #include <Hardware/Devices.h>
 #include <CAN/CanInterface.h>
-#include <peripheral_clk_config.h>
 #include <Flash.h>
 #include <Serial.h>
-//#include <CanDriver.h>
 #include <Config/BoardDef.h>
 #include <General/StringRef.h>
 #include <CanId.h>
@@ -361,7 +359,7 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 void AppMain()
 {
 	// Initialise systick (needed for delay calls to work)
-	SysTick->LOAD = ((CONF_CPU_FREQUENCY/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
+	SysTick->LOAD = ((SystemCoreClockFreq/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
 	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
 	NVIC_EnableIRQ(SysTick_IRQn);
 

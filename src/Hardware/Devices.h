@@ -9,10 +9,12 @@
 #define SRC_HARDWARE_DEVICES_H_
 
 #include <CoreIO.h>
-#include <Uart.h>
 
 #ifdef DEBUG
+
+#include <Uart.h>
 extern Uart uart0;
+
 #endif
 
 void DeviceInit();

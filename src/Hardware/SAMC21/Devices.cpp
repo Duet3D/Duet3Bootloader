@@ -40,9 +40,9 @@ void DeviceInit() noexcept
 {
 #ifdef DEBUG
 # ifdef SAMMYC21
-	gpio_set_pin_function(PortBPin(2), PINMUX_PB02D_SERCOM5_PAD0);		// TxD
+	SetPinFunction(PortBPin(2), GpioPinFunction::D);		// TxD
 # else
-	gpio_set_pin_function(PortAPin(12), PINMUX_PA12D_SERCOM4_PAD0);		// TxD
+	SetPinFunction(PortAPin(12), GpioPinFunction::D);		// TxD
 # endif
 #endif
 
