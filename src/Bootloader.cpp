@@ -39,61 +39,84 @@ constexpr const char* BoardTypeName = "SAMMYC21";
 // Board ID analog pin handling
 constexpr uint32_t AdcRange = 1 << 16;			// we use the ADC in 16-bit mode
 
+// Constexpr function to check that a table is in increasing order
+inline constexpr bool IsIncreasing(const float *arr, size_t length)
+{
+	return length < 2 || (arr[1] > arr[0] && IsIncreasing(arr + 1, length - 1));
+}
+
 // Names and board ID pin resistor ratios for the board we support
 // The expected ADC readings must be in increasing order, and the board names must be in the corresponding order
+// The board type and version as an enumeration
+enum class BoardId : unsigned int
+{
+	// Board types based on the first board detect pin
+	tool1lc_v0 = 0,
+	exp1hce_v0,
+	ate,
+	exp1xd_v0,
+
+	// ATE board types
+	ate_base,
+	ate_cm = ate_base,
+	ate_io
+};
+
 constexpr const char * BoardTypeNames[] =
 {
+	// Boards selected by just the first board type pin
 	"TOOL1LC",
 	"EXP1HCE",
-	"EXP1XD"
+	"unknown",			// for ATE we need to look at the second board type pin
+	"EXP1XD",
+
+	// ATE board types, distinguished by the second board type pin
+	"ATECM",
+	"ATEIO",
 };
 
 constexpr unsigned int BoardTypeVersions[] =
 {
 	0,
 	0,
+	0,
+	0,
+	0,
 	0
-};
-
-// The board type and version as an enumeration
-enum class BoardId : unsigned int
-{
-	tool1lc_v0,
-	exp1hce_v0,
-	exp1xd_v0
 };
 
 constexpr const Pin *LedPinsTables[] =
 {
 	LedPins_Tool1LC,
 	LedPins_Exp1HCE,
-	LedPins_Exp1XD
+	LedPins_Ate,
+	LedPins_Exp1XD,
+	LedPins_Ate,
+	LedPins_Ate,
 };
 
 constexpr bool LedActiveHigh[] =
 {
 	LedActiveHigh_Tool1LC,
 	LedActiveHigh_Exp1HCE,
-	LedActiveHigh_Exp1XD
+	LedActiveHigh_Ate,
+	LedActiveHigh_Exp1XD,
+	LedActiveHigh_Ate,
+	LedActiveHigh_Ate,
 };
+
+static_assert(ARRAY_SIZE(BoardTypeVersions) == ARRAY_SIZE(BoardTypeNames));
+static_assert(ARRAY_SIZE(LedPinsTables) == ARRAY_SIZE(BoardTypeNames));
+static_assert(ARRAY_SIZE(LedActiveHigh) == ARRAY_SIZE(BoardTypeNames));
 
 // This table of floats is only used at compile time, so it shouldn't cause the floating point library to be pulled in
 constexpr float BoardTypeFractions[] =
 {
 	1.0/(1.0 + 10.0),						// TOOL1LC has 1K lower resistor, 10K upper
 	4.7/(4.7 + 27.0),						// EXP1HCE has 4K7 lower resistor, 27K upper
+	3.0/(3.0 + 12.0),						// ATECM and ATEIO have 3K lower, 12K upper
 	4.7/(4.7 + 4.7),						// EXP1XD has 4K7 lower resistor, 4K7 upper
 };
-
-static_assert(ARRAY_SIZE(BoardTypeNames) == ARRAY_SIZE(BoardTypeFractions));
-static_assert(ARRAY_SIZE(BoardTypeVersions) == ARRAY_SIZE(BoardTypeFractions));
-static_assert(ARRAY_SIZE(LedPinsTables) == ARRAY_SIZE(BoardTypeFractions));
-static_assert(ARRAY_SIZE(LedActiveHigh) == ARRAY_SIZE(BoardTypeFractions));
-
-inline constexpr bool IsIncreasing(const float *arr, size_t length)
-{
-	return length < 2 || (arr[1] > arr[0] && IsIncreasing(arr + 1, length - 1));
-}
 
 static_assert(IsIncreasing(BoardTypeFractions, ARRAY_SIZE(BoardTypeFractions)));
 
@@ -101,10 +124,28 @@ static_assert(IsIncreasing(BoardTypeFractions, ARRAY_SIZE(BoardTypeFractions)));
 constexpr uint16_t BoardIdDecisionPoints[] =
 {
 	(uint16_t)((BoardTypeFractions[0] + BoardTypeFractions[1]) * (AdcRange/2)),
-	(uint16_t)((BoardTypeFractions[1] + BoardTypeFractions[2]) * (AdcRange/2))
+	(uint16_t)((BoardTypeFractions[1] + BoardTypeFractions[2]) * (AdcRange/2)),
+	(uint16_t)((BoardTypeFractions[2] + BoardTypeFractions[3]) * (AdcRange/2))
 };
 
 static_assert(ARRAY_SIZE(BoardIdDecisionPoints) + 1 == ARRAY_SIZE(BoardTypeFractions));
+
+// This table of floats is only used at compile time, so it shouldn't cause the floating point library to be pulled in
+constexpr float BoardType2Fractions[] =
+{
+	3.0/(3.0 + 12.0),						// ATECM has 3K lower, 12K upper
+	12.0/(12.0 + 3.0)						// AREIO has 12K lower 3K upper
+};
+
+static_assert(IsIncreasing(BoardType2Fractions, ARRAY_SIZE(BoardType2Fractions)));
+
+// Table of halfway points that we use to decide what board type a reading corresponds to
+constexpr uint16_t BoardId2DecisionPoints[] =
+{
+	(uint16_t)((BoardType2Fractions[0] + BoardType2Fractions[1]) * (AdcRange/2)),
+};
+
+static_assert(ARRAY_SIZE(BoardId2DecisionPoints) + 1 == ARRAY_SIZE(BoardType2Fractions));
 
 // Buttons pin ADC handling for EXP1HCE board
 
@@ -129,6 +170,18 @@ constexpr uint16_t ButtonsDecisionPoints[] =
 };
 
 static_assert(ARRAY_SIZE(ButtonsDecisionPoints) + 1 == ARRAY_SIZE(ButtonsExpectedFractions));
+
+// Function to read a pin and scan a table of decision points to find the corresponding index
+unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[], size_t numDecisionPoints)
+{
+	const uint16_t reading = AnalogIn::ReadChannel(CommonAdcDevice, chan);
+	unsigned int ainState = 0;
+	while (ainState < numDecisionPoints && reading > decisionPoints[ainState])
+	{
+		++ainState;
+	}
+	return ainState;
+}
 
 # endif
 
@@ -159,7 +212,15 @@ unsigned int boardTypeIndex;
 
 inline Pin GetLedPin(unsigned int ledNumber)
 {
-	return LedPinsTables[boardTypeIndex][ledNumber];
+	const Pin p = LedPinsTables[boardTypeIndex][ledNumber];
+#ifdef DEBUG
+	if (p == PortAPin(30) || p == PortAPin(31))
+	{
+		// Using the SWD pins to drive the LEDs. Don't allow this in a debug build because it prevents debugging.
+		return NoPin;
+	}
+#endif
+	return p;
 }
 
 inline bool GetLedActiveHigh()
@@ -251,6 +312,12 @@ void ReportError(const char *text, ErrorCode err)
 	Restart();
 }
 
+// Get the board type name
+inline const char* GetBoardTypeName()
+{
+	return BoardTypeNames[boardTypeIndex];
+}
+
 void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 {
 	CanMessageBuffer *buf = CanMessageBuffer::Allocate();
@@ -263,7 +330,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 	SafeStrncpy(msg->boardType, BoardTypeName, sizeof(msg->boardType));
 	msg->boardVersion = 0;
 #else
-	SafeStrncpy(msg->boardType, BoardTypeNames[boardTypeIndex], sizeof(msg->boardType));
+	SafeStrncpy(msg->boardType, GetBoardTypeName(), sizeof(msg->boardType));
 	msg->boardVersion = BoardTypeVersions[boardTypeIndex];
 #endif
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
@@ -372,50 +439,103 @@ void AppMain()
 		pinMode(p, INPUT_PULLUP);
 	}
 
+	// Check whether address switches are set to zero. If so then reset and load new firmware
+	const CanAddress switches = ReadBoardAddress();
+	const bool doHardwareReset = (switches == 0);
+	const CanAddress defaultAddress = (doHardwareReset) ? CanId::ExpansionBoardFirmwareUpdateAddress : switches;
+
 #elif SAMC21
 
 	// Establish the board type and initialise pins
 
 # ifdef SAMMYC21
 	pinMode(ButtonPins[0], INPUT_PULLUP);
+	const CanAddress defaultAddress = CanId::SammyC21DefaultAddress;
+	const bool doHardwareReset = !digitalRead(ButtonPins[0]);
+	const bool useAlternatCanPins = true;
 # else
 
 	// Read the board type pin, which is an analog input fed from a resistor network
 	AnalogIn::Init(CommonAdcDevice);
 	SetPinFunction(BoardTypePin, GpioPinFunction::B);
 
-	const uint16_t reading = AnalogIn::ReadChannel(CommonAdcDevice, BoardTypeAdcChannel);
-
-	boardTypeIndex = 0;
-	while (boardTypeIndex < ARRAY_SIZE(BoardIdDecisionPoints) && reading > BoardIdDecisionPoints[boardTypeIndex])
+	boardTypeIndex = ReadAndQuantise(BoardTypeAdcChannel, BoardIdDecisionPoints, ARRAY_SIZE(BoardIdDecisionPoints));
+	if (boardTypeIndex == (unsigned int)BoardId::ate)
 	{
-		++boardTypeIndex;
+		// We need to read the second board ID pin
+		SetPinFunction(BoardType2Pin, GpioPinFunction::B);			// ATE has a second board type pin
+		boardTypeIndex = (unsigned int)BoardId::ate_base + ReadAndQuantise(BoardType2AdcChannel, BoardId2DecisionPoints, ARRAY_SIZE(BoardId2DecisionPoints));
 	}
+
+	// Set up the hardware and default CAN address as appropriate
+	// Determine whether we need to do a hardware reset
+	bool doHardwareReset = false, useAlternatCanPins = false;
+	CanAddress defaultAddress;
 
 	switch ((BoardId)boardTypeIndex)
 	{
 	case BoardId::tool1lc_v0:
+		defaultAddress = CanId::ToolBoardDefaultAddress;
+
 		pinMode(OutPins_Tool1LC[0], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
 		pinMode(OutPins_Tool1LC[1], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
-		pinMode(OutPins_Tool1LC[2], OUTPUT_HIGH);				// this is intended for the hot end fan, so turn it on just as the tool board firmware does
+		pinMode(OutPins_Tool1LC[2], OUTPUT_HIGH);					// this is intended for the hot end fan, so turn it on just as the tool board firmware does
+		pinMode(GlobalTmc22xxEnablePin_Tool1LC, OUTPUT_HIGH);
 
 		pinMode(ButtonPins_Tool1LC[0], INPUT_PULLUP);
 		pinMode(ButtonPins_Tool1LC[1], INPUT_PULLUP);
 
-		pinMode(GlobalTmc22xxEnablePin_Tool1LC, OUTPUT_HIGH);
+
+		// If both button pins are pressed, reset and load new firmware
+		delayMicroseconds(100);
+		doHardwareReset = !digitalRead(ButtonPins_Tool1LC[0]) && !digitalRead(ButtonPins_Tool1LC[1]);
 		break;
 
 	case BoardId::exp1xd_v0:
+		defaultAddress = CanId::Exp1XDBoardDefaultAddress;
+
 		pinMode(JumperPin_Exp1XD, INPUT_PULLUP);
+		delayMicroseconds(100);
+		doHardwareReset = !digitalRead(JumperPin_Exp1XD);
 		break;
 
 	case BoardId::exp1hce_v0:
-		//TODO the buttons are read via analog inputs
+		defaultAddress = CanId::Exp1HCEBoardDefaultAddress;
+
+		SetPinFunction(ButtonsPin_Exp1HCE, GpioPinFunction::B);		// both buttons are on a single analog pin
+		{
+			const unsigned int buttonState = ReadAndQuantise(ButtonsAdcChannel_Exp1HCE, ButtonsDecisionPoints, ARRAY_SIZE(ButtonsDecisionPoints));
+			doHardwareReset = (buttonState == 0);
+		}
+		break;
+
+	case BoardId::ate_cm:
+		useAlternatCanPins = true;
+		// ATE CM board has a reset jumper fitted between AteCmZeroPin and AteCmJumperPin
+		defaultAddress = CanId::ATECMBoardDefaultAddress;
+		pinMode(AteCmZeroPin, OUTPUT_LOW);
+		pinMode(AteCmJumperPin, INPUT_PULLUP);
+		delayMicroseconds(100);
+		doHardwareReset = !digitalRead(AteCmJumperPin);
+		pinMode(AteCmZeroPin, INPUT_PULLUP);
+		break;
+
+	case BoardId::ate_io:
+		useAlternatCanPins = true;
+		defaultAddress = CanId::ATEIOBoardDefaultAddress;
+		pinMode(AteIoJumperPin, INPUT_PULLUP);
+		delayMicroseconds(100);
+		doHardwareReset = !digitalRead(AteIoJumperPin);
+		break;
+
+	default:									// should never be used
+		defaultAddress = CanId::ATEIOBoardDefaultAddress;
 		break;
 	}
 
-#endif
+	AnalogIn::Disable(CommonAdcDevice);			// finished using the ADC
 
+# endif
 #else
 # error Unsupported processor
 #endif
@@ -424,57 +544,6 @@ void AppMain()
 	{
 		pinMode(GetLedPin(ledNumber), (GetLedActiveHigh()) ? OUTPUT_LOW : OUTPUT_HIGH);
 	}
-
-#if SAME5x
-
-	// Check whether address switches are set to zero. If so then reset and load new firmware
-	const CanAddress switches = ReadBoardAddress();
-	const bool doHardwareReset = (switches == 0);
-	const CanAddress defaultAddress = (doHardwareReset) ? CanId::ExpansionBoardFirmwareUpdateAddress : switches;
-
-#elif SAMC21
-
-# ifdef SAMMYC21
-	const CanAddress defaultAddress = CanId::SammyC21DefaultAddress;
-	const bool doHardwareReset = !digitalRead(ButtonPins[0]);
-# else
-
-	bool doHardwareReset;
-	CanAddress defaultAddress;
-
-	switch ((BoardId)boardTypeIndex)
-	{
-	case BoardId::tool1lc_v0:
-	default:
-		// If both button pins are pressed, reset and load new firmware
-		defaultAddress = CanId::ToolBoardDefaultAddress;
-		doHardwareReset = !digitalRead(ButtonPins_Tool1LC[0]) && !digitalRead(ButtonPins_Tool1LC[1]);
-		break;
-
-	case BoardId::exp1xd_v0:
-		defaultAddress = CanId::Exp1XDBoardDefaultAddress;
-		doHardwareReset = !digitalRead(JumperPin_Exp1XD);
-		break;
-
-	case BoardId::exp1hce_v0:
-		defaultAddress = CanId::Exp1HCEBoardDefaultAddress;
-		{
-			SetPinFunction(ButtonsPin_Exp1HCE, GpioPinFunction::B);
-			const uint16_t reading = AnalogIn::ReadChannel(CommonAdcDevice, ButtonsAdcChannel_Exp1HCE);
-			unsigned int buttonState = 0;
-			while (buttonState < ARRAY_SIZE(ButtonsDecisionPoints) && reading > ButtonsDecisionPoints[buttonState])
-			{
-				++buttonState;
-			}
-			doHardwareReset = (buttonState == 0);
-		}
-		break;
-	}
-
-	AnalogIn::Disable(CommonAdcDevice);			// finished using the ADC
-
-# endif
-#endif
 
 #ifdef DEBUG
 	uart0.begin(57600);
@@ -492,7 +561,12 @@ void AppMain()
 	{
 		ReportErrorAndRestart("Failed to initialize flash controller", ErrorCode::flashInitFailed);
 	}
+
+#if SAME5x
 	CanInterface::Init(defaultAddress, doHardwareReset);
+#elif SAMC21
+	CanInterface::Init(defaultAddress, doHardwareReset, useAlternatCanPins);
+#endif
 
 	// Loop requesting firmware from the main board and handling any firmware that it sends to us
 	uint32_t bufferStartOffset = 0;

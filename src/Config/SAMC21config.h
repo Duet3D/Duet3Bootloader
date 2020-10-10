@@ -26,6 +26,8 @@ constexpr Pin CanStandbyPin = PortAPin(27);
 Adc * const CommonAdcDevice = ADC0;						// ADC device used for the board type pin, also for the buttons on the EXP1HCE
 constexpr Pin BoardTypePin = PortAPin(5);
 constexpr uint8_t BoardTypeAdcChannel = 5;
+constexpr Pin BoardType2Pin = PortAPin(4);				// second board type pin used on some boards
+constexpr uint8_t BoardType2AdcChannel = 4;
 constexpr Pin ButtonsPin_Exp1HCE = PortAPin(9);
 constexpr uint8_t ButtonsAdcChannel_Exp1HCE = 9;
 
@@ -34,6 +36,9 @@ constexpr Pin OutPins_Tool1LC[] = { PortAPin(11), PortAPin(10), PortBPin(11) };
 constexpr Pin ButtonPins_Tool1LC[] = { PortBPin(22), PortBPin(23) };
 
 constexpr Pin JumperPin_Exp1XD = PortAPin(27);
+constexpr Pin AteCmZeroPin = PortBPin(2);
+constexpr Pin AteCmJumperPin = PortAPin(27);
+constexpr Pin AteIoJumperPin = PortAPin(16);
 
 #endif
 
@@ -51,6 +56,9 @@ constexpr bool LedActiveHigh_Tool1LC = true;
 
 constexpr Pin LedPins_Exp1XD[] = { PortAPin(19), PortAPin(18) };
 constexpr bool LedActiveHigh_Exp1XD = true;
+
+constexpr Pin LedPins_Ate[] = { PortAPin(30), PortAPin(31) };
+constexpr bool LedActiveHigh_Ate = false;
 
 constexpr Pin LedPins_Exp1HCE[] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_Exp1HCE = false;

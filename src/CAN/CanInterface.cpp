@@ -100,18 +100,23 @@ void CAN_0_init(const CanTiming& timing)
  *
  * Enables CAN peripheral, clocks and initializes CAN driver
  */
-static void CAN_0_init(const CanTiming& timing)
+static void CAN_0_init(const CanTiming& timing, bool useAlternatePins)
 {
 	hri_mclk_set_AHBMASK_CAN0_bit(MCLK);
 	hri_gclk_write_PCHCTRL_reg(GCLK, CAN0_GCLK_ID, GclkNum48MHz | GCLK_PCHCTRL_CHEN);
 	can_async_init(&CAN_0, CAN0, timing);
+	if (useAlternatePins)
+	{
+		SetPinFunction(PortBPin(23), GpioPinFunction::G);
+		SetPinFunction(PortBPin(22), GpioPinFunction::G);
+	}
+	else
+	{
+		SetPinFunction(PortAPin(25), GpioPinFunction::G);
+		SetPinFunction(PortAPin(24), GpioPinFunction::G);
+	}
 #ifdef SAMMYC21
-	SetPinFunction(PortBPin(23), GpioPinFunction::G);
-	SetPinFunction(PortBPin(22), GpioPinFunction::G);
-	pinMode(CanStandbyPin, OUTPUT_LOW);					// take the CAN drivers out of standby
-#else
-	SetPinFunction(PortAPin(25), GpioPinFunction::G);
-	SetPinFunction(PortAPin(24), GpioPinFunction::G);
+	pinMode(CanStandbyPin, OUTPUT_LOW);						// take the CAN drivers out of standby
 #endif
 }
 
@@ -132,7 +137,11 @@ bool CanInterface::GetCanMessage(CanMessageBuffer *buf)
 	return false;
 }
 
-void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset)
+void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset
+#if SAMC21
+	, bool useAlternatePins
+#endif
+	)
 {
 	// Read the CAN timing data from the top part of the NVM User Row
 #if SAME5x
@@ -152,7 +161,11 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset)
 	canConfigData.GetTiming(timing);
 
 	// Initialise the CAN hardware, using the timing data if it was valid
+#if SAME5x
 	CAN_0_init(timing);
+#elif SAMC21
+	CAN_0_init(timing, useAlternatePins);
+#endif
 
 	boardAddress = canConfigData.GetCanAddress(defaultBoardAddress);
 	CanMessageBuffer::Init(NumCanBuffers);

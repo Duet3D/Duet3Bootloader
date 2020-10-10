@@ -16,7 +16,11 @@ class CanMessageBuffer;
 
 namespace CanInterface
 {
-	void Init(CanAddress defaultBoardAddress, bool doHardwareReset);
+	void Init(CanAddress defaultBoardAddress, bool doHardwareReset
+#if SAMC21
+				, bool useAlternatePins
+#endif
+			);
 	void Disable();
 
 	CanAddress GetCanAddress();
