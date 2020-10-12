@@ -11,17 +11,12 @@
 #include "RepRapFirmware.h"
 #include <CanId.h>
 
-struct CanMessageMovement;
 class CanMessageBuffer;
 
 namespace CanInterface
 {
-	void Init(CanAddress defaultBoardAddress, bool doHardwareReset
-#if SAMC21
-				, bool useAlternatePins
-#endif
-			);
-	void Disable();
+	void Init(CanAddress defaultBoardAddress, bool doHardwareReset, bool useAlternatePins);
+	void Shutdown();
 
 	CanAddress GetCanAddress();
 	void Send(CanMessageBuffer *buf);

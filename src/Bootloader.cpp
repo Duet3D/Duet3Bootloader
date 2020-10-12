@@ -306,16 +306,10 @@ void ReportError(const char *text, ErrorCode err)
 
 [[noreturn]] void ReportErrorAndRestart(const char *text, ErrorCode err)
 {
-	CanInterface::Disable();
+	CanInterface::Shutdown();
 	ReportError(text, err);
 	delay(2000);
 	Restart();
-}
-
-// Get the board type name
-inline const char* GetBoardTypeName()
-{
-	return BoardTypeNames[boardTypeIndex];
 }
 
 void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
@@ -330,7 +324,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 	SafeStrncpy(msg->boardType, BoardTypeName, sizeof(msg->boardType));
 	msg->boardVersion = 0;
 #else
-	SafeStrncpy(msg->boardType, GetBoardTypeName(), sizeof(msg->boardType));
+	SafeStrncpy(msg->boardType, BoardTypeNames[boardTypeIndex], sizeof(msg->boardType));
 	msg->boardVersion = BoardTypeVersions[boardTypeIndex];
 #endif
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
@@ -443,6 +437,7 @@ void AppMain()
 	const CanAddress switches = ReadBoardAddress();
 	const bool doHardwareReset = (switches == 0);
 	const CanAddress defaultAddress = (doHardwareReset) ? CanId::ExpansionBoardFirmwareUpdateAddress : switches;
+	const bool useAlternatCanPins = false;
 
 #elif SAMC21
 
@@ -562,11 +557,7 @@ void AppMain()
 		ReportErrorAndRestart("Failed to initialize flash controller", ErrorCode::flashInitFailed);
 	}
 
-#if SAME5x
-	CanInterface::Init(defaultAddress, doHardwareReset);
-#elif SAMC21
 	CanInterface::Init(defaultAddress, doHardwareReset, useAlternatCanPins);
-#endif
 
 	// Loop requesting firmware from the main board and handling any firmware that it sends to us
 	uint32_t bufferStartOffset = 0;
@@ -607,7 +598,7 @@ void AppMain()
 		ReportErrorAndRestart("Failed to lock flash", ErrorCode::lockFailed);
 	}
 
-	CanInterface::Disable();
+	CanInterface::Shutdown();
 
 	delay(2);
 
