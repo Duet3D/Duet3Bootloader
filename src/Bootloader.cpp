@@ -331,7 +331,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 	msg->fileOffset = fileOffset;
 	msg->lengthRequested = numBytes;
 	buf->dataLength = msg->GetActualDataLength();
-	CanInterface::Send(buf);
+	CanInterface::SendAndFree(buf);
 }
 
 // Get a buffer of data from the host
@@ -406,15 +406,15 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 }
 
 // Clock configuration:
-// ATSAME51:
-//	XOSC1 = 12MHz crystal oscillator
+// SAME5x:
+//	XOSC1 = 12MHz or 25MHz crystal oscillator
 //	FDPLL0 = takes XOSC1 divide by 4 (3MHz), multiplies by 40 to get 120MHz main clock
 //	FDPLL1 = takes XOSC1 divide by 4 (3MHz), multiplies by 12 to get 48MHz CAN clock
 //	GCLK0 = takes FDPLL0 output, no divisor, giving 120MHz main clock used by CPU
 //	GCLK1 = takes FDPLL0 output, divided by 2 to get 60MHz clock used by most peripherals
 //	GCLK2 = takes FDPLL1 output, no divisor, giving 48MHz CAN clock
-// ATSAMC21:
-//	XOSC1 = 12MHz crystal oscillator (16MHz on Sammy-C21 board)
+// SAMC21:
+//	XOSC1 = 12MHz or 25MHz crystal oscillator (16MHz on Sammy-C21 board)
 //	FDPLL = takes XOSC1 divide by 6 (8 for Sammy-C21) (2MHz), multiplied by 24 to get 48MHz main clock
 //	GCLK0 = takes FDPLL output, no divisor, giving 48MHz main clock used by CPU and most peripherals
 void AppMain()
@@ -581,10 +581,23 @@ void AppMain()
 				ReportErrorAndRestart("Failed to erase flash", ErrorCode::eraseFailed);
 			}
 		}
+
+		// If we have both red and green LEDs, the green one indicates CAN activity. use the red one to indicate writing to flash.
+		if (NumLedPins == 2)
+		{
+			WriteLed(0, true);
+		}
+
 		if (!Flash::Write(FirmwareFlashStart + bufferStartOffset, FlashBlockSize, blockBuffer))
 		{
 			ReportErrorAndRestart("Failed to write flash", ErrorCode::writeFailed);
 		}
+
+		if (NumLedPins == 2)
+		{
+			WriteLed(0, false);
+		}
+
 		bufferStartOffset += FlashBlockSize;
 		if (bufferStartOffset >= fileSize)
 		{

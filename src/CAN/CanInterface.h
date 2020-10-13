@@ -19,7 +19,7 @@ namespace CanInterface
 	void Shutdown();
 
 	CanAddress GetCanAddress();
-	void Send(CanMessageBuffer *buf);
+	void SendAndFree(CanMessageBuffer *buf);
 	bool GetCanMessage(CanMessageBuffer *buf);
 }
 
