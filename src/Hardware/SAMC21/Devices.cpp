@@ -11,6 +11,15 @@
 
 #include <RepRapFirmware.h>
 #include <AnalogIn.h>
+#include <Version.h>
+
+// The interrupt vector table points to this
+extern const char VersionText[] =
+#ifdef SAMMYC21
+	"SAMMY-C21 bootloader version " VERSION_TEXT;
+#else
+	"SAMC21 bootloader version " VERSION_TEXT;
+#endif
 
 #ifdef DEBUG
 

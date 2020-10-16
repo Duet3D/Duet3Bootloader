@@ -9,6 +9,10 @@
 
 #if SAME5x
 
+#include <Version.h>
+
+extern const char VersionText[] = "SAME5x bootloader version " VERSION_TEXT;
+
 #ifdef DEBUG
 
 void SerialPortInit(Uart*) noexcept
