@@ -14,19 +14,16 @@
 #include <General/StringRef.h>
 #include <CanId.h>
 #include <CanMessageBuffer.h>
+#include <Duet3Common.h>
 
 #if SAME5x
 
-constexpr uint32_t FlashBlockSize = 0x00010000;							// the block size we assume for flash
-constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
-const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 64K for the bootloader
+constexpr uint32_t FlashBlockSize = 0x00010000;							// the erase size we assume for flash (64K)
 constexpr const char* BoardTypeName = "EXP3HC";
 
 #elif SAMC21
 
-constexpr uint32_t FlashBlockSize = 0x00004000;							// the block size we assume for flash
-constexpr uint32_t BlockReceiveTimeout = 2000;							// block receive timeout milliseconds
-const uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// we reserve 16K for the bootloader
+constexpr uint32_t FlashBlockSize = 0x00004000;							// the erase size we assume for flash (16K)
 
 # ifdef SAMMYC21
 
@@ -189,22 +186,8 @@ unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[], size
 # error Unsupported board
 #endif
 
-// Error codes, presented as a number of flashes of the DIAG LED
-enum class ErrorCode : unsigned int
-{
-	invalidFirmware = 2,
-	badCRC = 3,
-	blockReceiveTimeout = 4,
-	noFile = 5,
-	badOffset = 6,
-	hostOther = 7,
-	noBuffer = 8,
-	flashInitFailed = 9,
-	unlockFailed = 10,
-	eraseFailed = 11,
-	writeFailed = 12,
-	lockFailed = 13
-};
+constexpr uint32_t BlockReceiveTimeout = 2000;								// block receive timeout milliseconds
+constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// the amount of space we reserve for the bootloader
 
 #if SAMC21 && !defined(SAMMYC21)
 
@@ -283,7 +266,7 @@ void SerialMessage(const char *text)
 #endif
 }
 
-void ReportError(const char *text, ErrorCode err)
+void ReportError(const char *text, FirmwareFlashErrorCode err)
 {
 	SerialMessage(text);
 
@@ -304,7 +287,7 @@ void ReportError(const char *text, ErrorCode err)
 	for (;;) { }
 }
 
-[[noreturn]] void ReportErrorAndRestart(const char *text, ErrorCode err)
+[[noreturn]] void ReportErrorAndRestart(const char *text, FirmwareFlashErrorCode err)
 {
 	CanInterface::Shutdown();
 	ReportError(text, err);
@@ -317,7 +300,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 	CanMessageBuffer *buf = CanMessageBuffer::Allocate();
 	if (buf == nullptr)
 	{
-		ReportErrorAndRestart("No buffers", ErrorCode::noBuffer);
+		ReportErrorAndRestart("No buffers", FirmwareFlashErrorCode::noBuffer);
 	}
 	CanMessageFirmwareUpdateRequest * const msg = buf->SetupRequestMessage<CanMessageFirmwareUpdateRequest>(0, CanInterface::GetCanAddress(), CanId::MasterAddress);
 #if defined(SAMMYC21) || SAME5x
@@ -328,6 +311,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 	msg->boardVersion = BoardTypeVersions[boardTypeIndex];
 #endif
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
+	msg->fileWanted = (uint32_t)FirmwareModule::main;
 	msg->fileOffset = fileOffset;
 	msg->lengthRequested = numBytes;
 	buf->dataLength = msg->GetActualDataLength();
@@ -347,7 +331,7 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 	CanMessageBuffer *buf = CanMessageBuffer::Allocate();
 	if (buf == nullptr)
 	{
-		ReportErrorAndRestart("No buffers", ErrorCode::noBuffer);
+		ReportErrorAndRestart("No buffers", FirmwareFlashErrorCode::noBuffer);
 	}
 
 	uint32_t whenStartedWaiting = millis();
@@ -364,11 +348,11 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 				switch (response.err)
 				{
 				case CanMessageFirmwareUpdateResponse::ErrNoFile:
-					ReportErrorAndRestart("Host reported no file", ErrorCode::noFile);
+					ReportErrorAndRestart("Host reported no file", FirmwareFlashErrorCode::noFile);
 				case CanMessageFirmwareUpdateResponse::ErrBadOffset:
-					ReportErrorAndRestart("Host reported bad offset", ErrorCode::badOffset);
+					ReportErrorAndRestart("Host reported bad offset", FirmwareFlashErrorCode::badOffset);
 				case CanMessageFirmwareUpdateResponse::ErrOther:
-					ReportErrorAndRestart("Host reported other error", ErrorCode::hostOther);
+					ReportErrorAndRestart("Host reported other error", FirmwareFlashErrorCode::hostOther);
 				case CanMessageFirmwareUpdateResponse::ErrNone:
 					if (response.fileOffset >= startingOffset && response.fileOffset <= startingOffset + bytesReceived)
 					{
@@ -395,7 +379,7 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 		{
 			if (bytesReceived == 0)
 			{
-				ReportErrorAndRestart("Block receive timeout", ErrorCode::blockReceiveTimeout);
+				ReportErrorAndRestart("Block receive timeout", FirmwareFlashErrorCode::blockReceiveTimeout);
 			}
 			RequestFirmwareBlock(startingOffset + bytesReceived, FlashBlockSize - bytesReceived);			// ask for 64K from the starting offset
 			whenStartedWaiting = millis();
@@ -554,7 +538,7 @@ void AppMain()
 	// Initialise the CAN subsystem
 	if (!Flash::Init())
 	{
-		ReportErrorAndRestart("Failed to initialize flash controller", ErrorCode::flashInitFailed);
+		ReportErrorAndRestart("Failed to initialize flash controller", FirmwareFlashErrorCode::flashInitFailed);
 	}
 
 	CanInterface::Init(defaultAddress, doHardwareReset, useAlternatCanPins);
@@ -573,12 +557,12 @@ void AppMain()
 			SerialMessage("Unlocking flash");
 			if (!Flash::Unlock(FirmwareFlashStart, roundedUpLength))
 			{
-				ReportErrorAndRestart("Failed to unlock flash", ErrorCode::unlockFailed);
+				ReportErrorAndRestart("Failed to unlock flash", FirmwareFlashErrorCode::unlockFailed);
 			}
 			SerialMessage("Erasing flash");
 			if (!Flash::Erase(FirmwareFlashStart, roundedUpLength))
 			{
-				ReportErrorAndRestart("Failed to erase flash", ErrorCode::eraseFailed);
+				ReportErrorAndRestart("Failed to erase flash", FirmwareFlashErrorCode::eraseFailed);
 			}
 		}
 
@@ -590,7 +574,7 @@ void AppMain()
 
 		if (!Flash::Write(FirmwareFlashStart + bufferStartOffset, FlashBlockSize, blockBuffer))
 		{
-			ReportErrorAndRestart("Failed to write flash", ErrorCode::writeFailed);
+			ReportErrorAndRestart("Failed to write flash", FirmwareFlashErrorCode::writeFailed);
 		}
 
 		if (NumLedPins == 2)
@@ -608,7 +592,7 @@ void AppMain()
 	// If we get here, firmware update is complete
 	if (!Flash::Lock(FirmwareFlashStart, roundedUpLength))
 	{
-		ReportErrorAndRestart("Failed to lock flash", ErrorCode::lockFailed);
+		ReportErrorAndRestart("Failed to lock flash", FirmwareFlashErrorCode::lockFailed);
 	}
 
 	CanInterface::Shutdown();
@@ -663,7 +647,7 @@ bool CheckValidFirmware()
 		|| reinterpret_cast<uint32_t>(vectors->pvReservedM9) > FirmwareFlashStart + FLASH_SIZE - 4
 	   )
 	{
-		ReportError("Invalid firmware", ErrorCode::invalidFirmware);
+		ReportError("Invalid firmware", FirmwareFlashErrorCode::invalidFirmware);
 		return false;
 	}
 
@@ -701,7 +685,7 @@ bool CheckValidFirmware()
 
 	String<100> message;
 	message.printf("CRC error: stored %08" PRIx32 ", actual %" PRIx32, storedCRC, actualCRC);
-	ReportError(message.c_str(), ErrorCode::badCRC);
+	ReportError(message.c_str(), FirmwareFlashErrorCode::badCRC);
 	return false;
 }
 
@@ -798,5 +782,8 @@ bool CheckValidFirmware()
 	// This point is unreachable, but gcc doesn't seem to know that
 	for (;;) { }
 }
+
+// Function needed by CoreNG. It doesn't need to do anything in this instance.
+void OutOfMemoryHandler() { }
 
 // End

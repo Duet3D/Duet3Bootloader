@@ -8,10 +8,6 @@
 #ifndef SRC_CONFIG_BOARDDEF_H_
 #define SRC_CONFIG_BOARDDEF_H_
 
-constexpr float DefaultThermistorR25 = 100000.0;
-constexpr float DefaultThermistorbeta = 4388.0;
-constexpr float DefaultThermistorC = 0.0;
-
 #if SAME5x
 # include "SAME51config.h"
 #endif
