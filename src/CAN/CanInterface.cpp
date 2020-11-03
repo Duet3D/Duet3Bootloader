@@ -15,8 +15,6 @@
 #include <CanDevice.h>
 #include <hpl_user_area.h>
 
-constexpr unsigned int NumCanBuffers = 4;
-
 static CanDevice *can0dev = nullptr;
 static CanUserAreaData canConfigData;
 static CanAddress boardAddress;
@@ -87,7 +85,6 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 #endif
 
 	boardAddress = canConfigData.GetCanAddress(defaultBoardAddress);
-	CanMessageBuffer::Init(NumCanBuffers);
 
 	// Set up a CAN receive filter to receive all messages addressed to us in FIFO 0
 	can0dev->SetExtendedFilterElement(0, CanDevice::RxBufferNumber::fifo0,
@@ -118,10 +115,9 @@ bool CanInterface::GetCanMessage(CanMessageBuffer *buf)
 }
 
 // Send a CAN message and free the buffer
-void CanInterface::SendAndFree(CanMessageBuffer *buf)
+void CanInterface::Send(CanMessageBuffer *buf)
 {
 	can0dev->SendMessage(CanDevice::TxBufferNumber::fifo, 1000, buf);
-	CanMessageBuffer::Free(buf);
 }
 
 // End
