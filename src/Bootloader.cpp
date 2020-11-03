@@ -295,14 +295,9 @@ void ReportError(const char *text, FirmwareFlashErrorCode err)
 	Restart();
 }
 
-void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
+void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes, CanMessageBuffer& buf)
 {
-	CanMessageBuffer *buf = CanMessageBuffer::Allocate();
-	if (buf == nullptr)
-	{
-		ReportErrorAndRestart("No buffers", FirmwareFlashErrorCode::noBuffer);
-	}
-	CanMessageFirmwareUpdateRequest * const msg = buf->SetupRequestMessage<CanMessageFirmwareUpdateRequest>(0, CanInterface::GetCanAddress(), CanId::MasterAddress);
+	CanMessageFirmwareUpdateRequest * const msg = buf.SetupRequestMessage<CanMessageFirmwareUpdateRequest>(0, CanInterface::GetCanAddress(), CanId::MasterAddress);
 #if defined(SAMMYC21) || SAME5x
 	SafeStrncpy(msg->boardType, BoardTypeName, sizeof(msg->boardType));
 	msg->boardVersion = 0;
@@ -314,8 +309,8 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes)
 	msg->fileWanted = (uint32_t)FirmwareModule::main;
 	msg->fileOffset = fileOffset;
 	msg->lengthRequested = numBytes;
-	buf->dataLength = msg->GetActualDataLength();
-	CanInterface::SendAndFree(buf);
+	buf.dataLength = msg->GetActualDataLength();
+	CanInterface::Send(&buf);
 }
 
 // Get a buffer of data from the host
@@ -326,25 +321,20 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 	delay(25);														// flash the LED briefly to indicate we are requesting a new flash block
 	WriteLed(CanLedNumber, false);
 
-	RequestFirmwareBlock(startingOffset, FlashBlockSize);			// ask for 16K or 64K from the starting offset
-
-	CanMessageBuffer *buf = CanMessageBuffer::Allocate();
-	if (buf == nullptr)
-	{
-		ReportErrorAndRestart("No buffers", FirmwareFlashErrorCode::noBuffer);
-	}
+	CanMessageBuffer buf(nullptr);
+	RequestFirmwareBlock(startingOffset, FlashBlockSize, buf);			// ask for 16K or 64K from the starting offset
 
 	uint32_t whenStartedWaiting = millis();
 	uint32_t bytesReceived = 0;
 	bool done = false;
 	do
 	{
-		const bool ok = CanInterface::GetCanMessage(buf);
+		const bool ok = CanInterface::GetCanMessage(&buf);
 		if (ok)
 		{
-			if (buf->id.MsgType() == CanMessageType::firmwareBlockResponse)
+			if (buf.id.MsgType() == CanMessageType::firmwareBlockResponse)
 			{
-				const CanMessageFirmwareUpdateResponse& response = buf->msg.firmwareUpdateResponse;
+				const CanMessageFirmwareUpdateResponse& response = buf.msg.firmwareUpdateResponse;
 				switch (response.err)
 				{
 				case CanMessageFirmwareUpdateResponse::ErrNoFile:
@@ -381,12 +371,10 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 			{
 				ReportErrorAndRestart("Block receive timeout", FirmwareFlashErrorCode::blockReceiveTimeout);
 			}
-			RequestFirmwareBlock(startingOffset + bytesReceived, FlashBlockSize - bytesReceived);			// ask for 64K from the starting offset
+			RequestFirmwareBlock(startingOffset + bytesReceived, FlashBlockSize - bytesReceived, buf);			// ask for 64K from the starting offset
 			whenStartedWaiting = millis();
 		}
 	} while (!done);
-
-	CanMessageBuffer::Free(buf);
 }
 
 // Clock configuration:
@@ -635,6 +623,34 @@ uint8_t ReadBoardAddress()
 
 #endif
 
+// Compute the CRC32 of a dword-aligned block of memory
+// This assumes the caller has exclusive use of the DMAC
+uint32_t ComputeCRC32(const uint32_t *start, const uint32_t *end)
+{
+#if SAME5x
+	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_DISABLE | DMAC_CRCCTRL_CRCPOLY_CRC32;	// disable the CRC unit
+#elif SAMC21
+	DMAC->CTRL.bit.CRCENABLE = 0;
+#else
+# error Unsupported processor
+#endif
+	DMAC->CRCCHKSUM.reg = 0xFFFFFFFF;
+	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_IO | DMAC_CRCCTRL_CRCPOLY_CRC32;
+#if SAMC21
+	DMAC->CTRL.bit.CRCENABLE = 1;
+#endif
+	while (start < end)
+	{
+		DMAC->CRCDATAIN.reg = *start++;
+		asm volatile("nop");
+		asm volatile("nop");
+	}
+
+	DMAC->CRCSTATUS.reg = DMAC_CRCSTATUS_CRCBUSY;
+	asm volatile("nop");
+	return DMAC->CRCCHKSUM.reg;
+}
+
 // Check that valid firmware is installed. If not, report the error and return false.
 bool CheckValidFirmware()
 {
@@ -656,28 +672,8 @@ bool CheckValidFirmware()
 	const uint32_t storedCRC = *crcAddr;
 
 	// Compute the CRC-32 of the file
-#if SAME5x
-	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_DISABLE | DMAC_CRCCTRL_CRCPOLY_CRC32;	// disable the CRC unit
-#elif SAMC21
-	DMAC->CTRL.bit.CRCENABLE = 0;
-#else
-# error Unsupported processor
-#endif
-	DMAC->CRCCHKSUM.reg = 0xFFFFFFFF;
-	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_IO | DMAC_CRCCTRL_CRCPOLY_CRC32;
-#if SAMC21
-	DMAC->CTRL.bit.CRCENABLE = 1;
-#endif
-	for (const uint32_t *p = reinterpret_cast<const uint32_t*>(FirmwareFlashStart); p < crcAddr; ++p)
-	{
-		DMAC->CRCDATAIN.reg = *p;
-		asm volatile("nop");
-		asm volatile("nop");
-	}
+	const uint32_t actualCRC = ComputeCRC32(reinterpret_cast<const uint32_t*>(FirmwareFlashStart), crcAddr);
 
-	DMAC->CRCSTATUS.reg = DMAC_CRCSTATUS_CRCBUSY;
-	asm volatile("nop");
-	const uint32_t actualCRC = DMAC->CRCCHKSUM.reg;
 	if (actualCRC == storedCRC)
 	{
 		return true;
@@ -783,7 +779,10 @@ bool CheckValidFirmware()
 	for (;;) { }
 }
 
-// Function needed by CoreNG. It doesn't need to do anything in this instance.
-void OutOfMemoryHandler() { }
+// Function needed by CoreNG
+[[noreturn]] void OutOfMemoryHandler()
+{
+	ReportErrorAndRestart("Out of memory", FirmwareFlashErrorCode::noMemory);
+}
 
 // End
