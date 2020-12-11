@@ -15,17 +15,17 @@ extern const char VersionText[] = "SAME5x bootloader version " VERSION_TEXT;
 
 #ifdef DEBUG
 
-void SerialPortInit(Uart*) noexcept
+void SerialPortInit(AsyncSerial*) noexcept
 {
 	SetPinFunction(PortBPin(20), GpioPinFunction::C);		// TxD
 }
 
-void SerialPortDeinit(Uart*) noexcept
+void SerialPortDeinit(AsyncSerial*) noexcept
 {
 	pinMode(PortBPin(20), INPUT_PULLUP);
 }
 
-Uart uart0(3, 3, 512, 512, SerialPortInit, SerialPortDeinit);
+AsyncSerial uart0(3, 3, 512, 512, SerialPortInit, SerialPortDeinit);
 
 extern "C" void SERCOM3_0_Handler()
 {

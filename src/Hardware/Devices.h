@@ -12,8 +12,8 @@
 
 #ifdef DEBUG
 
-#include <Uart.h>
-extern Uart uart0;
+#include <AsyncSerial.h>
+extern AsyncSerial uart0;
 
 #endif
 
