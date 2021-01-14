@@ -78,7 +78,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 #endif
 
 	// Initialise the CAN hardware, using the timing data if it was valid
-	can0dev = CanDevice::Init(0, whichPort, Can0Config, can0Memory, timing);
+	can0dev = CanDevice::Init(0, whichPort, Can0Config, can0Memory, timing, nullptr);
 
 #ifdef SAMMYC21
 	pinMode(CanStandbyPin, OUTPUT_LOW);							// take the CAN drivers out of standby

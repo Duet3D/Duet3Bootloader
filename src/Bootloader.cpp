@@ -225,14 +225,14 @@ inline bool GetLedActiveHigh()
 
 #endif
 
-static uint8_t blockBuffer[FlashBlockSize];
+alignas(4) static uint8_t blockBuffer[FlashBlockSize];
 
 #if SAME5x
 uint8_t ReadBoardAddress();
 #endif
 
 bool CheckValidFirmware();
-void StartFirmware();
+[[noreturn]] void StartFirmware();
 
 static inline void WriteLed(uint8_t ledNumber, bool turnOn)
 {
@@ -560,7 +560,7 @@ void AppMain()
 			WriteLed(0, true);
 		}
 
-		if (!Flash::Write(FirmwareFlashStart + bufferStartOffset, FlashBlockSize, blockBuffer))
+		if (!Flash::Write(FirmwareFlashStart + bufferStartOffset, FlashBlockSize, reinterpret_cast<uint32_t*>(blockBuffer)))
 		{
 			ReportErrorAndRestart("Failed to write flash", FirmwareFlashErrorCode::writeFailed);
 		}

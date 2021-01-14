@@ -19,7 +19,7 @@
 
 #include <General/String.h>
 #include <General/StringFunctions.h>
-#include <General/BitMap.h>
+#include <General/Bitmap.h>
 
 // These three are implemented in Tasks.cpp
 void delay(uint32_t ms);
