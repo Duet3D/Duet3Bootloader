@@ -51,8 +51,11 @@ constexpr unsigned int NumLedPins = 1;
 
 #else
 
-constexpr Pin LedPins_Tool1LC[] = { PortAPin(0), PortAPin(1) };
-constexpr bool LedActiveHigh_Tool1LC = true;
+constexpr Pin LedPins_Tool1LC_v0[] = { PortAPin(0), PortAPin(1) };
+constexpr bool LedActiveHigh_Tool1LC_v0 = true;
+
+constexpr Pin LedPins_Tool1LC_v1[] = { PortAPin(30), PortAPin(31) };
+constexpr bool LedActiveHigh_Tool1LC_v1 = false;
 
 constexpr Pin LedPins_Exp1XD[] = { PortAPin(19), PortAPin(18) };
 constexpr bool LedActiveHigh_Exp1XD = true;

@@ -52,6 +52,7 @@ enum class BoardId : unsigned int
 	exp1hce_v0,
 	ate,
 	exp1xd_v0,
+	tool1lc_v1,
 
 	// ATE board types
 	ate_base,
@@ -62,10 +63,11 @@ enum class BoardId : unsigned int
 constexpr const char * BoardTypeNames[] =
 {
 	// Boards selected by just the first board type pin
-	"TOOL1LC",
+	"TOOL1LC",			// version 1.0 or earlier
 	"EXP1HCE",
 	"unknown",			// for ATE we need to look at the second board type pin
 	"EXP1XD",
+	"TOOL1LC",			// version 1.1 or later
 
 	// ATE board types, distinguished by the second board type pin
 	"ATECM",
@@ -78,26 +80,29 @@ constexpr unsigned int BoardTypeVersions[] =
 	0,
 	0,
 	0,
+	1,
 	0,
 	0
 };
 
 constexpr const Pin *LedPinsTables[] =
 {
-	LedPins_Tool1LC,
+	LedPins_Tool1LC_v0,
 	LedPins_Exp1HCE,
 	LedPins_Ate,
 	LedPins_Exp1XD,
+	LedPins_Tool1LC_v1,
 	LedPins_Ate,
 	LedPins_Ate,
 };
 
 constexpr bool LedActiveHigh[] =
 {
-	LedActiveHigh_Tool1LC,
+	LedActiveHigh_Tool1LC_v0,
 	LedActiveHigh_Exp1HCE,
 	LedActiveHigh_Ate,
 	LedActiveHigh_Exp1XD,
+	LedActiveHigh_Tool1LC_v1,
 	LedActiveHigh_Ate,
 	LedActiveHigh_Ate,
 };
@@ -109,10 +114,11 @@ static_assert(ARRAY_SIZE(LedActiveHigh) == ARRAY_SIZE(BoardTypeNames));
 // This table of floats is only used at compile time, so it shouldn't cause the floating point library to be pulled in
 constexpr float BoardTypeFractions[] =
 {
-	1.0/(1.0 + 10.0),						// TOOL1LC has 1K lower resistor, 10K upper
+	1.0/(1.0 + 10.0),						// TOOL1LC v1.0 has 1K lower resistor, 10K upper
 	4.7/(4.7 + 27.0),						// EXP1HCE has 4K7 lower resistor, 27K upper
 	3.0/(3.0 + 12.0),						// ATECM and ATEIO have 3K lower, 12K upper
 	4.7/(4.7 + 4.7),						// EXP1XD has 4K7 lower resistor, 4K7 upper
+	10.0/(1.0 + 10.0),						// TOOL1LC v1.1 has 10K lower resistor, 1K upper
 };
 
 static_assert(IsIncreasing(BoardTypeFractions, ARRAY_SIZE(BoardTypeFractions)));
@@ -122,7 +128,8 @@ constexpr uint16_t BoardIdDecisionPoints[] =
 {
 	(uint16_t)((BoardTypeFractions[0] + BoardTypeFractions[1]) * (AdcRange/2)),
 	(uint16_t)((BoardTypeFractions[1] + BoardTypeFractions[2]) * (AdcRange/2)),
-	(uint16_t)((BoardTypeFractions[2] + BoardTypeFractions[3]) * (AdcRange/2))
+	(uint16_t)((BoardTypeFractions[2] + BoardTypeFractions[3]) * (AdcRange/2)),
+	(uint16_t)((BoardTypeFractions[3] + BoardTypeFractions[4]) * (AdcRange/2))
 };
 
 static_assert(ARRAY_SIZE(BoardIdDecisionPoints) + 1 == ARRAY_SIZE(BoardTypeFractions));
