@@ -117,7 +117,7 @@ bool CanInterface::GetCanMessage(CanMessageBuffer *buf)
 // Send a CAN message and free the buffer
 void CanInterface::Send(CanMessageBuffer *buf)
 {
-	can0dev->SendMessage(CanDevice::TxBufferNumber::fifo, 1000, buf);
+	(void)can0dev->SendMessage(CanDevice::TxBufferNumber::fifo, 1000, buf);
 }
 
 // End
