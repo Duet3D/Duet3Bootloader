@@ -19,7 +19,54 @@
 #if SAME5x
 
 constexpr uint32_t FlashBlockSize = 0x00010000;							// the erase size we assume for flash (64K)
-constexpr const char* BoardTypeName = "EXP3HC";
+
+// Currently we support two boards: the EXP3HC and the EXP1HCE (new version using ATSAME51G18A or 19A)
+constexpr const char* BoardTypeNames[] =
+{
+	"EXP3HC",
+	"EXP1HCL"
+};
+
+constexpr unsigned int BoardTypeVersions[] =
+{
+	0,
+	0,
+};
+
+constexpr const Pin *LedPinsTables[] =
+{
+	LedPins_EXP3HC,
+	LedPins_EXP1HCL,
+};
+
+constexpr bool LedActiveHigh[] =
+{
+	LedActiveHigh_EXP3HC,
+	LedActiveHigh_EXP1HCL,
+};
+
+// Values of the DID register that correspond to the boards we support
+//	ID			Chip		Board
+//	0x61810300	SAME51N20A	EXP3HC
+//	0x61810301	SAME51N19A	EXP3HC
+//	0x61810302	SAME51J19A
+//	0x61810303	SAME51J18A
+//	0x61810304	SAME51J20A
+//	0x61810305	SAME51G19A	EXP1HCE
+//	0x61810306	SAME51G18A	EXP1HCE
+// Bits 8-15 (03 in the above) identify the die and revision number, so may be subject to change
+
+constexpr uint32_t DeviceIdMask = 0xFFFF00FF;
+
+enum DeviceId : uint32_t
+{
+	SAME51N_min = 0x61810300 & DeviceIdMask,
+	SAME51N_max = 0x61810301 & DeviceIdMask,
+	SAME51J_min = 0x61810302 & DeviceIdMask,
+	SAME51J_max = 0x61810304 & DeviceIdMask,
+	SAME51G_min = 0x61810305 & DeviceIdMask,
+	SAME51G_max = 0x61810306 & DeviceIdMask
+};
 
 #elif SAMC21
 
@@ -27,7 +74,10 @@ constexpr uint32_t FlashBlockSize = 0x00004000;							// the erase size we assum
 
 # ifdef SAMMYC21
 
-constexpr const char* BoardTypeName = "SAMMYC21";
+constexpr const char* BoardTypeNames[] = { "SAMMYC21" };
+constexpr unsigned int BoardTypeVersions[] = { 0 };
+constexpr const Pin *LedPinsTables[] = { LedPins_SAMMYC21 };
+constexpr bool LedActiveHigh[] = { LedActiveHigh_SAMMYC21 };
 
 # else
 
@@ -106,10 +156,6 @@ constexpr bool LedActiveHigh[] =
 	LedActiveHigh_Ate,
 	LedActiveHigh_Ate,
 };
-
-static_assert(ARRAY_SIZE(BoardTypeVersions) == ARRAY_SIZE(BoardTypeNames));
-static_assert(ARRAY_SIZE(LedPinsTables) == ARRAY_SIZE(BoardTypeNames));
-static_assert(ARRAY_SIZE(LedActiveHigh) == ARRAY_SIZE(BoardTypeNames));
 
 // This table of floats is only used at compile time, so it shouldn't cause the floating point library to be pulled in
 constexpr float BoardTypeFractions[] =
@@ -193,12 +239,14 @@ unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[], size
 # error Unsupported board
 #endif
 
+static_assert(ARRAY_SIZE(BoardTypeVersions) == ARRAY_SIZE(BoardTypeNames));
+static_assert(ARRAY_SIZE(LedPinsTables) == ARRAY_SIZE(BoardTypeNames));
+static_assert(ARRAY_SIZE(LedActiveHigh) == ARRAY_SIZE(BoardTypeNames));
+
 constexpr uint32_t BlockReceiveTimeout = 2000;								// block receive timeout milliseconds
 constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// the amount of space we reserve for the bootloader
 
-#if SAMC21 && !defined(SAMMYC21)
-
-unsigned int boardTypeIndex;
+unsigned int boardTypeIndex = 0;
 
 inline Pin GetLedPin(unsigned int ledNumber)
 {
@@ -217,20 +265,6 @@ inline bool GetLedActiveHigh()
 {
 	return LedActiveHigh[boardTypeIndex];
 }
-
-#else
-
-inline Pin GetLedPin(unsigned int ledNumber)
-{
-	return LedPins[ledNumber];
-}
-
-inline bool GetLedActiveHigh()
-{
-	return LedActiveHigh;
-}
-
-#endif
 
 alignas(4) static uint8_t blockBuffer[FlashBlockSize];
 
@@ -305,13 +339,8 @@ void ReportError(const char *text, FirmwareFlashErrorCode err)
 void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes, CanMessageBuffer& buf)
 {
 	CanMessageFirmwareUpdateRequest * const msg = buf.SetupRequestMessage<CanMessageFirmwareUpdateRequest>(0, CanInterface::GetCanAddress(), CanId::MasterAddress);
-#if defined(SAMMYC21) || SAME5x
-	SafeStrncpy(msg->boardType, BoardTypeName, sizeof(msg->boardType));
-	msg->boardVersion = 0;
-#else
 	SafeStrncpy(msg->boardType, BoardTypeNames[boardTypeIndex], sizeof(msg->boardType));
 	msg->boardVersion = BoardTypeVersions[boardTypeIndex];
-#endif
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
 	msg->fileWanted = (uint32_t)FirmwareModule::main;
 	msg->fileOffset = fileOffset;

@@ -43,30 +43,29 @@ constexpr Pin AteIoJumperPin = PortAPin(16);
 #endif
 
 // Diagnostic LEDs
+constexpr unsigned int NumLedPins = 2;
+
 #ifdef SAMMYC21
 
-constexpr Pin LedPins[] = { PortAPin(28) };
-constexpr bool LedActiveHigh = true;
-constexpr unsigned int NumLedPins = 1;
+constexpr Pin LedPins_SAMMYC21[NumLedPins] = { PortAPin(28), NoPin };
+constexpr bool LedActiveHigh_SAMMYC21 = true;
 
 #else
 
-constexpr Pin LedPins_Tool1LC_v0[] = { PortAPin(0), PortAPin(1) };
+constexpr Pin LedPins_Tool1LC_v0[NumLedPins] = { PortAPin(0), PortAPin(1) };
 constexpr bool LedActiveHigh_Tool1LC_v0 = true;
 
-constexpr Pin LedPins_Tool1LC_v1[] = { PortAPin(30), PortAPin(31) };
+constexpr Pin LedPins_Tool1LC_v1[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_Tool1LC_v1 = false;
 
-constexpr Pin LedPins_Exp1XD[] = { PortAPin(19), PortAPin(18) };
+constexpr Pin LedPins_Exp1XD[NumLedPins] = { PortAPin(19), PortAPin(18) };
 constexpr bool LedActiveHigh_Exp1XD = true;
 
-constexpr Pin LedPins_Ate[] = { PortAPin(30), PortAPin(31) };
+constexpr Pin LedPins_Ate[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_Ate = false;
 
-constexpr Pin LedPins_Exp1HCE[] = { PortAPin(30), PortAPin(31) };
+constexpr Pin LedPins_Exp1HCE[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_Exp1HCE = false;
-
-constexpr unsigned int NumLedPins = 2;					// currently all boards supported by this build have 2 LEDs
 
 #endif
 
