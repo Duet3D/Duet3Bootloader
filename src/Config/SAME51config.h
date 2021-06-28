@@ -23,6 +23,8 @@ constexpr bool LedActiveHigh_EXP3HC = true;
 constexpr Pin LedPins_EXP1HCL[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_EXP1HCL = false;
 
+constexpr Pin JumperPin_EXP1HCL = PortAPin(0);
+
 // Available UART ports
 constexpr IRQn Serial0_IRQn = SERCOM3_0_IRQn;
 

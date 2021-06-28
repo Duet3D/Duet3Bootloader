@@ -18,6 +18,8 @@
 
 #if SAME5x
 
+#include <same51.h>
+
 constexpr uint32_t FlashBlockSize = 0x00010000;							// the erase size we assume for flash (64K)
 
 // Currently we support two boards: the EXP3HC and the EXP1HCE (new version using ATSAME51G18A or 19A)
@@ -436,16 +438,41 @@ void AppMain()
 
 #if SAME5x
 
-	for (Pin p : BoardAddressPins)
+	bool doHardwareReset;
+	CanAddress defaultAddress;
+
+	// Determine the board type
+	const uint32_t deviceId = REG_DSU_DID & DeviceIdMask;
+	if (deviceId >= SAME51N_min && deviceId <= SAME51N_max)
 	{
-		pinMode(p, INPUT_PULLUP);
+		// if a SAME51N processor, assume EXP3HC
+		boardTypeIndex = 0;
+		for (Pin p : BoardAddressPins)
+		{
+			pinMode(p, INPUT_PULLUP);
+		}
+
+		// Check whether address switches are set to zero. If so then reset and load new firmware
+		const CanAddress switches = ReadBoardAddress();
+		doHardwareReset = (switches == 0);
+		defaultAddress = (doHardwareReset) ? CanId::ExpansionBoardFirmwareUpdateAddress : switches;
+	}
+	else if (deviceId >= SAME51G_min && deviceId <= SAME51G_max)
+	{
+		// When we have more boards using this processor, we will need to read the board ID pin here as we do for the SAMC21-based boards.
+		// But for now we have only the EXP1HCL
+		boardTypeIndex = 2;
+		defaultAddress = CanId::Exp1HCEBoardDefaultAddress;
+		pinMode(JumperPin_EXP1HCL, INPUT_PULLUP);
+		delayMicroseconds(100);
+		doHardwareReset = !digitalRead(JumperPin_EXP1HCL);
+	}
+	else
+	{
+		ReportErrorAndRestart("Unknown board", FirmwareFlashErrorCode::unknownBoard);
 	}
 
-	// Check whether address switches are set to zero. If so then reset and load new firmware
-	const CanAddress switches = ReadBoardAddress();
-	const bool doHardwareReset = (switches == 0);
-	const CanAddress defaultAddress = (doHardwareReset) ? CanId::ExpansionBoardFirmwareUpdateAddress : switches;
-	const bool useAlternatCanPins = false;
+	const bool useAlternateCanPins = false;
 
 #elif SAMC21
 
@@ -565,7 +592,7 @@ void AppMain()
 		ReportErrorAndRestart("Failed to initialize flash controller", FirmwareFlashErrorCode::flashInitFailed);
 	}
 
-	CanInterface::Init(defaultAddress, doHardwareReset, useAlternatCanPins);
+	CanInterface::Init(defaultAddress, doHardwareReset, useAlternateCanPins);
 
 	// Loop requesting firmware from the main board and handling any firmware that it sends to us
 	uint32_t bufferStartOffset = 0;
