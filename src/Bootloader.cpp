@@ -439,6 +439,7 @@ void AppMain()
 #if SAME5x
 
 	bool doHardwareReset;
+	bool useAlternateCanPins = false;
 	CanAddress defaultAddress;
 
 	// Determine the board type
@@ -461,7 +462,8 @@ void AppMain()
 	{
 		// When we have more boards using this processor, we will need to read the board ID pin here as we do for the SAMC21-based boards.
 		// But for now we have only the EXP1HCL
-		boardTypeIndex = 2;
+		boardTypeIndex = 1;
+		useAlternateCanPins = true;
 		defaultAddress = CanId::Exp1HCEBoardDefaultAddress;
 		pinMode(JumperPin_EXP1HCL, INPUT_PULLUP);
 		delayMicroseconds(100);
@@ -471,8 +473,6 @@ void AppMain()
 	{
 		ReportErrorAndRestart("Unknown board", FirmwareFlashErrorCode::unknownBoard);
 	}
-
-	const bool useAlternateCanPins = false;
 
 #elif SAMC21
 
