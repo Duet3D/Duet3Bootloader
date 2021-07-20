@@ -22,7 +22,7 @@
 
 constexpr uint32_t FlashBlockSize = 0x00010000;							// the erase size we assume for flash (64K)
 
-// Currently we support two boards: the EXP3HC and the EXP1HCE (new version using ATSAME51G18A or 19A)
+// Currently we support two boards: the EXP3HC and the EXP1HCL (new version of the 1HCE using ATSAME51G19A)
 constexpr const char* BoardTypeNames[] =
 {
 	"EXP3HC",
@@ -446,7 +446,7 @@ void AppMain()
 	const uint32_t deviceId = REG_DSU_DID & DeviceIdMask;
 	if (deviceId >= SAME51N_min && deviceId <= SAME51N_max)
 	{
-		// if a SAME51N processor, assume EXP3HC
+		// If a SAME51N processor, assume EXP3HC
 		boardTypeIndex = 0;
 		for (Pin p : BoardAddressPins)
 		{
@@ -464,7 +464,7 @@ void AppMain()
 		// But for now we have only the EXP1HCL
 		boardTypeIndex = 1;
 		useAlternateCanPins = true;
-		defaultAddress = CanId::Exp1HCEBoardDefaultAddress;
+		defaultAddress = CanId::Exp1HCEBoardDefaultAddress;		// 1HCL default address is that same as 1HCE
 		pinMode(JumperPin_EXP1HCL, INPUT_PULLUP);
 		delayMicroseconds(100);
 		doHardwareReset = !digitalRead(JumperPin_EXP1HCL);
