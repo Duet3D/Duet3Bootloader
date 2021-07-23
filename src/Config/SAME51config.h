@@ -18,7 +18,7 @@ constexpr Pin BoardAddressPins[NumAddressBits] = { PortCPin(11), PortCPin(12), P
 // Diagnostic LED
 constexpr unsigned int NumLedPins = 2;
 
-constexpr Pin LedPins_EXP3HC[NumLedPins] = { PortCPin(10), NoPin };
+constexpr Pin LedPins_EXP3HC[NumLedPins] = { PortCPin(10), PortCPin(7) };
 constexpr bool LedActiveHigh_EXP3HC = true;
 constexpr Pin LedPins_EXP1HCL[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_EXP1HCL = false;
