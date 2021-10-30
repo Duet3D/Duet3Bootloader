@@ -482,7 +482,7 @@ void AppMain()
 	pinMode(ButtonPins[0], INPUT_PULLUP);
 	const CanAddress defaultAddress = CanId::SammyC21DefaultAddress;
 	const bool doHardwareReset = !digitalRead(ButtonPins[0]);
-	const bool useAlternatCanPins = true;
+	const bool useAlternateCanPins = true;
 # else
 
 	// Read the board type pin, which is an analog input fed from a resistor network
@@ -499,7 +499,7 @@ void AppMain()
 
 	// Set up the hardware and default CAN address as appropriate
 	// Determine whether we need to do a hardware reset
-	bool doHardwareReset = false, useAlternatCanPins = false;
+	bool doHardwareReset = false, useAlternateCanPins = false;
 	CanAddress defaultAddress;
 
 	switch ((BoardId)boardTypeIndex)
@@ -540,7 +540,7 @@ void AppMain()
 		break;
 
 	case BoardId::ate_cm:
-		useAlternatCanPins = true;
+		useAlternateCanPins = true;
 		// ATE CM board has a reset jumper fitted between AteCmZeroPin and AteCmJumperPin
 		defaultAddress = CanId::ATECMBoardDefaultAddress;
 		pinMode(AteCmZeroPin, OUTPUT_LOW);
@@ -551,7 +551,7 @@ void AppMain()
 		break;
 
 	case BoardId::ate_io:
-		useAlternatCanPins = true;
+		useAlternateCanPins = true;
 		defaultAddress = CanId::ATEIOBoardDefaultAddress;
 		pinMode(AteIoJumperPin, INPUT_PULLUP);
 		delayMicroseconds(100);
