@@ -1,7 +1,7 @@
 # Duet3Bootloader
 Bootstrap loader for Duet 3 Expansion and Smart Tool boards
  
-Build instructions:
+## Build instructions
 
 Duet3Bootloader is built from several Github projects. You need to use compatible branches of these projects. As at 20 May 2020, the latest source code is on these branches:
 
@@ -27,3 +27,6 @@ Duet3Bootloader is built from several Github projects. You need to use compatibl
 
 8. Select and build the configuration you want.
 
+## Bug reports
+
+Please use the [forum](https://forum.duet3d.com) for support requests or the [RepRapFirmware](https://github.com/Duet3D/RepRapFirmware) GitHub repository for feature requests and bug reports.
