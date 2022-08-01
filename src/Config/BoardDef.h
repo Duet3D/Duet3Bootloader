@@ -16,6 +16,10 @@
 # include "SAMC21config.h"
 #endif
 
+#if SAME70
+# include "SAME70config.h"
+#endif
+
 #define SUPPORT_CAN_EXPANSION	1
 
 #endif /* SRC_CONFIG_BOARDDEF_H_ */

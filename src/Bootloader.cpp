@@ -9,7 +9,13 @@
 #include <Hardware/Devices.h>
 #include <CAN/CanInterface.h>
 #include <Flash.h>
-#include <Serial.h>
+
+#if SAME70
+# include <AsyncSerial.h>
+#else
+# include <Serial.h>
+#endif
+
 #include <Config/BoardDef.h>
 #include <General/StringRef.h>
 #include <CanId.h>
@@ -237,6 +243,29 @@ unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[], size
 
 # endif
 
+#elif SAME70
+
+# define pvReservedM9	pfnReserved1_Handler
+# define FLASH_ADDR		IFLASH_ADDR
+# define FLASH_SIZE		IFLASH_SIZE
+# define HSRAM_ADDR		IRAM_ADDR
+# define HSRAM_SIZE		IRAM_SIZE
+
+// We program the flash in 64kb blocks
+constexpr uint32_t FlashBlockSize = 0x00010000;
+
+# if defined(MB6HC)
+constexpr const char* BoardTypeNames[] = { "MB6HC" };
+constexpr unsigned int BoardTypeVersions[] = { 0 };
+constexpr const Pin *LedPinsTables[] = { LedPins_MB6HC };
+constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6HC };
+# elif defined(MB6XD)
+constexpr const char* BoardTypeNames[] = { "MB6XD" };
+constexpr unsigned int BoardTypeVersions[] = { 0 };
+constexpr const Pin *LedPinsTables[] = { LedPins_MB6XD };
+constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6XD };
+# endif
+
 #else
 # error Unsupported board
 #endif
@@ -246,9 +275,37 @@ static_assert(ARRAY_SIZE(LedPinsTables) == ARRAY_SIZE(BoardTypeNames));
 static_assert(ARRAY_SIZE(LedActiveHigh) == ARRAY_SIZE(BoardTypeNames));
 
 constexpr uint32_t BlockReceiveTimeout = 2000;								// block receive timeout milliseconds
+
+#if SAME70
+constexpr uint32_t FirmwareFlashStart = FLASH_ADDR;							// no bootloader on SAME70
+#else
 constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// the amount of space we reserve for the bootloader
+#endif
 
 unsigned int boardTypeIndex = 0;
+
+#if SAME70
+
+// Erase at least 'length' bytes of flash
+// There are two 8K sectors, then one 112K sector, then the rest are 128K sectors. We can only erase whole sectors.
+bool EraseFlash(uint32_t length) noexcept
+{
+	uint32_t addr = 0;
+	while (addr < length)
+	{
+		const uint32_t next = (addr < 0x00004000) ? addr + 0x00002000		// we are in one of the 8K sectors
+						: (addr < 0x00020000) ? 0x00020000					// we are in the 112k sector
+							: addr + 0x00020000;							// we are in one of the 128k sectors
+		if (!Flash::EraseSector(addr))
+		{
+			return false;
+		}
+		addr = next;
+	}
+	return true;
+}
+
+#endif
 
 inline Pin GetLedPin(unsigned int ledNumber)
 {
@@ -274,8 +331,10 @@ alignas(4) static uint8_t blockBuffer[FlashBlockSize];
 uint8_t ReadBoardAddress();
 #endif
 
+#if !SAME70
 bool CheckValidFirmware();
 [[noreturn]] void StartFirmware();
+#endif
 
 static inline void WriteLed(uint8_t ledNumber, bool turnOn)
 {
@@ -566,6 +625,10 @@ void AppMain()
 	AnalogIn::Disable(CommonAdcDevice);			// finished using the ADC
 
 # endif
+#elif SAME70
+	constexpr bool doHardwareReset = false;
+	constexpr bool useAlternateCanPins = false;
+	constexpr CanAddress defaultAddress = CanId::ExpansionBoardFirmwareUpdateAddress;
 #else
 # error Unsupported processor
 #endif
@@ -579,11 +642,13 @@ void AppMain()
 	uart0.begin(57600);
 #endif
 
+#if !SAME70
 	if (!doHardwareReset && CheckValidFirmware())
 	{
 		// Relocate the vector table and jump into the firmware. If it returns then we execute the bootloader.
 		StartFirmware();
 	}
+#endif
 
 	// If we get here then we are staying in the bootloader
 	// Initialise the CAN subsystem
@@ -611,7 +676,11 @@ void AppMain()
 				ReportErrorAndRestart("Failed to unlock flash", FirmwareFlashErrorCode::unlockFailed);
 			}
 			SerialMessage("Erasing flash");
+#if SAME70
+			if (!EraseFlash(roundedUpLength))
+#else
 			if (!Flash::Erase(FirmwareFlashStart, roundedUpLength))
+#endif
 			{
 				ReportErrorAndRestart("Failed to erase flash", FirmwareFlashErrorCode::eraseFailed);
 			}
@@ -650,6 +719,9 @@ void AppMain()
 
 	delay(2);
 
+#if SAME70
+	ResetProcessor();
+#else
 	NVIC_DisableIRQ(CAN0_IRQn);
 	NVIC_DisableIRQ(CAN1_IRQn);
 	CAN0->IR.reg = 0xFFFFFFFF;			// clear all interrupt sources for when the device gets enabled by the main firmware
@@ -666,6 +738,7 @@ void AppMain()
 	}
 
 	StartFirmware();
+#endif
 }
 
 #if SAME5x
@@ -686,22 +759,24 @@ uint8_t ReadBoardAddress()
 
 #endif
 
+#if !SAME70
+
 // Compute the CRC32 of a dword-aligned block of memory
 // This assumes the caller has exclusive use of the DMAC
 uint32_t ComputeCRC32(const uint32_t *start, const uint32_t *end)
 {
-#if SAME5x
+# if SAME5x
 	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_DISABLE | DMAC_CRCCTRL_CRCPOLY_CRC32;	// disable the CRC unit
-#elif SAMC21
+# elif SAMC21
 	DMAC->CTRL.bit.CRCENABLE = 0;
-#else
-# error Unsupported processor
-#endif
+# else
+#  error Unsupported processor
+# endif
 	DMAC->CRCCHKSUM.reg = 0xFFFFFFFF;
 	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_IO | DMAC_CRCCTRL_CRCPOLY_CRC32;
-#if SAMC21
+# if SAMC21
 	DMAC->CTRL.bit.CRCENABLE = 1;
-#endif
+# endif
 	while (start < end)
 	{
 		DMAC->CRCDATAIN.reg = *start++;
@@ -748,19 +823,19 @@ bool CheckValidFirmware()
 	return false;
 }
 
-// Execute the main firmware CAN1
+// Execute the main firmware
 [[noreturn]] void StartFirmware()
 {
-#ifdef DEBUG
+# ifdef DEBUG
 	SerialMessage("Bootloader transferring control to main firmware");
 	uart0.end();										// disable serial port so that main firmware can initialise it
-#endif
+# endif
 
 	// Disable all IRQs
 	SysTick->CTRL = (1 << SysTick_CTRL_CLKSOURCE_Pos);	// disable the system tick exception
 	__disable_irq();
 
-#if SAME5x
+# if SAME5x
 
 	for (size_t i = 0; i < 8; i++)
 	{
@@ -778,31 +853,30 @@ bool CheckValidFirmware()
 	OSCCTRL->Dpll[1].DPLLCTRLA.bit.ENABLE = 0;
 	while (OSCCTRL->Dpll[1].DPLLSYNCBUSY.bit.ENABLE) { }
 
-#elif SAMC21
+# elif SAMC21
 
 	NVIC->ICER[0] = 0xFFFFFFFF;							// Disable IRQs
 	NVIC->ICPR[0] = 0xFFFFFFFF;							// Clear pending IRQs
 
 	// Switch back to the OSC48M clock divided to 4MHz
-# if 1
+#  if 1
 	// 2020-06-03: on the SammyC21 board the software reset of GCLK never completed, so reset it manually
 	OSCCTRL->OSC48MCTRL.reg = OSCCTRL_OSC48MCTRL_ENABLE;				// make sure OSC48M is enabled, clear the on-demand bit
 	while ((OSCCTRL->STATUS.reg & OSCCTRL_STATUS_OSC48MRDY) == 0) { }	// wait for it to become ready
 	GCLK->GENCTRL[0].reg = 0x00000106;									// this is the reset default
 	OSCCTRL->OSC48MCTRL.reg = OSCCTRL_OSC48MCTRL_ENABLE | OSCCTRL_OSC48MCTRL_ONDEMAND;		// back to reset default
-# else
+#  else
 	// The following code works on Duet3D boards, but it hangs on the SammyC21 with device ID 0x11010405 (SAMC21G18A die revision E)
 	GCLK->CTRLA.reg = GCLK_CTRLA_SWRST;
 	while ((GCLK->CTRLA.reg & GCLK_CTRLA_SWRST) != 0) { }
-# endif
+#  endif
 
 	// Disable the DPLL so that it can be reprogrammed by the main firmware
 	OSCCTRL->DPLLCTRLA.bit.ENABLE = 0;
 	while (OSCCTRL->DPLLSYNCBUSY.bit.ENABLE) { }
-
-#else
-# error Unsupported processor
-#endif
+# else
+#  error Unsupported processor
+# endif
 
 	for (size_t i = 0; i < NumLedPins; ++i)
 	{
@@ -828,24 +902,34 @@ bool CheckValidFirmware()
 	__enable_irq();
 
 	__asm volatile ("ldr r1, [r3, #4]");
-#if SAME5x
+# if SAME5x
 	__asm volatile ("orr r1, r1, #1");
-#elif SAMC21
+# elif SAMC21
 	__asm volatile ("movs r2, #1");
 	__asm volatile ("orr r1, r1, r2");
-#else
-# error Unsupported processor
-#endif
+# else
+#  error Unsupported processor
+# endif
 	__asm volatile ("bx r1");
 
 	// This point is unreachable, but gcc doesn't seem to know that
 	for (;;) { }
+
 }
+
+#endif
 
 // Function needed by CoreNG
 [[noreturn]] void OutOfMemoryHandler()
 {
 	ReportErrorAndRestart("Out of memory", FirmwareFlashErrorCode::noMemory);
 }
+
+#if SAME70
+
+// Dummy assertion handler, called by the Cache module in CoreN2G
+extern "C" [[noreturn]] void vAssertCalled(uint32_t line, const char *file) noexcept { while (true) { } }
+
+#endif
 
 // End

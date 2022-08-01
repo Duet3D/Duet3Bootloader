@@ -13,7 +13,10 @@
 
 #define SUPPORT_CAN		1		// needed by CanDevice.h
 #include <CanDevice.h>
-#include <hpl_user_area.h>
+
+#if !SAME70
+# include <hpl_user_area.h>
+#endif
 
 static CanDevice *can0dev = nullptr;
 static CanUserAreaData canConfigData;
@@ -47,6 +50,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 	const uint32_t CanUserAreaDataOffset = 256 - sizeof(CanUserAreaData);
 #endif
 
+#if !SAME70
 	canConfigData = *reinterpret_cast<CanUserAreaData*>(NVMCTRL_USER + CanUserAreaDataOffset);
 
 	if (doHardwareReset)
@@ -54,8 +58,15 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 		canConfigData.Clear();
 		_user_area_write(reinterpret_cast<void*>(NVMCTRL_USER), CanUserAreaDataOffset, reinterpret_cast<const uint8_t*>(&canConfigData), sizeof(canConfigData));
 	}
+#endif
+
 	CanTiming timing;
+
+#if SAME70
+	timing.SetDefaults_1Mb();									// we only support default timing when a main board is used as an expansion board
+#else
 	canConfigData.GetTiming(timing);
+#endif
 
 	// Set up the CAN pins
 #if SAME5x
@@ -84,6 +95,10 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 		SetPinFunction(PortAPin(24), GpioPinFunction::G);
 	}
 	const unsigned int whichPort = 0;							// we always use CAN0 on the SAMC21
+#elif SAME70
+	const unsigned int whichPort = 1;							// we always use MCAN1 for Can-FD on the SAME70
+	SetPinFunction(PortDPin(12), GpioPinFunction::B);
+	SetPinFunction(PortCPin(12), GpioPinFunction::C);
 #endif
 
 	// Initialise the CAN hardware, using the timing data if it was valid
