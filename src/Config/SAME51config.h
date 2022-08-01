@@ -22,6 +22,8 @@ constexpr Pin LedPins_EXP3HC[NumLedPins] = { PortCPin(10), PortCPin(7) };
 constexpr bool LedActiveHigh_EXP3HC = true;
 constexpr Pin LedPins_EXP1HCL[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_EXP1HCL = false;
+constexpr Pin LedPins_DUET3MINI[NumLedPins] = { PortAPin(30), PortAPin(31) };
+constexpr bool LedActiveHigh_DUET3MINI = false;
 
 constexpr Pin JumperPin_EXP1HCL = PortAPin(0);
 

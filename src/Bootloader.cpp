@@ -28,6 +28,15 @@
 
 constexpr uint32_t FlashBlockSize = 0x00010000;							// the erase size we assume for flash (64K)
 
+# if defined(CAN_IAP)
+
+constexpr const char* BoardTypeNames[] = { "Mini5plus" };
+constexpr unsigned int BoardTypeVersions[] = { 0 };
+constexpr const Pin *LedPinsTables[] = { LedPins_DUET3MINI };
+constexpr bool LedActiveHigh[] = { LedActiveHigh_DUET3MINI };
+
+#else
+
 // Currently we support two boards: the EXP3HC and the EXP1HCL (new version of the 1HCE using ATSAME51G19A)
 constexpr const char* BoardTypeNames[] =
 {
@@ -41,6 +50,7 @@ constexpr unsigned int BoardTypeVersions[] =
 	0,
 };
 
+
 constexpr const Pin *LedPinsTables[] =
 {
 	LedPins_EXP3HC,
@@ -52,6 +62,8 @@ constexpr bool LedActiveHigh[] =
 	LedActiveHigh_EXP3HC,
 	LedActiveHigh_EXP1HCL,
 };
+
+#endif
 
 // Values of the DID register that correspond to the boards we support
 //	ID			Chip		Board
@@ -278,6 +290,8 @@ constexpr uint32_t BlockReceiveTimeout = 2000;								// block receive timeout m
 
 #if SAME70
 constexpr uint32_t FirmwareFlashStart = FLASH_ADDR;							// no bootloader on SAME70
+#elif SAME5x && defined(CAN_IAP)
+constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + 0x4000;				// the amount of space we reserve for the USB bootloader
 #else
 constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// the amount of space we reserve for the bootloader
 #endif
@@ -290,17 +304,17 @@ unsigned int boardTypeIndex = 0;
 // There are two 8K sectors, then one 112K sector, then the rest are 128K sectors. We can only erase whole sectors.
 bool EraseFlash(uint32_t length) noexcept
 {
-	uint32_t addr = 0;
-	while (addr < length)
+	uint32_t offset = 0;
+	while (offset < length)
 	{
-		const uint32_t next = (addr < 0x00004000) ? addr + 0x00002000		// we are in one of the 8K sectors
-						: (addr < 0x00020000) ? 0x00020000					// we are in the 112k sector
-							: addr + 0x00020000;							// we are in one of the 128k sectors
-		if (!Flash::EraseSector(addr))
+		const uint32_t next = (offset < 0x00004000) ? offset + 0x00002000	// we are in one of the 8K sectors
+						: (offset < 0x00020000) ? 0x00020000				// we are in the 112k sector
+							: offset + 0x00020000;							// we are in one of the 128k sectors
+		if (!Flash::EraseSector(offset + IFLASH_ADDR))
 		{
 			return false;
 		}
-		addr = next;
+		offset = next;
 	}
 	return true;
 }
@@ -310,7 +324,7 @@ bool EraseFlash(uint32_t length) noexcept
 inline Pin GetLedPin(unsigned int ledNumber)
 {
 	const Pin p = LedPinsTables[boardTypeIndex][ledNumber];
-#ifdef DEBUG
+#if defined(DEBUG) && (SAME5x || SAMC21)
 	if (p == PortAPin(30) || p == PortAPin(31))
 	{
 		// Using the SWD pins to drive the LEDs. Don't allow this in a debug build because it prevents debugging.
@@ -327,13 +341,16 @@ inline bool GetLedActiveHigh()
 
 alignas(4) static uint8_t blockBuffer[FlashBlockSize];
 
-#if SAME5x
-uint8_t ReadBoardAddress();
-#endif
+#if !defined(CAN_IAP)
 
-#if !SAME70
+// Forward declarations
 bool CheckValidFirmware();
 [[noreturn]] void StartFirmware();
+
+# if SAME5x
+uint8_t ReadBoardAddress();
+# endif
+
 #endif
 
 static inline void WriteLed(uint8_t ledNumber, bool turnOn)
@@ -383,18 +400,12 @@ void ReportError(const char *text, FirmwareFlashErrorCode err)
 	delay(1000);
 }
 
-[[noreturn]] void Restart()
-{
-	SCB->AIRCR = (0x5FA << 16) | (1u << 2);				// reset the processor
-	for (;;) { }
-}
-
 [[noreturn]] void ReportErrorAndRestart(const char *text, FirmwareFlashErrorCode err)
 {
 	CanInterface::Shutdown();
 	ReportError(text, err);
 	delay(2000);
-	Restart();
+	ResetProcessor();
 }
 
 void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes, CanMessageBuffer& buf)
@@ -497,6 +508,14 @@ void AppMain()
 
 #if SAME5x
 
+# if defined(CAN_IAP)
+
+	constexpr bool doHardwareReset = false;
+	constexpr bool useAlternateCanPins = false;
+	constexpr CanAddress defaultAddress = CanId::ExpansionBoardFirmwareUpdateAddress;
+
+# else
+
 	bool doHardwareReset;
 	bool useAlternateCanPins = false;
 	CanAddress defaultAddress;
@@ -533,6 +552,7 @@ void AppMain()
 		ReportErrorAndRestart("Unknown board", FirmwareFlashErrorCode::unknownBoard);
 	}
 
+# endif
 #elif SAMC21
 
 	// Establish the board type and initialise pins
@@ -642,7 +662,7 @@ void AppMain()
 	uart0.begin(57600);
 #endif
 
-#if !SAME70
+#if !defined(CAN_IAP)
 	if (!doHardwareReset && CheckValidFirmware())
 	{
 		// Relocate the vector table and jump into the firmware. If it returns then we execute the bootloader.
@@ -719,7 +739,7 @@ void AppMain()
 
 	delay(2);
 
-#if SAME70
+#if defined(CAN_IAP)
 	ResetProcessor();
 #else
 	NVIC_DisableIRQ(CAN0_IRQn);
@@ -734,14 +754,16 @@ void AppMain()
 
 	if (!CheckValidFirmware())
 	{
-		Restart();
+		ResetProcessor();
 	}
 
 	StartFirmware();
 #endif
 }
 
-#if SAME5x
+#if !defined(CAN_IAP)
+
+# if SAME5x
 
 // Read the board address
 uint8_t ReadBoardAddress()
@@ -757,9 +779,7 @@ uint8_t ReadBoardAddress()
 	return rslt;
 }
 
-#endif
-
-#if !SAME70
+# endif
 
 // Compute the CRC32 of a dword-aligned block of memory
 // This assumes the caller has exclusive use of the DMAC
@@ -928,7 +948,10 @@ bool CheckValidFirmware()
 #if SAME70
 
 // Dummy assertion handler, called by the Cache module in CoreN2G
-extern "C" [[noreturn]] void vAssertCalled(uint32_t line, const char *file) noexcept { while (true) { } }
+extern "C" [[noreturn]] void vAssertCalled(uint32_t line, const char *file) noexcept
+{
+	ReportErrorAndRestart("vAssert called", FirmwareFlashErrorCode::vAssertCalled);
+}
 
 #endif
 
