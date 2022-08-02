@@ -712,6 +712,7 @@ void AppMain()
 			WriteLed(0, true);
 		}
 
+		SerialMessage("Writing flash");
 		if (!Flash::Write(FirmwareFlashStart + bufferStartOffset, FlashBlockSize, reinterpret_cast<uint32_t*>(blockBuffer)))
 		{
 			ReportErrorAndRestart("Failed to write flash", FirmwareFlashErrorCode::writeFailed);
@@ -730,6 +731,7 @@ void AppMain()
 	}
 
 	// If we get here, firmware update is complete
+	SerialMessage("Locking flash");
 	if (!Flash::Lock(FirmwareFlashStart, roundedUpLength))
 	{
 		ReportErrorAndRestart("Failed to lock flash", FirmwareFlashErrorCode::lockFailed);

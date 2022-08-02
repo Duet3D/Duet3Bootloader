@@ -1101,6 +1101,392 @@
 				</externalSettings>
 			</storageModule>
 		</cconfiguration>
+		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.685750866.1538439612">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.685750866.1538439612" moduleId="org.eclipse.cdt.core.settings" name="Duet3_MB6XD-Debug">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactExtension="elf" artifactName="Duet3_CANiap32_MB6XD-Debug" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.685750866.1538439612" name="Duet3_MB6XD-Debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=" parent="cdt.managedbuild.config.gnu.cross.exe.release" postannouncebuildStep="Generating binary file" postbuildStep="arm-none-eabi-objcopy -O binary &quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.elf&quot; &quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.bin&quot; &amp;&amp; crc32appender &quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.bin&quot;">
+					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.685750866.1538439612." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.release.1094734489" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.release">
+							<option id="cdt.managedbuild.option.gnu.cross.prefix.1703617931" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" useByScannerDiscovery="false" value="arm-none-eabi-" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.path.176976594" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" useByScannerDiscovery="false" value="${ArmGccPath}" valueType="string"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.676031214" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
+							<builder buildPath="${workspace_loc:/Duet3Bootloader}/Release" id="cdt.managedbuild.builder.gnu.cross.2052995350" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.builder.gnu.cross"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.2053696107" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
+								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.option.optimization.level.1406742618" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.size" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.none" id="gnu.c.compiler.option.debugging.level.294957059" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.510808648" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__SAME70Q20B__"/>
+									<listOptionValue builtIn="false" value="MB6XD"/>
+									<listOptionValue builtIn="false" value="CAN_IAP"/>
+									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="noexcept="/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.454619206" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/Hardware/SAME70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/SAME70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/asf/common/utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include}&quot;"/>
+								</option>
+								<option id="gnu.c.compiler.option.dialect.std.81959905" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.dialect.flags.778287825" name="Other dialect flags" superClass="gnu.c.compiler.option.dialect.flags" useByScannerDiscovery="true" value="-std=gnu99" valueType="string"/>
+								<option id="gnu.c.compiler.option.misc.other.1108936099" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard -mfp16-format=ieee -mno-unaligned-access  -ffunction-sections -fdata-sections -nostdlib -Wundef -Wdouble-promotion -Werror=return-type -fsingle-precision-constant &quot;-Wa,-ahl=$*.s&quot;" valueType="string"/>
+								<option id="gnu.c.compiler.option.misc.pic.863353364" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.461501526" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.948492355" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
+								<option id="gnu.cpp.compiler.option.optimization.level.1859588888" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.size" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.none" id="gnu.cpp.compiler.option.debugging.level.430681970" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1156622783" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__SAME70Q20B__"/>
+									<listOptionValue builtIn="false" value="MB6XD"/>
+									<listOptionValue builtIn="false" value="CAN_IAP"/>
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.97911176" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/Hardware/SAME70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/SAME70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/asf}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/asf/common/utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/asf/sam/drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/asf/sam/utils/cmsis/same70/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RRFLibraries/src}&quot;"/>
+								</option>
+								<option id="gnu.cpp.compiler.option.dialect.std.193075834" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.dialect.flags.760135282" name="Other dialect flags" superClass="gnu.cpp.compiler.option.dialect.flags" useByScannerDiscovery="true" value="-std=gnu++17" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.575516419" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard -mfp16-format=ieee -mno-unaligned-access  -ffunction-sections -fdata-sections -fno-threadsafe-statics -fno-rtti -fno-exceptions -nostdlib -Wundef -Wdouble-promotion -Werror=return-type -fsingle-precision-constant &quot;-Wa,-ahl=$*.s&quot;" valueType="string"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1293130589" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.1355130478" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1065122132" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
+								<option id="gnu.cpp.link.option.flags.1893292101" name="Linker flags" superClass="gnu.cpp.link.option.flags" useByScannerDiscovery="false" value="-Os --specs=nano.specs -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--fatal-warnings -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -T&quot;${workspace_loc:/${ProjName}/src/Hardware/SAME70/same70_iap_ram.ld}&quot; -Wl,-Map,&quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.map&quot;" valueType="string"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1246484721" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="CoreN2G"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="RRFLibraries"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="CANlib"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.paths.2060179999" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/SAME70_CAN}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RRFLibraries/SAME70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib/SAME70_nonRTOS}&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1772180579" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1744788210" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.63742886" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.1956452882" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib}&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1333245184" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="src/atmel|src/CMSIS|src/AtmelStart_SAMC21" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
+				<externalSettings containerId="CANlib;cdt.managedbuild.config.gnu.cross.lib.release.1485070058.1579180717" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/CANlib"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/CANlib/SAME70_nonRTOS"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="CANlib" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="RRFLibraries;cdt.managedbuild.config.gnu.cross.lib.release.1693990866.1913177425.1067689062" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/RRFLibraries/SAME70"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="RRFLibraries" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="CoreN2G;cdt.managedbuild.config.gnu.cross.lib.release.675522878.1031364120.1670975982.1657433415.1166824645.1972288034" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/CoreN2G"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/CoreN2G/SAME70_CAN"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="CoreN2G" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+			</storageModule>
+		</cconfiguration>
+		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.685750866.2076007979.1231616766">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.685750866.2076007979.1231616766" moduleId="org.eclipse.cdt.core.settings" name="Duet3_MB6HC-Debug">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactExtension="elf" artifactName="Duet3_CANiap32_MB6HC" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.685750866.2076007979.1231616766" name="Duet3_MB6HC-Debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=" parent="cdt.managedbuild.config.gnu.cross.exe.release" postannouncebuildStep="Generating binary file" postbuildStep="arm-none-eabi-objcopy -O binary &quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.elf&quot; &quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.bin&quot; &amp;&amp; crc32appender &quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.bin&quot;">
+					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.685750866.2076007979.1231616766." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.release.592454415" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.release">
+							<option id="cdt.managedbuild.option.gnu.cross.prefix.1723535149" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" useByScannerDiscovery="false" value="arm-none-eabi-" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.path.571851160" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" useByScannerDiscovery="false" value="${ArmGccPath}" valueType="string"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.2131424696" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
+							<builder buildPath="${workspace_loc:/Duet3Bootloader}/Release" id="cdt.managedbuild.builder.gnu.cross.915142157" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.builder.gnu.cross"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.1116923230" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
+								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.option.optimization.level.339735594" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.size" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.none" id="gnu.c.compiler.option.debugging.level.1881301357" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.676976520" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__SAME70Q20B__"/>
+									<listOptionValue builtIn="false" value="MB6HC"/>
+									<listOptionValue builtIn="false" value="CAN_IAP"/>
+									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="noexcept="/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1649304698" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/Hardware/SAME70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/SAME70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/asf/common/utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include}&quot;"/>
+								</option>
+								<option id="gnu.c.compiler.option.dialect.std.949329499" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.dialect.flags.2042464194" name="Other dialect flags" superClass="gnu.c.compiler.option.dialect.flags" useByScannerDiscovery="true" value="-std=gnu99" valueType="string"/>
+								<option id="gnu.c.compiler.option.misc.other.1870930510" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard -mfp16-format=ieee -mno-unaligned-access  -ffunction-sections -fdata-sections -nostdlib -Wundef -Wdouble-promotion -Werror=return-type -fsingle-precision-constant &quot;-Wa,-ahl=$*.s&quot;" valueType="string"/>
+								<option id="gnu.c.compiler.option.misc.pic.1655489651" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2084276741" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.591899209" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
+								<option id="gnu.cpp.compiler.option.optimization.level.1869383810" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.size" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.none" id="gnu.cpp.compiler.option.debugging.level.1351578283" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.462331022" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__SAME70Q20B__"/>
+									<listOptionValue builtIn="false" value="MB6HC"/>
+									<listOptionValue builtIn="false" value="CAN_IAP"/>
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.678077244" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/Hardware/SAME70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/SAME70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/asf}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/asf/common/utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/asf/sam/drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAM4S_4E_E70/asf/sam/utils/cmsis/same70/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RRFLibraries/src}&quot;"/>
+								</option>
+								<option id="gnu.cpp.compiler.option.dialect.std.899070321" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.dialect.flags.1172659548" name="Other dialect flags" superClass="gnu.cpp.compiler.option.dialect.flags" useByScannerDiscovery="true" value="-std=gnu++17" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.919995113" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard -mfp16-format=ieee -mno-unaligned-access  -ffunction-sections -fdata-sections -fno-threadsafe-statics -fno-rtti -fno-exceptions -nostdlib -Wundef -Wdouble-promotion -Werror=return-type -fsingle-precision-constant &quot;-Wa,-ahl=$*.s&quot;" valueType="string"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1589389741" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.458182670" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.693980063" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
+								<option id="gnu.cpp.link.option.flags.210577279" name="Linker flags" superClass="gnu.cpp.link.option.flags" useByScannerDiscovery="false" value="-Os --specs=nano.specs -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--fatal-warnings -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -T&quot;${workspace_loc:/${ProjName}/src/Hardware/SAME70/same70_iap_ram.ld}&quot; -Wl,-Map,&quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.map&quot;" valueType="string"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1378141779" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="CoreN2G"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="RRFLibraries"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="CANlib"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.paths.2138632678" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/SAME70_CAN}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RRFLibraries/SAME70}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib/SAME70_nonRTOS}&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.255291585" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1126144731" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.955260624" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.103396755" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib}&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1275179572" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="src/atmel|src/CMSIS|src/AtmelStart_SAMC21" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
+				<externalSettings containerId="CANlib;cdt.managedbuild.config.gnu.cross.lib.release.1485070058.1579180717" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/CANlib"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/CANlib/SAME70_nonRTOS"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="CANlib" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="RRFLibraries;cdt.managedbuild.config.gnu.cross.lib.release.1693990866.1913177425.1067689062" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/RRFLibraries/SAME70"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="RRFLibraries" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="CoreN2G;cdt.managedbuild.config.gnu.cross.lib.release.675522878.1031364120.1670975982.1657433415.1166824645.1972288034" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/CoreN2G"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/CoreN2G/SAME70_CAN"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="CoreN2G" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+			</storageModule>
+		</cconfiguration>
+		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.111773185.1686439078">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.111773185.1686439078" moduleId="org.eclipse.cdt.core.settings" name="Duet3_Mini5plus-Debug">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactExtension="elf" artifactName="Duet3_CANiap32_Mini5plus" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.111773185.1686439078" name="Duet3_Mini5plus-Debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=" parent="cdt.managedbuild.config.gnu.cross.exe.release" postannouncebuildStep="Generating binary file" postbuildStep="arm-none-eabi-objcopy -O binary &quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.elf&quot; &quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.bin&quot; &amp;&amp; crc32appender &quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.bin&quot;">
+					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.release.1404521558.111773185.1686439078." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.release.450733817" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.release">
+							<option id="cdt.managedbuild.option.gnu.cross.prefix.1305840976" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" useByScannerDiscovery="false" value="arm-none-eabi-" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.path.857472426" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" useByScannerDiscovery="false" value="${ArmGccPath}" valueType="string"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.2057370035" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
+							<builder buildPath="${workspace_loc:/Duet3Bootloader}/Release" id="cdt.managedbuild.builder.gnu.cross.750785435" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.builder.gnu.cross"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.1171266564" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
+								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.option.optimization.level.1080416343" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.size" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.none" id="gnu.c.compiler.option.debugging.level.1754743884" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1208647776" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__SAME51N19A__"/>
+									<listOptionValue builtIn="false" value="CAN_IAP"/>
+									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="noexcept="/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.216479955" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/Hardware/SAME51}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/atmel/SAME51_DFP/1.1.139/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include}&quot;"/>
+								</option>
+								<option id="gnu.c.compiler.option.dialect.std.1862559476" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.dialect.flags.1640566349" name="Other dialect flags" superClass="gnu.c.compiler.option.dialect.flags" useByScannerDiscovery="true" value="-std=gnu99" valueType="string"/>
+								<option id="gnu.c.compiler.option.misc.other.1195334186" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mfp16-format=ieee -ffunction-sections -fdata-sections -nostdlib -Wundef -Wdouble-promotion -Werror=return-type -fsingle-precision-constant &quot;-Wa,-ahl=$*.s&quot;" valueType="string"/>
+								<option id="gnu.c.compiler.option.misc.pic.1563470302" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1425555345" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.441258127" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
+								<option id="gnu.cpp.compiler.option.optimization.level.148854638" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.size" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.none" id="gnu.cpp.compiler.option.debugging.level.1514462705" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.731675473" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__SAME51N19A__"/>
+									<listOptionValue builtIn="false" value="CAN_IAP"/>
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.1244140795" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/Hardware/SAME51}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAME5x_C21}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAME5x_C21/SAME5x/hal/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAME5x_C21/SAME5x/hal/utils/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/SAME5x_C21/SAME5x/hri}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/atmel/SAME51_DFP/1.1.139/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RRFLibraries/src}&quot;"/>
+								</option>
+								<option id="gnu.cpp.compiler.option.dialect.std.1935152746" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.dialect.flags.1505202296" name="Other dialect flags" superClass="gnu.cpp.compiler.option.dialect.flags" useByScannerDiscovery="true" value="-std=gnu++17" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.1555790322" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mfp16-format=ieee -ffunction-sections -fdata-sections -fno-threadsafe-statics -fno-rtti -fno-exceptions -nostdlib -Wundef -Wdouble-promotion -Werror=return-type -fsingle-precision-constant &quot;-Wa,-ahl=$*.s&quot;" valueType="string"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.437551873" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.485371192" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1053644452" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
+								<option id="gnu.cpp.link.option.flags.967528290" name="Linker flags" superClass="gnu.cpp.link.option.flags" useByScannerDiscovery="false" value="-Os --specs=nano.specs -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--fatal-warnings -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -T&quot;${workspace_loc:/${ProjName}/src/Hardware/SAME51/same51n19a_flash.ld}&quot; -Wl,-Map,&quot;${workspace_loc:/${ProjName}/${ConfigName}}/${BuildArtifactFileBaseName}.map&quot;" valueType="string"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1479789966" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="CoreN2G"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="RRFLibraries"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="CANlib"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.paths.1774078870" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G/SAME5x_CAN}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RRFLibraries/SAME51}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CANlib/SAME51_nonRTOS}&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.820900040" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1086896971" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.901085035" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.1419892278" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CoreN2G}&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1053227487" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="src/atmel|src/CMSIS|src/AtmelStart_SAMC21" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
+				<externalSettings containerId="CANlib;cdt.managedbuild.config.gnu.cross.lib.release.1485070058.881130662.1643015122" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/CANlib/SAME51_nonRTOS"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="CANlib" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="RRFLibraries;cdt.managedbuild.config.gnu.cross.lib.release.1693990866.1129583112.1313063177" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/RRFLibraries/SAME51"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="RRFLibraries" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="CoreN2G;cdt.managedbuild.config.gnu.cross.lib.release.675522878.1031364120.1670975982.1226901380.649021590" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/CoreN2G"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/CoreN2G/SAME5x_CAN"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="CoreN2G" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+			</storageModule>
+		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="Duet3Bootloader.cdt.managedbuild.target.gnu.cross.exe.1054899805" name="Executable" projectType="cdt.managedbuild.target.gnu.cross.exe"/>

@@ -11,7 +11,11 @@
 
 #include <Version.h>
 
-extern const char VersionText[] = "SAME70 CAN IAP version " VERSION_TEXT;
+#if defined(MB6HC)
+extern const char VersionText[] = "Duet 3 MB6HC CAN IAP version " VERSION_TEXT;
+#elif defined(MB6XD)
+extern const char VersionText[] = "Duet 3 MB6XD CAN IAP version " VERSION_TEXT;
+#endif
 
 #ifdef DEBUG
 
@@ -25,21 +29,11 @@ void SerialPortDeinit(AsyncSerial*) noexcept
 	pinMode(PortBPin(20), INPUT_PULLUP);
 }
 
-AsyncSerial uart0(3, 3, 512, 512, SerialPortInit, SerialPortDeinit);
+AsyncSerial uart0(UART2, UART2_IRQn, ID_UART2, 512, 512, SerialPortInit, SerialPortDeinit);
 
-extern "C" void SERCOM3_0_Handler()
+void UART2_Handler(void) noexcept
 {
-	uart0.Interrupt0();
-}
-
-extern "C" void SERCOM3_2_Handler()
-{
-	uart0.Interrupt2();
-}
-
-extern "C" void SERCOM3_3_Handler()
-{
-	uart0.Interrupt3();
+	uart0.IrqHandler();
 }
 
 #endif
