@@ -504,6 +504,9 @@ void AppMain()
 	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
 	NVIC_EnableIRQ(SysTick_IRQn);
 
+#if 0				// we don't need to call CoreInit because we don't use DMA, EXINTs or the random number generator
+	CoreInit();
+#endif
 	DeviceInit();
 
 #if SAME5x
@@ -660,6 +663,11 @@ void AppMain()
 
 #ifdef DEBUG
 	uart0.begin(57600);
+# if defined(CAN_IAP)
+	SerialMessage("CAN IAP running");
+# else
+	SerialMessage("Bootloader running");
+# endif
 #endif
 
 #if !defined(CAN_IAP)

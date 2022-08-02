@@ -19,7 +19,11 @@
 #endif
 
 static CanDevice *can0dev = nullptr;
+
+#if !defined(CAN_IAP)
 static CanUserAreaData canConfigData;
+#endif
+
 static CanAddress boardAddress;
 
 constexpr CanDevice::Config Can0Config =
@@ -43,14 +47,14 @@ static uint32_t can0Memory[Can0Config.GetMemorySize()] __attribute__ ((section (
 // Initialise the CAN interface
 void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bool useAlternatePins)
 {
+#if !defined(CAN_IAP)
 	// Read the CAN timing data from the top part of the NVM User Row
-#if SAME5x
+# if SAME5x
 	const uint32_t CanUserAreaDataOffset = 512 - sizeof(CanUserAreaData);
-#elif SAMC21
+# elif SAMC21
 	const uint32_t CanUserAreaDataOffset = 256 - sizeof(CanUserAreaData);
-#endif
+# endif
 
-#if !SAME70
 	canConfigData = *reinterpret_cast<CanUserAreaData*>(NVMCTRL_USER + CanUserAreaDataOffset);
 
 	if (doHardwareReset)
@@ -62,7 +66,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 
 	CanTiming timing;
 
-#if SAME70
+#if defined(CAN_IAP)
 	timing.SetDefaults_1Mb();									// we only support default timing when a main board is used as an expansion board
 #else
 	canConfigData.GetTiming(timing);
@@ -70,6 +74,12 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 
 	// Set up the CAN pins
 #if SAME5x
+# if defined(CAN_IAP)
+	// Duet 3 Mini uses PB14 and PB15, CAN 1
+	SetPinFunction(PortBPin(15), GpioPinFunction::H);
+	SetPinFunction(PortBPin(14), GpioPinFunction::H);
+	constexpr unsigned int whichPort = 1;
+# else
 	unsigned int whichPort;
 	if (useAlternatePins)
 	{
@@ -83,6 +93,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 		SetPinFunction(PortBPin(12), GpioPinFunction::H);
 		whichPort = 1;											// use CAN1
 	}
+# endif
 #elif SAMC21
 	if (useAlternatePins)
 	{
@@ -94,9 +105,9 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 		SetPinFunction(PortAPin(25), GpioPinFunction::G);
 		SetPinFunction(PortAPin(24), GpioPinFunction::G);
 	}
-	const unsigned int whichPort = 0;							// we always use CAN0 on the SAMC21
+	constexpr unsigned int whichPort = 0;						// we always use CAN0 on the SAMC21
 #elif SAME70
-	const unsigned int whichPort = 1;							// we always use MCAN1 for Can-FD on the SAME70
+	constexpr unsigned int whichPort = 1;						// we always use MCAN1 for Can-FD on the SAME70
 	SetPinFunction(PortDPin(12), GpioPinFunction::B);
 	SetPinFunction(PortCPin(12), GpioPinFunction::C);
 #endif
@@ -108,7 +119,11 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 	pinMode(CanStandbyPin, OUTPUT_LOW);							// take the CAN drivers out of standby
 #endif
 
+#if defined(CAN_IAP)
+	boardAddress = defaultBoardAddress;
+#else
 	boardAddress = canConfigData.GetCanAddress(defaultBoardAddress);
+#endif
 
 	// Set up a CAN receive filter to receive all messages addressed to us in FIFO 0
 	can0dev->SetExtendedFilterElement(0, CanDevice::RxBufferNumber::fifo0,
