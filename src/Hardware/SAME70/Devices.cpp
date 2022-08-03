@@ -21,12 +21,12 @@ extern const char VersionText[] = "Duet 3 MB6XD CAN IAP version " VERSION_TEXT;
 
 void SerialPortInit(AsyncSerial*) noexcept
 {
-	SetPinFunction(PortBPin(20), GpioPinFunction::C);		// TxD
+	SetPinFunction(PortDPin(26), GpioPinFunction::C);		// TxD
 }
 
 void SerialPortDeinit(AsyncSerial*) noexcept
 {
-	pinMode(PortBPin(20), INPUT_PULLUP);
+	pinMode(PortDPin(26), INPUT_PULLUP);
 }
 
 AsyncSerial uart0(UART2, UART2_IRQn, ID_UART2, 512, 512, SerialPortInit, SerialPortDeinit);

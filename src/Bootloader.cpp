@@ -26,7 +26,8 @@
 
 #include <same51.h>
 
-constexpr uint32_t FlashBlockSize = 0x00010000;							// the erase size we assume for flash (64K)
+constexpr uint32_t FlashBlockWriteSize = 0x00010000;					// the block write size we use for flash (64K)
+constexpr uint32_t FlashBlockEraseSize = 0x00010000;					// the block erase size we use for flash (64K)
 
 # if defined(CAN_IAP)
 
@@ -90,7 +91,8 @@ enum DeviceId : uint32_t
 
 #elif SAMC21
 
-constexpr uint32_t FlashBlockSize = 0x00004000;							// the erase size we assume for flash (16K)
+constexpr uint32_t FlashBlockWriteSize = 0x00004000;							// the block write size we use for flash (16K)
+constexpr uint32_t FlashBlockEraseSize = 0x00004000;							// the block erase size we use for flash (16K)
 
 # ifdef SAMMYC21
 
@@ -264,7 +266,8 @@ unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[], size
 # define HSRAM_SIZE		IRAM_SIZE
 
 // We program the flash in 64kb blocks
-constexpr uint32_t FlashBlockSize = 0x00010000;
+constexpr uint32_t FlashBlockWriteSize = 0x00010000;
+constexpr uint32_t FlashBlockEraseSize = 0x00020000;
 
 # if defined(MB6HC)
 constexpr const char* BoardTypeNames[] = { "MB6HC" };
@@ -291,9 +294,9 @@ constexpr uint32_t BlockReceiveTimeout = 2000;								// block receive timeout m
 #if SAME70
 constexpr uint32_t FirmwareFlashStart = FLASH_ADDR;							// no bootloader on SAME70
 #elif SAME5x && defined(CAN_IAP)
-constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + 0x4000;				// the amount of space we reserve for the USB bootloader
+constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + 0x4000;				// the amount of space we reserve for the USB bootloader on the Duet 3 Mini
 #else
-constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockSize;		// the amount of space we reserve for the bootloader
+constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + FlashBlockWriteSize;	// the amount of space we reserve for the bootloader on the SAME5x-based expansion boards
 #endif
 
 unsigned int boardTypeIndex = 0;
@@ -316,6 +319,7 @@ bool EraseFlash(uint32_t length) noexcept
 		}
 		offset = next;
 	}
+
 	return true;
 }
 
@@ -339,7 +343,7 @@ inline bool GetLedActiveHigh()
 	return LedActiveHigh[boardTypeIndex];
 }
 
-alignas(4) static uint8_t blockBuffer[FlashBlockSize];
+alignas(4) static uint8_t blockBuffer[FlashBlockWriteSize];
 
 #if !defined(CAN_IAP)
 
@@ -365,6 +369,13 @@ static inline void WriteLed(uint8_t ledNumber, bool turnOn)
 extern "C" void SysTick_Handler()
 {
 	CoreSysTick();
+#if defined(CAN_IAP)
+	// The watchdog is enabled, so we need to reset that too
+	WatchdogReset();
+# if SAME70
+	WatchdogResetSecondary();
+# endif
+#endif
 }
 
 void SerialMessage(const char *text)
@@ -430,7 +441,7 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 	WriteLed(CanLedNumber, false);
 
 	CanMessageBuffer buf(nullptr);
-	RequestFirmwareBlock(startingOffset, FlashBlockSize, buf);			// ask for 16K or 64K from the starting offset
+	RequestFirmwareBlock(startingOffset, FlashBlockWriteSize, buf);	// ask for 16K or 64K from the starting offset
 
 	uint32_t whenStartedWaiting = millis();
 	uint32_t bytesReceived = 0;
@@ -461,7 +472,7 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 						{
 							bytesReceived = response.fileOffset - startingOffset + bytesToCopy;
 						}
-						if (bytesReceived == FlashBlockSize || bytesReceived >= response.fileLength - startingOffset)
+						if (bytesReceived == FlashBlockWriteSize || bytesReceived >= response.fileLength - startingOffset)
 						{
 							// Reached the end of the file
 							memset(blockBuffer + bytesReceived, 0xFF, sizeof(blockBuffer) - bytesReceived);
@@ -479,7 +490,7 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 			{
 				ReportErrorAndRestart("Block receive timeout", FirmwareFlashErrorCode::blockReceiveTimeout);
 			}
-			RequestFirmwareBlock(startingOffset + bytesReceived, FlashBlockSize - bytesReceived, buf);			// ask for 64K from the starting offset
+			RequestFirmwareBlock(startingOffset + bytesReceived, FlashBlockWriteSize - bytesReceived, buf);		// ask for 16K or 64K from the starting offset
 			whenStartedWaiting = millis();
 		}
 	} while (!done);
@@ -697,12 +708,13 @@ void AppMain()
 		if (bufferStartOffset == 0)
 		{
 			// First block received, so unlock and erase the firmware
-			roundedUpLength = ((fileSize + (FlashBlockSize - 1))/FlashBlockSize) * FlashBlockSize;
+			roundedUpLength = ((fileSize + (FlashBlockEraseSize - 1))/FlashBlockEraseSize) * FlashBlockEraseSize;
 			SerialMessage("Unlocking flash");
 			if (!Flash::Unlock(FirmwareFlashStart, roundedUpLength))
 			{
 				ReportErrorAndRestart("Failed to unlock flash", FirmwareFlashErrorCode::unlockFailed);
 			}
+
 			SerialMessage("Erasing flash");
 #if SAME70
 			if (!EraseFlash(roundedUpLength))
@@ -714,14 +726,14 @@ void AppMain()
 			}
 		}
 
-		// If we have both red and green LEDs, the green one indicates CAN activity. use the red one to indicate writing to flash.
+		// If we have both red and green LEDs, the green one indicates CAN activity. Use the red one to indicate writing to flash.
 		if (NumLedPins == 2)
 		{
 			WriteLed(0, true);
 		}
 
 		SerialMessage("Writing flash");
-		if (!Flash::Write(FirmwareFlashStart + bufferStartOffset, FlashBlockSize, reinterpret_cast<uint32_t*>(blockBuffer)))
+		if (!Flash::Write(FirmwareFlashStart + bufferStartOffset, FlashBlockWriteSize, reinterpret_cast<uint32_t*>(blockBuffer)))
 		{
 			ReportErrorAndRestart("Failed to write flash", FirmwareFlashErrorCode::writeFailed);
 		}
@@ -731,7 +743,7 @@ void AppMain()
 			WriteLed(0, false);
 		}
 
-		bufferStartOffset += FlashBlockSize;
+		bufferStartOffset += FlashBlockWriteSize;
 		if (bufferStartOffset >= fileSize)
 		{
 			break;
@@ -750,6 +762,9 @@ void AppMain()
 	delay(2);
 
 #if defined(CAN_IAP)
+	SerialMessage("Finished firmware update");
+	delay(1000);
+
 	ResetProcessor();
 #else
 	NVIC_DisableIRQ(CAN0_IRQn);
