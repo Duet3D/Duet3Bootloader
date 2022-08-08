@@ -36,7 +36,7 @@ constexpr unsigned int BoardTypeVersions[] = { 0 };
 constexpr const Pin *LedPinsTables[] = { LedPins_DUET3MINI };
 constexpr bool LedActiveHigh[] = { LedActiveHigh_DUET3MINI };
 
-#else
+# else
 
 // Currently we support two boards: the EXP3HC and the EXP1HCL (new version of the 1HCE using ATSAME51G19A)
 constexpr const char* BoardTypeNames[] =
@@ -64,8 +64,6 @@ constexpr bool LedActiveHigh[] =
 	LedActiveHigh_EXP1HCL,
 };
 
-#endif
-
 // Values of the DID register that correspond to the boards we support
 //	ID			Chip		Board
 //	0x61810300	SAME51N20A	EXP3HC
@@ -88,6 +86,8 @@ enum DeviceId : uint32_t
 	SAME51G_min = 0x61810305 & DeviceIdMask,
 	SAME51G_max = 0x61810306 & DeviceIdMask
 };
+
+# endif
 
 #elif SAMC21
 
