@@ -425,6 +425,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes, CanMessageBuff
 	SafeStrncpy(msg->boardType, BoardTypeNames[boardTypeIndex], sizeof(msg->boardType));
 	msg->boardVersion = BoardTypeVersions[boardTypeIndex];
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
+	msg->uf2Format = false;
 	msg->fileWanted = (uint32_t)FirmwareModule::main;
 	msg->fileOffset = fileOffset;
 	msg->lengthRequested = numBytes;
