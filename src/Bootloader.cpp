@@ -36,6 +36,25 @@ constexpr unsigned int BoardTypeVersions[] = { 0 };
 constexpr const Pin *LedPinsTables[] = { LedPins_DUET3MINI };
 constexpr bool LedActiveHigh[] = { LedActiveHigh_DUET3MINI };
 
+struct UF2_Block
+{
+	// 32 byte header
+	uint32_t magicStart0;
+	uint32_t magicStart1;
+	uint32_t flags;
+	uint32_t targetAddr;
+	uint32_t payloadSize;
+	uint32_t blockNo;
+	uint32_t numBlocks;
+	uint32_t fileSize;		// or familyID
+	uint32_t data[476/4];
+	uint32_t magicEnd;
+
+	static constexpr uint32_t MagicStart0Val = 0x0A324655;
+	static constexpr uint32_t MagicStart1Val = 0x9E5D5157;
+	static constexpr uint32_t MagicEndVal = 0x0AB16F30;
+};
+
 # else
 
 // Currently we support two boards: the EXP3HC and the EXP1HCL (new version of the 1HCE using ATSAME51G19A)
@@ -425,7 +444,11 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes, CanMessageBuff
 	SafeStrncpy(msg->boardType, BoardTypeNames[boardTypeIndex], sizeof(msg->boardType));
 	msg->boardVersion = BoardTypeVersions[boardTypeIndex];
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
+#if defined(CAN_IAP) && SAME5x
+	msg->uf2Format = true;											// firmware files for Duet 3 Mini are shipped in .uf2 format
+#else
 	msg->uf2Format = false;
+#endif
 	msg->fileWanted = (uint32_t)FirmwareModule::main;
 	msg->fileOffset = fileOffset;
 	msg->lengthRequested = numBytes;
@@ -709,7 +732,13 @@ void AppMain()
 		if (bufferStartOffset == 0)
 		{
 			// First block received, so unlock and erase the firmware
-			roundedUpLength = ((fileSize + (FlashBlockEraseSize - 1))/FlashBlockEraseSize) * FlashBlockEraseSize;
+			const uint32_t firmwareSize =
+#if defined(CAN_IAP) && SAME5x
+										fileSize/2;			// using UF2 format with 256 data bytes per 512b block
+#else
+										fileSize;			// using binary format
+#endif
+			roundedUpLength = ((firmwareSize + (FlashBlockEraseSize - 1))/FlashBlockEraseSize) * FlashBlockEraseSize;
 			SerialMessage("Unlocking flash");
 			if (!Flash::Unlock(FirmwareFlashStart, roundedUpLength))
 			{
@@ -734,11 +763,36 @@ void AppMain()
 		}
 
 		SerialMessage("Writing flash");
+#if defined(CAN_IAP) && SAME5x
+		// The file being fetched is in .uf2 format, so extract the data from the buffer and write it
+		// On the SAME5x we fetch 64kb at a time, so we have up to 128 blocks in the buffer
+		for (unsigned int block = 0; block < FlashBlockWriteSize/512 && bufferStartOffset + (512 * (block + 1)) <= fileSize; ++block)
+		{
+			const UF2_Block *const currentBlock = reinterpret_cast<const UF2_Block*>(blockBuffer + (512 * block));
+			if (   currentBlock->magicStart0 == UF2_Block::MagicStart0Val
+				&& currentBlock->magicStart1 == UF2_Block::MagicStart1Val
+				&& currentBlock->magicEnd == UF2_Block::MagicEndVal
+				&& currentBlock->payloadSize <= 256
+			   )
+			{
+				const uint32_t firmwareOffset = FirmwareFlashStart + (bufferStartOffset/2) + (block * 256);
+				if (!Flash::Write(firmwareOffset, 256, currentBlock->data))
+				{
+					ReportErrorAndRestart("Failed to write flash", FirmwareFlashErrorCode::writeFailed);
+				}
+			}
+			else
+			{
+				ReportErrorAndRestart("bad UF2 file", FirmwareFlashErrorCode::invalidFirmware);
+			}
+		}
+#else
+		// The file being fetched is in binary format, so we can write it directly
 		if (!Flash::Write(FirmwareFlashStart + bufferStartOffset, FlashBlockWriteSize, reinterpret_cast<uint32_t*>(blockBuffer)))
 		{
 			ReportErrorAndRestart("Failed to write flash", FirmwareFlashErrorCode::writeFailed);
 		}
-
+#endif
 		if (NumLedPins == 2)
 		{
 			WriteLed(0, false);
