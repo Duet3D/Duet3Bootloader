@@ -35,10 +35,14 @@ constexpr Pin GlobalTmc22xxEnablePin_Tool1LC = PortBPin(2);
 constexpr Pin OutPins_Tool1LC[] = { PortAPin(11), PortAPin(10), PortBPin(11) };
 constexpr Pin ButtonPins_Tool1LC[] = { PortBPin(22), PortBPin(23) };
 
-constexpr Pin JumperPin_Exp1XD = PortAPin(27);
-constexpr Pin AteCmZeroPin = PortBPin(2);
+constexpr Pin CanResetPin_Tool1LC = PortBPin(22);		// first button pin
+constexpr Pin CanResetPin_Exp1XD = PortAPin(27);
+constexpr Pin CanResetPin_Exp1HCE = NoPin;
+constexpr Pin CanResetPin_AteCM = NoPin;				// the CAN jumper on the ATECM is connected between AteCmJumperPin and AteCmZeroPin
+constexpr Pin CanResetPin_AteIO = PortAPin(16);
+
 constexpr Pin AteCmJumperPin = PortAPin(27);
-constexpr Pin AteIoJumperPin = PortAPin(16);
+constexpr Pin AteCmZeroPin = PortBPin(2);
 
 #endif
 

@@ -10,10 +10,14 @@
 
 #include "RepRapFirmware.h"
 
-#define DIAG_SERCOM_NUMBER	3			// which SERCOM device we use for debugging output
+#define DIAG_SERCOM_NUMBER	3							// which SERCOM device we use for debugging output
 
 constexpr size_t NumAddressBits = 4;
 constexpr Pin BoardAddressPins[NumAddressBits] = { PortCPin(11), PortCPin(12), PortCPin(14), PortCPin(15) };
+
+Adc * const CommonAdcDevice = ADC0;						// ADC device used for the board type pin, also for the buttons on the EXP1HCE
+constexpr Pin BoardTypePin = PortAPin(3);				// Board type pin (not on EXP3HC)
+constexpr uint8_t BoardTypeAdcChannel = 1;				// the ADC channel that the board type pin is connected to
 
 // Diagnostic LED
 constexpr unsigned int NumLedPins = 2;
@@ -24,8 +28,11 @@ constexpr Pin LedPins_EXP1HCL[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_EXP1HCL = false;
 constexpr Pin LedPins_DUET3MINI[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_DUET3MINI = false;
+constexpr Pin LedPins_M23CL[NumLedPins] = { PortAPin(12), PortAPin(13) };
+constexpr bool LedActiveHigh_M23CL = true;
 
-constexpr Pin JumperPin_EXP1HCL = PortAPin(0);
+constexpr Pin CanResetPin_EXP1HCL = PortAPin(0);
+constexpr Pin CanResetPin_M23CL = PortAPin(0);
 
 // Available UART ports
 constexpr IRQn Serial0_IRQn = SERCOM3_0_IRQn;
