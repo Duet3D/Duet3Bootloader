@@ -169,15 +169,15 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		// Read the board type pin, which is an analog input fed from a resistor network
 		AnalogIn::Init(CommonAdcDevice);
 		SetPinFunction(BoardTypePin, GpioPinFunction::B);
-
 		boardTypeIndex = ReadAndQuantise(BoardTypeAdcChannel, BoardIdDecisionPoints, ARRAY_SIZE(BoardIdDecisionPoints)) + 1;
+		AnalogIn::Disable(CommonAdcDevice);						// finished using the ADC
+		ClearPinFunction(BoardTypePin);
 
 		useAlternateCanPins = true;
 		defaultAddress = CanId::Exp1HCEBoardDefaultAddress;		// EXP1HCL and M23CL default address is that same as 1HCE
 		pinMode(CanResetPins[boardTypeIndex], INPUT_PULLUP);
 		delayMicroseconds(100);
 		doHardwareReset = !digitalRead(CanResetPins[boardTypeIndex]);
-		AnalogIn::Disable(CommonAdcDevice);						// finished using the ADC
 		return true;
 	}
 
@@ -369,8 +369,10 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 	// Read the board type pin, which is an analog input fed from a resistor network
 	AnalogIn::Init(CommonAdcDevice);
 	SetPinFunction(BoardTypePin, GpioPinFunction::B);
-
 	boardTypeIndex = ReadAndQuantise(BoardTypeAdcChannel, BoardIdDecisionPoints, ARRAY_SIZE(BoardIdDecisionPoints));
+	AnalogIn::Disable(CommonAdcDevice);								// finished using the ADC
+	ClearPinFunction(BoardTypePin);
+
 	if (boardTypeIndex == (unsigned int)BoardId::ate)
 	{
 		// We need to read the second board ID pin
@@ -436,7 +438,6 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		break;
 	}
 
-	AnalogIn::Disable(CommonAdcDevice);			// finished using the ADC
 	return true;
 }
 

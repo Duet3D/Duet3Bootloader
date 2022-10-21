@@ -23,7 +23,7 @@ unsigned int AppGetXoscNumber() noexcept
 #if defined(CAN_IAP)
 	return 1;			// Duet 3 Mini uses XOSC 1
 #else
-	return 0;			// EXP3HC and EXP1HCL use XOSC 0
+	return 0;			// EXP3HC, EXP1HCL and M23CL use XOSC 0
 #endif
 }
 
