@@ -281,7 +281,6 @@ void AppMain()
 	// Initialise systick (needed for delay calls to work)
 	SysTick->LOAD = ((SystemCoreClockFreq/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
 	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
-	NVIC_EnableIRQ(SysTick_IRQn);
 
 #if 0				// we don't need to call CoreInit because we don't use DMA, EXINTs or the random number generator
 	CoreInit();
