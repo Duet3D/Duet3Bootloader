@@ -279,8 +279,9 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 void AppMain()
 {
 	// Initialise systick (needed for delay calls to work)
-	SysTick->LOAD = ((SystemCoreClockFreq/1000) - 1) << SysTick_LOAD_RELOAD_Pos;
-	SysTick->CTRL = (1 << SysTick_CTRL_ENABLE_Pos) | (1 << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
+	SysTick->LOAD = ((SystemCoreClockFreq/1000) - 1u) << SysTick_LOAD_RELOAD_Pos;
+	SysTick->CTRL = (1u << SysTick_CTRL_ENABLE_Pos) | (1u << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
+	NVIC_SetPriority(SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL);	// set Priority for Systick Interrupt
 
 #if 0				// we don't need to call CoreInit because we don't use DMA, EXINTs or the random number generator
 	CoreInit();
