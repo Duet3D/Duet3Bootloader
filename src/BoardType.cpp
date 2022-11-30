@@ -446,10 +446,10 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 #elif SAME70
 
 # if defined(MB6HC)
-constexpr const char* BoardTypeNames[] = { "MB6HC" };
-constexpr unsigned int BoardTypeVersions[] = { 0 };
-constexpr const Pin *LedPinsTables[] = { LedPins_MB6HC };
-constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6HC };
+constexpr const char* BoardTypeNames[] = { "MB6HC", "MB6HC" };
+constexpr unsigned int BoardTypeVersions[] = { 0, 1 };
+constexpr const Pin *LedPinsTables[] = { LedPins_MB6HC_pre102, LedPins_MB6HC_102 };
+constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6HC_pre102, LedActiveHigh_MB6HC_102 };
 # elif defined(MB6XD)
 constexpr const char* BoardTypeNames[] = { "MB6XD" };
 constexpr unsigned int BoardTypeVersions[] = { 0 };
@@ -462,6 +462,14 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 	defaultAddress = 0;
 	doHardwareReset = false;
 	useAlternateCanPins = false;
+
+# if defined(MB6HC)
+	// Test whether the board is version 1.02 or later. Version 1.02 boards have a pulldown resistor on a direction pin.
+	pinMode(VersionTestPin_MB6HC, INPUT_PULLUP);
+	delayMicroseconds(100);
+	boardTypeIndex = (digitalRead(VersionTestPin_MB6HC)) ? 0 : 1;
+# endif
+
 	return true;
 }
 

@@ -13,10 +13,19 @@
 // Diagnostic LED
 constexpr unsigned int NumLedPins = 2;
 
-constexpr Pin LedPins_MB6HC[NumLedPins] = { PortCPin(20), NoPin };
-constexpr bool LedActiveHigh_MB6HC[] = { true, true };
+// MB6HC boards prior to version 1.02
+constexpr Pin LedPins_MB6HC_pre102[NumLedPins] = { PortCPin(20), NoPin };
+constexpr bool LedActiveHigh_MB6HC_pre102[] = { true, true };
+
+// MB6HC boards 1.02 and later
+constexpr Pin LedPins_MB6HC_102[NumLedPins] = { PortBPin(6), PortBPin(7) };
+constexpr bool LedActiveHigh_MB6HC_102[] = { false, false };
+
+// MB6XD boards
 constexpr Pin LedPins_MB6XD[NumLedPins] = { PortBPin(6), PortBPin(7) };
 constexpr bool LedActiveHigh_MB6XD[] = { false, false };
+
+constexpr Pin VersionTestPin_MB6HC = PortAPin(04);		// this pin has a pulldown resistor on version 1.02 boards
 
 // Available UART ports
 //constexpr IRQn Serial0_IRQn = SERCOM3_0_IRQn;
