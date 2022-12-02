@@ -459,7 +459,7 @@ constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6XD };
 
 bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useAlternateCanPins)
 {
-	defaultAddress = 0;
+	defaultAddress = CanId::ExpansionBoardFirmwareUpdateAddress;
 	doHardwareReset = false;
 	useAlternateCanPins = false;
 
