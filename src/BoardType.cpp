@@ -449,12 +449,12 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 constexpr const char* BoardTypeNames[] = { "MB6HC", "MB6HC" };
 constexpr unsigned int BoardTypeVersions[] = { 0, 1 };
 constexpr const Pin *LedPinsTables[] = { LedPins_MB6HC_pre102, LedPins_MB6HC_102 };
-constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6HC_pre102, LedActiveHigh_MB6HC_102 };
+constexpr const bool *LedActiveHigh[] = { LedActiveHigh_MB6HC_pre102, LedActiveHigh_MB6HC_102 };
 # elif defined(MB6XD)
 constexpr const char* BoardTypeNames[] = { "MB6XD" };
 constexpr unsigned int BoardTypeVersions[] = { 0 };
 constexpr const Pin *LedPinsTables[] = { LedPins_MB6XD };
-constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6XD };
+constexpr const bool *LedActiveHigh[] = { LedActiveHigh_MB6XD };
 # endif
 
 bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useAlternateCanPins)
