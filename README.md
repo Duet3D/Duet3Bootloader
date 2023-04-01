@@ -5,13 +5,14 @@ Build instructions:
 
 Duet3Bootloader is built from several Github projects. You need to use compatible branches of these projects. As at 20 May 2020, the latest source code is on these branches:
 
-- Duet3Bootloader: master
-- RRFLibraries: dev
-- CANlib : master
+- Duet3Bootloader: dev
+- RRFLibraries: 3.4-dev
+- CANlib: 3.4-dev
+- CoreN2G: 3.4-dev
 
 **Instructions for building under Windows**
 
-1. Download and install the gcc cross-compiler from https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads
+1. Download and install the gcc cross-compiler. You need version 10.3-2021.10 from https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads.
 
 2. Download and install a recent version of Eclipse IDE for C/C++ Developers from http://www.eclipse.org/downloads/eclipse-packages/.
 
