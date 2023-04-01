@@ -24,7 +24,7 @@ Duet3Bootloader is built from several Github projects. You need to use compatibl
 
 6. In Eclipse create a workspace.
 
-7. Add this github project, the CANlib project, and RRFLibraries project to the workspace.
+7. Add this github project, the CANlib project, CoreN2G and RRFLibraries project to the workspace.
 
 8. Select and build the configuration you want.
 
