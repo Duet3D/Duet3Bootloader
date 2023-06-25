@@ -31,7 +31,8 @@ constexpr bool LedActiveHigh_DUET3MINI = false;
 constexpr Pin LedPins_M23CL[NumLedPins] = { PortAPin(12), PortAPin(13) };
 constexpr bool LedActiveHigh_M23CL = true;
 
-constexpr Pin CanResetPin_EXP1HCL = PortAPin(0);
+constexpr Pin CanResetPin_EXP1HCL_v1 = PortAPin(0);
+constexpr Pin CanResetPin_EXP1HCL_v2 = PortAPin(27);	// same as DRIVER_DIR pin
 constexpr Pin CanResetPin_M23CL = PortAPin(0);
 
 // Available UART ports

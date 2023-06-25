@@ -46,19 +46,22 @@ constexpr const char* BoardTypeNames[] =
 	"EXP3HC",
 	"M23CL",
 	"EXP1HCL",
+	"EXP1HCL",
 };
 
 constexpr unsigned int BoardTypeVersions[] =
 {
 	0,
 	0,
-	0
+	1,		// EXP1HCL version 2.x
+	0		// EXP1HCL version 1.x
 };
 
 constexpr const Pin *LedPinsTables[] =
 {
 	LedPins_EXP3HC,
 	LedPins_M23CL,
+	LedPins_EXP1HCL,
 	LedPins_EXP1HCL,
 };
 
@@ -67,20 +70,23 @@ constexpr bool LedActiveHigh[] =
 	LedActiveHigh_EXP3HC,
 	LedActiveHigh_M23CL,
 	LedActiveHigh_EXP1HCL,
+	LedActiveHigh_EXP1HCL,
 };
 
 constexpr Pin CanResetPins[] =
 {
 	NoPin,
 	CanResetPin_M23CL,
-	CanResetPin_EXP1HCL
+	CanResetPin_EXP1HCL_v2,
+	CanResetPin_EXP1HCL_v1,
 };
 
 // This table of floats is only used at compile time, so it shouldn't cause the floating point library to be pulled in
 constexpr float BoardTypeFractions[] =
 {
 	4.7/(4.7 + 60.4),						// M23CL has 4K7 lower resistor, 60.4K upper
-	10.0/(1.0 + 10.0),						// EXCP1HCL has 10K lower resistor, 1K upper
+	25.5/(16.0 + 25.5),						// EXP1HCL 2.0 has 25K lower resistor, 16K upper
+	10.0/(1.0 + 10.0),						// EXP1HCL 1.x has 10K lower resistor, 1K upper
 };
 
 static_assert(IsIncreasing(BoardTypeFractions, ARRAY_SIZE(BoardTypeFractions)));
@@ -89,6 +95,7 @@ static_assert(IsIncreasing(BoardTypeFractions, ARRAY_SIZE(BoardTypeFractions)));
 constexpr uint16_t BoardIdDecisionPoints[] =
 {
 	(uint16_t)((BoardTypeFractions[0] + BoardTypeFractions[1]) * (AdcRange/2)),
+	(uint16_t)((BoardTypeFractions[1] + BoardTypeFractions[2]) * (AdcRange/2)),
 };
 
 static_assert(ARRAY_SIZE(BoardIdDecisionPoints) + 1 == ARRAY_SIZE(BoardTypeFractions));
