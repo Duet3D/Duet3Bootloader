@@ -208,7 +208,7 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 	delay(25);														// flash the LED briefly to indicate we are requesting a new flash block
 	WriteLed(CanLedNumber, false);
 
-	CanMessageBuffer buf(nullptr);
+	CanMessageBuffer buf;
 	RequestFirmwareBlock(startingOffset, FlashBlockWriteSize, buf);	// ask for 16K or 64K from the starting offset
 
 	uint32_t whenStartedWaiting = millis();
