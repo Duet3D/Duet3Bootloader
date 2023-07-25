@@ -36,6 +36,7 @@ constexpr Pin OutPins_Tool1LC[] = { PortAPin(11), PortAPin(10), PortBPin(11) };
 constexpr Pin ButtonPins_Tool1LC[] = { PortBPin(22), PortBPin(23) };
 
 constexpr Pin CanResetPin_Tool1LC = PortBPin(22);		// first button pin
+constexpr Pin CanResetPin_SZP = PortAPin(18);
 constexpr Pin CanResetPin_Exp1XD = PortAPin(27);
 constexpr Pin CanResetPin_Exp1HCE = NoPin;
 constexpr Pin CanResetPin_AteCM = NoPin;				// the CAN jumper on the ATECM is connected between AteCmJumperPin and AteCmZeroPin
@@ -61,6 +62,9 @@ constexpr bool LedActiveHigh_Tool1LC_v0 = true;
 
 constexpr Pin LedPins_Tool1LC_v1[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_Tool1LC_v1 = false;
+
+constexpr Pin LedPins_SZP[NumLedPins] = { PortAPin(30), PortAPin(31) };
+constexpr bool LedActiveHigh_SZP = false;
 
 constexpr Pin LedPins_Exp1XD[NumLedPins] = { PortAPin(19), PortAPin(18) };
 constexpr bool LedActiveHigh_Exp1XD = true;
