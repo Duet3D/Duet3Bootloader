@@ -8,6 +8,6 @@
 #ifndef SRC_VERSION_H_
 #define SRC_VERSION_H_
 
-#define VERSION_TEXT		"2.8 (2023-07-25)"
+#define VERSION_TEXT		"2.9 (2023-09-20)"
 
 #endif /* SRC_VERSION_H_ */

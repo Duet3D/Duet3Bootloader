@@ -413,7 +413,6 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 	case BoardId::tool1lc_v0:
 	case BoardId::tool1lc_v1:
 		defaultAddress = CanId::ToolBoardDefaultAddress;
-
 		pinMode(OutPins_Tool1LC[0], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
 		pinMode(OutPins_Tool1LC[1], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
 		pinMode(OutPins_Tool1LC[2], OUTPUT_HIGH);					// this is intended for the hot end fan, so turn it on just as the tool board firmware does
@@ -432,6 +431,10 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 			const unsigned int buttonState = ReadAndQuantise(ButtonsAdcChannel_Exp1HCE, ButtonsDecisionPoints, ARRAY_SIZE(ButtonsDecisionPoints));
 			doHardwareReset = (buttonState == 0);
 		}
+		break;
+
+	case BoardId::szp:
+		defaultAddress = CanId::SZPDefaultAddress;
 		break;
 
 	case BoardId::ate_cm:
