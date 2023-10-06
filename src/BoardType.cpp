@@ -45,6 +45,7 @@ constexpr const char* BoardTypeNames[] =
 {
 	"EXP3HC",
 	"M23CL",
+	"TOOL1RR",
 	"EXP1HCL",
 	"EXP1HCL",
 };
@@ -53,14 +54,25 @@ constexpr unsigned int BoardTypeVersions[] =
 {
 	0,
 	0,
+	0,
 	1,		// EXP1HCL version 2.x
 	0		// EXP1HCL version 1.x
+};
+
+constexpr CanAddress DefaultCanAddresses[] =
+{
+	CanId::Exp3HCFirmwareUpdateAddress,		// 3HC
+	CanId::Exp1HCLBoardDefaultAddress,		// M23CL is the same as 1HCL
+	CanId::ToolBoardDefaultAddress,			// TOOL1RR
+	CanId::Exp1HCLBoardDefaultAddress,		// EXP1HCL v1.x
+	CanId::Exp1HCLBoardDefaultAddress,		// EXP1HCL v2.x
 };
 
 constexpr const Pin *LedPinsTables[] =
 {
 	LedPins_EXP3HC,
 	LedPins_M23CL,
+	LedPins_TOOL1RR,
 	LedPins_EXP1HCL,
 	LedPins_EXP1HCL,
 };
@@ -69,6 +81,7 @@ constexpr bool LedActiveHigh[] =
 {
 	LedActiveHigh_EXP3HC,
 	LedActiveHigh_M23CL,
+	LedActiveHigh_TOOL1RR,
 	LedActiveHigh_EXP1HCL,
 	LedActiveHigh_EXP1HCL,
 };
@@ -77,6 +90,7 @@ constexpr Pin CanResetPins[] =
 {
 	NoPin,
 	CanResetPin_M23CL,
+	CanResetPin_TOOL1RR,
 	CanResetPin_EXP1HCL_v2,
 	CanResetPin_EXP1HCL_v1,
 };
@@ -85,6 +99,7 @@ constexpr Pin CanResetPins[] =
 constexpr float BoardTypeFractions[] =
 {
 	4.7/(4.7 + 60.4),						// M23CL has 4K7 lower resistor, 60.4K upper
+	4.7/(4.7 + 4.7),						// TOOL1RR has 4K4 lower, 4K7 upper
 	25.5/(16.0 + 25.5),						// EXP1HCL 2.0 has 25K lower resistor, 16K upper
 	10.0/(1.0 + 10.0),						// EXP1HCL 1.x has 10K lower resistor, 1K upper
 };
@@ -96,6 +111,7 @@ constexpr uint16_t BoardIdDecisionPoints[] =
 {
 	(uint16_t)((BoardTypeFractions[0] + BoardTypeFractions[1]) * (AdcRange/2)),
 	(uint16_t)((BoardTypeFractions[1] + BoardTypeFractions[2]) * (AdcRange/2)),
+	(uint16_t)((BoardTypeFractions[2] + BoardTypeFractions[3]) * (AdcRange/2)),
 };
 
 static_assert(ARRAY_SIZE(BoardIdDecisionPoints) + 1 == ARRAY_SIZE(BoardTypeFractions));
@@ -119,8 +135,8 @@ static unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[
 //	0x61810302	SAME51J19A
 //	0x61810303	SAME51J18A
 //	0x61810304	SAME51J20A
-//	0x61810305	SAME51G19A	EXP1HCL or M23CL
-//	0x61810306	SAME51G18A	EXP1HCL or M23CL
+//	0x61810305	SAME51G19A	EXP1HCL or M23CL or TOOL1RR
+//	0x61810306	SAME51G18A	EXP1HCL or M23CL or TOOL1RR
 // Bits 8-15 (03 in the above) identify the die and revision number, so may be subject to change
 
 constexpr uint32_t DeviceIdMask = 0xFFFF00FF;
@@ -167,7 +183,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		// Check whether address switches are set to zero. If so then reset and load new firmware
 		const CanAddress switches = ReadBoardAddress();
 		doHardwareReset = (switches == 0);
-		defaultAddress = (doHardwareReset) ? CanId::ExpansionBoardFirmwareUpdateAddress : switches;
+		defaultAddress = (doHardwareReset) ? CanId::Exp3HCFirmwareUpdateAddress : switches;
 		return true;
 	}
 
@@ -180,8 +196,8 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		AnalogIn::Disable(CommonAdcDevice);						// finished using the ADC
 		ClearPinFunction(BoardTypePin);
 
-		useAlternateCanPins = true;
-		defaultAddress = CanId::Exp1HCEBoardDefaultAddress;		// EXP1HCL and M23CL default address is that same as 1HCE
+		useAlternateCanPins = true;								// all boards with the smaller processor use the alternate CAN pins
+		defaultAddress = DefaultCanAddresses[boardTypeIndex];
 		pinMode(CanResetPins[boardTypeIndex], INPUT_PULLUP);
 		delayMicroseconds(100);
 		doHardwareReset = !digitalRead(CanResetPins[boardTypeIndex]);

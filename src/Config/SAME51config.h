@@ -24,16 +24,23 @@ constexpr unsigned int NumLedPins = 2;
 
 constexpr Pin LedPins_EXP3HC[NumLedPins] = { PortCPin(10), PortCPin(7) };
 constexpr bool LedActiveHigh_EXP3HC = true;
+
 constexpr Pin LedPins_EXP1HCL[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_EXP1HCL = false;
+
 constexpr Pin LedPins_DUET3MINI[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_DUET3MINI = false;
+
 constexpr Pin LedPins_M23CL[NumLedPins] = { PortAPin(12), PortAPin(13) };
 constexpr bool LedActiveHigh_M23CL = true;
+
+constexpr Pin LedPins_TOOL1RR[NumLedPins] = { PortAPin(30), PortAPin(31) };
+constexpr bool LedActiveHigh_TOOL1RR = false;
 
 constexpr Pin CanResetPin_EXP1HCL_v1 = PortAPin(0);
 constexpr Pin CanResetPin_EXP1HCL_v2 = PortAPin(27);	// same as DRIVER_DIR pin
 constexpr Pin CanResetPin_M23CL = PortAPin(0);
+constexpr Pin CanResetPin_TOOL1RR = PortAPin(27);		// same as DRIVER_DIR pin
 
 // Available UART ports
 constexpr IRQn Serial0_IRQn = SERCOM3_0_IRQn;
