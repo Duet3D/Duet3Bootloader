@@ -440,7 +440,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		break;
 
 	case BoardId::exp1hce_v0:
-		defaultAddress = CanId::Exp1HCEBoardDefaultAddress;
+		defaultAddress = CanId::Exp1HCLBoardDefaultAddress;
 
 		SetPinFunction(ButtonsPin_Exp1HCE, GpioPinFunction::B);		// both buttons are on a single analog pin
 		{
