@@ -15,7 +15,7 @@
 constexpr size_t NumAddressBits = 4;
 constexpr Pin BoardAddressPins[NumAddressBits] = { PortCPin(11), PortCPin(12), PortCPin(14), PortCPin(15) };
 
-Adc * const CommonAdcDevice = ADC0;						// ADC device used for the board type pin, also for the buttons on the EXP1HCE
+Adc * const CommonAdcDevice = ADC0;						// ADC device used for the board type pin
 constexpr Pin BoardTypePin = PortAPin(3);				// Board type pin (not on EXP3HC)
 constexpr uint8_t BoardTypeAdcChannel = 1;				// the ADC channel that the board type pin is connected to
 
@@ -40,7 +40,7 @@ constexpr bool LedActiveHigh_TOOL1RR = false;
 constexpr Pin CanResetPin_EXP1HCL_v1 = PortAPin(0);
 constexpr Pin CanResetPin_EXP1HCL_v2 = PortAPin(27);	// same as DRIVER_DIR pin
 constexpr Pin CanResetPin_M23CL = PortAPin(0);
-constexpr Pin CanResetPin_TOOL1RR = PortAPin(27);		// same as DRIVER_DIR pin
+constexpr Pin CanResetPin_TOOL1RR = PortAPin(10);		// same as DRIVER_DIR pin
 
 // Available UART ports
 constexpr IRQn Serial0_IRQn = SERCOM3_0_IRQn;
