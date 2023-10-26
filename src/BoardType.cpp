@@ -27,7 +27,7 @@ constexpr bool LedActiveHigh[] = { LedActiveHigh_DUET3MINI };
 
 bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useAlternateCanPins)
 {
-	defaultAddress = CanId::ExpansionBoardFirmwareUpdateAddress;
+	defaultAddress = CanId::Exp3HCFirmwareUpdateAddress;				// we use the same reserved CAN address as the 3HC board
 	doHardwareReset = false;
 	useAlternateCanPins = false;
 	return true;
@@ -493,7 +493,7 @@ constexpr const bool *LedActiveHigh[] = { LedActiveHigh_MB6XD };
 
 bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useAlternateCanPins)
 {
-	defaultAddress = CanId::ExpansionBoardFirmwareUpdateAddress;
+	defaultAddress = CanId::Exp3HCFirmwareUpdateAddress;				// we use the same reserved CAN address as the 3HC board
 	doHardwareReset = false;
 	useAlternateCanPins = false;
 
