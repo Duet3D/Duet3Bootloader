@@ -40,7 +40,8 @@ constexpr Pin CanResetPin_SZP = PortAPin(18);
 constexpr Pin CanResetPin_Exp1XD = PortAPin(27);
 constexpr Pin CanResetPin_Exp1HCE = NoPin;
 constexpr Pin CanResetPin_AteCM = NoPin;				// the CAN jumper on the ATECM is connected between AteCmJumperPin and AteCmZeroPin
-constexpr Pin CanResetPin_AteIO = PortAPin(16);
+constexpr Pin CanResetPin_AteIO_v01 = PortAPin(16);
+constexpr Pin CanResetPin_AteIO_v02 = PortBPin(11);
 
 constexpr Pin AteCmJumperPin = PortAPin(27);
 constexpr Pin AteCmZeroPin = PortBPin(2);

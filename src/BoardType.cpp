@@ -251,7 +251,8 @@ enum class BoardId : unsigned int
 	// ATE board types
 	ate_base,
 	ate_cm = ate_base,
-	ate_io
+	ate_io_v02,
+	ate_io_v01
 };
 
 constexpr const char * BoardTypeNames[] =
@@ -267,6 +268,7 @@ constexpr const char * BoardTypeNames[] =
 	// ATE board types, distinguished by the second board type pin
 	"ATECM",
 	"ATEIO",
+	"ATEIO",
 };
 
 constexpr unsigned int BoardTypeVersions[] =
@@ -277,7 +279,10 @@ constexpr unsigned int BoardTypeVersions[] =
 	0,
 	0,
 	1,
+
+	// ATE board versions
 	0,
+	1,
 	0
 };
 
@@ -289,6 +294,8 @@ constexpr const Pin *LedPinsTables[] =
 	LedPins_SZP,
 	LedPins_Exp1XD,
 	LedPins_Tool1LC_v1,
+
+	LedPins_Ate,
 	LedPins_Ate,
 	LedPins_Ate,
 };
@@ -301,6 +308,8 @@ constexpr bool LedActiveHigh[] =
 	LedActiveHigh_SZP,
 	LedActiveHigh_Exp1XD,
 	LedActiveHigh_Tool1LC_v1,
+
+	LedActiveHigh_Ate,
 	LedActiveHigh_Ate,
 	LedActiveHigh_Ate,
 };
@@ -313,8 +322,10 @@ constexpr Pin CanResetPins[] =
 	CanResetPin_SZP,
 	CanResetPin_Exp1XD,
 	CanResetPin_Tool1LC,
+
 	CanResetPin_AteCM,
-	CanResetPin_AteIO
+	CanResetPin_AteIO_v02,
+	CanResetPin_AteIO_v01
 };
 
 // This table of floats is only used at compile time, so it shouldn't cause the floating point library to be pulled in
@@ -346,7 +357,8 @@ static_assert(ARRAY_SIZE(BoardIdDecisionPoints) + 1 == ARRAY_SIZE(BoardTypeFract
 constexpr float BoardType2Fractions[] =
 {
 	3.0/(3.0 + 12.0),						// ATECM has 3K lower, 12K upper
-	12.0/(12.0 + 3.0)						// AREIO has 12K lower 3K upper
+	12.0/(12.0 + 12.0),						// ATEIO v0.2 has 12K lower 12K upper
+	12.0/(12.0 + 3.0)						// ATEIO v0.1 has 12K lower 3K upper
 };
 
 static_assert(IsIncreasing(BoardType2Fractions, ARRAY_SIZE(BoardType2Fractions)));
@@ -355,6 +367,7 @@ static_assert(IsIncreasing(BoardType2Fractions, ARRAY_SIZE(BoardType2Fractions))
 constexpr uint16_t BoardId2DecisionPoints[] =
 {
 	(uint16_t)((BoardType2Fractions[0] + BoardType2Fractions[1]) * (AdcRange/2)),
+	(uint16_t)((BoardType2Fractions[1] + BoardType2Fractions[2]) * (AdcRange/2)),
 };
 
 static_assert(ARRAY_SIZE(BoardId2DecisionPoints) + 1 == ARRAY_SIZE(BoardType2Fractions));
@@ -464,7 +477,8 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		pinMode(AteCmZeroPin, INPUT_PULLUP);
 		break;
 
-	case BoardId::ate_io:
+	case BoardId::ate_io_v01:
+	case BoardId::ate_io_v02:
 	case BoardId::ate:
 	default:
 		useAlternateCanPins = true;
@@ -514,6 +528,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 static_assert(ARRAY_SIZE(BoardTypeVersions) == ARRAY_SIZE(BoardTypeNames));
 static_assert(ARRAY_SIZE(LedPinsTables) == ARRAY_SIZE(BoardTypeNames));
 static_assert(ARRAY_SIZE(LedActiveHigh) == ARRAY_SIZE(BoardTypeNames));
+static_assert(ARRAY_SIZE(CanResetPins) == ARRAY_SIZE(BoardTypeNames));
 
 Pin GetLedPin(unsigned int ledNumber)
 {
