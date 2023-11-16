@@ -267,23 +267,23 @@ constexpr const char * BoardTypeNames[] =
 
 	// ATE board types, distinguished by the second board type pin
 	"ATECM",
-	"ATEIO",
-	"ATEIO",
+	"ATEIO",			// version 0.2
+	"ATEIO",			// version 0.1
 };
 
 constexpr unsigned int BoardTypeVersions[] =
 {
 	0,
 	0,
-	0,
+	0,					// dummy entry for ATE
 	0,
 	0,
 	1,
 
 	// ATE board versions
 	0,
-	1,
-	0
+	1,					// ATEIO v0.2
+	0					// ATEIO v0.1
 };
 
 constexpr const Pin *LedPinsTables[] =
@@ -414,8 +414,6 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 	AnalogIn::Init(CommonAdcDevice);
 	SetPinFunction(BoardTypePin, GpioPinFunction::B);
 	boardTypeIndex = ReadAndQuantise(BoardTypeAdcChannel, BoardIdDecisionPoints, ARRAY_SIZE(BoardIdDecisionPoints));
-	AnalogIn::Disable(CommonAdcDevice);								// finished using the ADC
-	ClearPinFunction(BoardTypePin);
 
 	if (boardTypeIndex == (unsigned int)BoardId::ate)
 	{
@@ -423,6 +421,10 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		SetPinFunction(BoardType2Pin, GpioPinFunction::B);			// ATE has a second board type pin
 		boardTypeIndex = (unsigned int)BoardId::ate_base + ReadAndQuantise(BoardType2AdcChannel, BoardId2DecisionPoints, ARRAY_SIZE(BoardId2DecisionPoints));
 	}
+
+	AnalogIn::Disable(CommonAdcDevice);								// finished using the ADC
+	ClearPinFunction(BoardTypePin);
+	ClearPinFunction(BoardType2Pin);
 
 	// Set up the hardware and default CAN address as appropriate
 	// Determine whether we need to do a hardware reset
