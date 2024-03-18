@@ -69,22 +69,6 @@ private:
 	const T _end;
 };
 
-// A simple milliseconds timer class
-class MillisTimer
-{
-public:
-	MillisTimer() { running = false; }
-	void Start();
-	void Stop() { running = false; }
-	bool CheckNoStop(uint32_t timeoutMillis) const;
-	bool CheckAndStop(uint32_t timeoutMillis);
-	bool IsRunning() const { return running; }
-
-private:
-	uint32_t whenStarted;
-	bool running;
-};
-
 constexpr size_t ScratchStringLength = 220;							// standard length of a scratch string, enough to print delta parameters to
 constexpr size_t ShortScratchStringLength = 50;
 
