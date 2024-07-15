@@ -105,7 +105,7 @@ constexpr Pin CanResetPins[] =
 constexpr float BoardTypeFractions[] =
 {
 	4.7/(4.7 + 60.4),						// M23CL has 4K7 lower resistor, 60K4 upper
-	4.7/(4.7 + 27.0),						// F3PTB has 4K7 lower, 27K upper
+	2.4/(2.4 + 15.0),						// F3PTB has 2K4 lower, 15K upper
 	10.0/(10.0 + 10.0),						// TOOL1RR has 10K lower, 10K upper
 	25.5/(16.0 + 25.5),						// EXP1HCL 2.0 has 25K lower resistor, 16K upper
 	10.0/(1.0 + 10.0),						// EXP1HCL 1.x has 10K lower resistor, 1K upper
