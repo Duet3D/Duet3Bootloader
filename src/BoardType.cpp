@@ -325,7 +325,7 @@ constexpr bool LedActiveHigh[] =
 constexpr Pin CanResetPins[] =
 {
 	CanResetPin_Tool1LC,
-	CanResetPin_Exp1HCE,
+	NoPin,									// was CanResetPin_1HCE
 	NoPin,
 	CanResetPin_SZP,
 	CanResetPin_Exp1XD,
@@ -379,30 +379,6 @@ constexpr uint16_t BoardId2DecisionPoints[] =
 };
 
 static_assert(ARRAY_SIZE(BoardId2DecisionPoints) + 1 == ARRAY_SIZE(BoardType2Fractions));
-
-// Buttons pin ADC handling for EXP1HCE board
-
-constexpr float BothButtonsDownRgnd = (4.7 * 10.0)/(4.7 + 10.0);
-
-constexpr float ButtonsExpectedFractions[] =
-{
-	BothButtonsDownRgnd/(BothButtonsDownRgnd + 10.0),
-	4.7/(4.7 + 10.0),
-	10.0/(1.00 + 10.0),
-	1.0
-};
-
-static_assert(IsIncreasing(ButtonsExpectedFractions, ARRAY_SIZE(ButtonsExpectedFractions)));
-
-// Table of halfway points that we use to decide what board type a reading corresponds to
-constexpr uint16_t ButtonsDecisionPoints[] =
-{
-	(uint16_t)((ButtonsExpectedFractions[0] + ButtonsExpectedFractions[1]) * (AdcRange/2)),
-	(uint16_t)((ButtonsExpectedFractions[1] + ButtonsExpectedFractions[2]) * (AdcRange/2)),
-	(uint16_t)((ButtonsExpectedFractions[2] + ButtonsExpectedFractions[3]) * (AdcRange/2))
-};
-
-static_assert(ARRAY_SIZE(ButtonsDecisionPoints) + 1 == ARRAY_SIZE(ButtonsExpectedFractions));
 
 // Function to read a pin and scan a table of decision points to find the corresponding index
 static unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[], size_t numDecisionPoints)
@@ -462,14 +438,8 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		defaultAddress = CanId::Exp1XDBoardDefaultAddress;
 		break;
 
-	case BoardId::exp1hce_v0:
+	case BoardId::exp1hce_v0:										// no longer supported
 		defaultAddress = CanId::Exp1HCLBoardDefaultAddress;
-
-		SetPinFunction(ButtonsPin_Exp1HCE, GpioPinFunction::B);		// both buttons are on a single analog pin
-		{
-			const unsigned int buttonState = ReadAndQuantise(ButtonsAdcChannel_Exp1HCE, ButtonsDecisionPoints, ARRAY_SIZE(ButtonsDecisionPoints));
-			doHardwareReset = (buttonState == 0);
-		}
 		break;
 
 	case BoardId::szp:

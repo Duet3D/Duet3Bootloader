@@ -28,8 +28,6 @@ constexpr Pin BoardTypePin = PortAPin(5);
 constexpr uint8_t BoardTypeAdcChannel = 5;
 constexpr Pin BoardType2Pin = PortAPin(4);				// second board type pin used on some boards
 constexpr uint8_t BoardType2AdcChannel = 4;
-constexpr Pin ButtonsPin_Exp1HCE = PortAPin(9);
-constexpr uint8_t ButtonsAdcChannel_Exp1HCE = 9;
 
 constexpr Pin GlobalTmc22xxEnablePin_Tool1LC = PortBPin(2);
 constexpr Pin OutPins_Tool1LC[] = { PortAPin(11), PortAPin(10), PortBPin(11) };
@@ -38,7 +36,6 @@ constexpr Pin ButtonPins_Tool1LC[] = { PortBPin(22), PortBPin(23) };
 constexpr Pin CanResetPin_Tool1LC = PortBPin(22);		// first button pin
 constexpr Pin CanResetPin_SZP = PortAPin(18);
 constexpr Pin CanResetPin_Exp1XD = PortAPin(27);
-constexpr Pin CanResetPin_Exp1HCE = NoPin;
 constexpr Pin CanResetPin_AteCM = NoPin;				// the CAN jumper on the ATECM is connected between AteCmJumperPin and AteCmZeroPin
 constexpr Pin CanResetPin_AteIO_v01 = PortAPin(16);
 constexpr Pin CanResetPin_AteIO_v02 = PortBPin(11);
