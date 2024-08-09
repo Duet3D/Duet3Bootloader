@@ -398,17 +398,17 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 	AnalogIn::Init(CommonAdcDevice);
 	SetPinFunction(BoardTypePin, GpioPinFunction::B);
 	boardTypeIndex = ReadAndQuantise(BoardTypeAdcChannel, BoardIdDecisionPoints, ARRAY_SIZE(BoardIdDecisionPoints));
+	ClearPinFunction(BoardTypePin);
 
 	if (boardTypeIndex == (unsigned int)BoardId::ate)
 	{
 		// We need to read the second board ID pin
 		SetPinFunction(BoardType2Pin, GpioPinFunction::B);			// ATE has a second board type pin
 		boardTypeIndex = (unsigned int)BoardId::ate_base + ReadAndQuantise(BoardType2AdcChannel, BoardId2DecisionPoints, ARRAY_SIZE(BoardId2DecisionPoints));
+		ClearPinFunction(BoardType2Pin);
 	}
 
 	AnalogIn::Disable(CommonAdcDevice);								// finished using the ADC
-	ClearPinFunction(BoardTypePin);
-	ClearPinFunction(BoardType2Pin);
 
 	// Set up the hardware and default CAN address as appropriate
 	// Determine whether we need to do a hardware reset

@@ -31,7 +31,6 @@ constexpr uint8_t BoardType2AdcChannel = 4;
 
 constexpr Pin GlobalTmc22xxEnablePin_Tool1LC = PortBPin(2);
 constexpr Pin OutPins_Tool1LC[] = { PortAPin(11), PortAPin(10), PortBPin(11) };
-constexpr Pin ButtonPins_Tool1LC[] = { PortBPin(22), PortBPin(23) };
 
 constexpr Pin CanResetPin_Tool1LC = PortBPin(22);		// first button pin
 constexpr Pin CanResetPin_SZP = PortAPin(18);
