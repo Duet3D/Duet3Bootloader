@@ -3,12 +3,12 @@ Bootstrap loader for Duet 3 Expansion and Smart Tool boards
  
 ## Build instructions
 
-Duet3Bootloader is built from several Github projects. You need to use compatible branches of these projects. As at 1 April 2023 the latest stable source code is on these branches:
+Duet3Bootloader is built from several Github projects. You need to use compatible branches of these projects. As at 7 October 2024 the latest stable source code is on these branches:
 
 - Duet3Bootloader: dev
-- RRFLibraries: 3.4-dev
-- CANlib: 3.4-dev
-- CoreN2G: 3.4-dev
+- RRFLibraries: 3.5-dev
+- CANlib: 3.5-dev
+- CoreN2G: 3.5-dev
 
 **Instructions for building under Windows**
 
