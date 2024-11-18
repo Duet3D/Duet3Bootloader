@@ -184,7 +184,7 @@ void ReportError(const char *text, FirmwareFlashErrorCode err)
 
 void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes, CanMessageBuffer& buf)
 {
-	CanMessageFirmwareUpdateRequest * const msg = buf.SetupRequestMessage<CanMessageFirmwareUpdateRequest>(0, CanInterface::GetCanAddress(), CanId::MasterAddress);
+	CanMessageFirmwareUpdateRequest * const msg = buf.SetupRequestMessageNoRid<CanMessageFirmwareUpdateRequest>(CanInterface::GetCanAddress(), CanId::MasterAddress);
 	SafeStrncpy(msg->boardType, GetBoardTypeName(), sizeof(msg->boardType));
 	msg->boardVersion = GetBoardVersion();
 	msg->bootloaderVersion = CanMessageFirmwareUpdateRequest::BootloaderVersion0;
