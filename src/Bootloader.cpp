@@ -520,7 +520,7 @@ bool CheckValidFirmware()
 # endif
 
 	// Disable all IRQs
-	SysTick->CTRL = (1 << SysTick_CTRL_CLKSOURCE_Pos);	// disable the system tick exception
+	SysTick->CTRL = (1u << SysTick_CTRL_CLKSOURCE_Pos);	// disable the system tick exception
 	__disable_irq();
 
 # if SAME5x
@@ -535,7 +535,7 @@ bool CheckValidFirmware()
 	GCLK->CTRLA.reg = GCLK_CTRLA_SWRST;
 	while ((GCLK->CTRLA.reg & GCLK_CTRLA_SWRST) != 0) { }
 
-	// Disable DPLL0 and DPLL1 so hat they can be reprogrammed by the main firmware
+	// Disable DPLL0 and DPLL1 so that they can be reprogrammed by the main firmware
 	OSCCTRL->Dpll[0].DPLLCTRLA.bit.ENABLE = 0;
 	while (OSCCTRL->Dpll[0].DPLLSYNCBUSY.bit.ENABLE) { }
 	OSCCTRL->Dpll[1].DPLLCTRLA.bit.ENABLE = 0;
@@ -602,7 +602,6 @@ bool CheckValidFirmware()
 
 	// This point is unreachable, but gcc doesn't seem to know that
 	for (;;) { }
-
 }
 
 #endif
