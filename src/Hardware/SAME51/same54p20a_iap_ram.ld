@@ -117,6 +117,16 @@ SECTIONS
         _eCanMessage = . ;
     } > ram
 
+     /* DMA programming and write-back memory, here because they are volatile so we must't CRC them when we check for data corruption */
+    .dmaBuffers (NOLOAD) :
+    {
+    	. = ALIGN(16);
+    	_sDmaBuffers = . ;
+    	*(.DmaBuffers .DmaBuffers.*)
+    	. = ALIGN(4);
+    	_eDmaBuffers = . ;
+    } > ram
+
     /* .bss section which is used for uninitialized data */
     .bss (NOLOAD) :
     {
