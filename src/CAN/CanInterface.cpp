@@ -116,7 +116,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 	can0dev = CanDevice::Init(0, whichPort, Can0Config, can0Memory, timing, nullptr);
 
 #ifdef SAMMYC21
-	pinMode(CanStandbyPin, OUTPUT_LOW);							// take the CAN drivers out of standby
+	SetPinMode(CanStandbyPin, OUTPUT_LOW);						// take the CAN drivers out of standby
 #endif
 
 #if defined(CAN_IAP)

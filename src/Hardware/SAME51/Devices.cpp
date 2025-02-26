@@ -29,7 +29,7 @@ void SerialPortInit(AsyncSerial*) noexcept
 
 void SerialPortDeinit(AsyncSerial*) noexcept
 {
-	pinMode(PortBPin(25), INPUT_PULLUP);
+	SetPinMode(PortBPin(25), INPUT_PULLUP);
 }
 
 AsyncSerial uart0(2, 1, 512, 512, SerialPortInit, SerialPortDeinit);
@@ -59,7 +59,7 @@ void SerialPortInit(AsyncSerial*) noexcept
 
 void SerialPortDeinit(AsyncSerial*) noexcept
 {
-	pinMode(PortBPin(20), INPUT_PULLUP);
+	SetPinMode(PortBPin(20), INPUT_PULLUP);
 }
 
 AsyncSerial uart0(3, 3, 512, 512, SerialPortInit, SerialPortDeinit);

@@ -185,7 +185,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		boardTypeIndex = 0;
 		for (Pin p : BoardAddressPins)
 		{
-			pinMode(p, INPUT_PULLUP);
+			SetPinMode(p, INPUT_PULLUP, false);
 		}
 
 		// Check whether address switches are set to zero. If so then reset and load new firmware
@@ -206,7 +206,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 
 		useAlternateCanPins = true;								// all boards with the smaller processor use the alternate CAN pins
 		defaultAddress = DefaultCanAddresses[boardTypeIndex];
-		pinMode(CanResetPins[boardTypeIndex], INPUT_PULLUP);
+		SetPinMode(CanResetPins[boardTypeIndex], INPUT_PULLUP, false);
 		delayMicroseconds(100);
 		doHardwareReset = !digitalRead(CanResetPins[boardTypeIndex]);
 		return true;
@@ -230,7 +230,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 {
 	defaultAddress = CanId::SammyC21DefaultAddress;
 	useAlternateCanPins = true;
-	pinMode(ButtonPins[0], INPUT_PULLUP);
+	SetPinMode(ButtonPins[0], INPUT_PULLUP, false);
 	delayMicroseconds(100);
 	doHardwareReset = !digitalRead(ButtonPins[0]);
 	return true;
@@ -418,7 +418,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 	const Pin canResetPin = CanResetPins[boardTypeIndex];
 	if (canResetPin != NoPin)
 	{
-		pinMode(canResetPin, INPUT_PULLUP);
+		SetPinMode(canResetPin, INPUT_PULLUP);
 		delayMicroseconds(100);
 		doHardwareReset = !digitalRead(canResetPin);
 	}
@@ -428,10 +428,10 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 	case BoardId::tool1lc_v0:
 	case BoardId::tool1lc_v1:
 		defaultAddress = CanId::ToolBoardDefaultAddress;
-		pinMode(OutPins_Tool1LC[0], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
-		pinMode(OutPins_Tool1LC[1], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
-		pinMode(OutPins_Tool1LC[2], OUTPUT_HIGH);					// this is intended for the hot end fan, so turn it on just as the tool board firmware does
-		pinMode(GlobalTmc22xxEnablePin_Tool1LC, OUTPUT_HIGH);
+		SetPinMode(OutPins_Tool1LC[0], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
+		SetPinMode(OutPins_Tool1LC[1], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
+		SetPinMode(OutPins_Tool1LC[2], OUTPUT_HIGH);					// this is intended for the hot end fan, so turn it on just as the tool board firmware does
+		SetPinMode(GlobalTmc22xxEnablePin_Tool1LC, OUTPUT_HIGH);
 		break;
 
 	case BoardId::exp1xd_v0:
@@ -450,11 +450,11 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		useAlternateCanPins = true;
 		// ATE CM board has the reset jumper fitted between AteCmZeroPin and AteCmJumperPin
 		defaultAddress = CanId::ATECMBoardDefaultAddress;
-		pinMode(AteCmZeroPin, OUTPUT_LOW);
-		pinMode(AteCmJumperPin, INPUT_PULLUP);
+		SetPinMode(AteCmZeroPin, OUTPUT_LOW);
+		SetPinMode(AteCmJumperPin, INPUT_PULLUP);
 		delayMicroseconds(100);
 		doHardwareReset = !digitalRead(AteCmJumperPin);
-		pinMode(AteCmZeroPin, INPUT_PULLUP);
+		SetPinMode(AteCmZeroPin, INPUT_PULLUP, false);
 		break;
 
 	case BoardId::ate_io_v01:
@@ -493,7 +493,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 
 # if defined(MB6HC)
 	// Test whether the board is version 1.02 or later. Version 1.02 boards have a pulldown resistor on a direction pin.
-	pinMode(VersionTestPin_MB6HC, INPUT_PULLUP);
+	SetPinMode(VersionTestPin_MB6HC, INPUT_PULLUP, false);
 	delayMicroseconds(100);
 	boardTypeIndex = (digitalRead(VersionTestPin_MB6HC)) ? 0 : 1;
 # endif

@@ -299,7 +299,7 @@ void AppMain()
 
 	for (unsigned int ledNumber = 0; ledNumber < NumLedPins; ++ledNumber)
 	{
-		pinMode(GetLedPin(ledNumber), (GetLedActiveHigh()) ? OUTPUT_LOW : OUTPUT_HIGH);
+		SetPinMode(GetLedPin(ledNumber), (GetLedActiveHigh()) ? OUTPUT_LOW : OUTPUT_HIGH);
 	}
 
 #ifdef DEBUG

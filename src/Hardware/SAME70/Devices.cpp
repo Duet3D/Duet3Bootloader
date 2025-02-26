@@ -26,7 +26,7 @@ void SerialPortInit(AsyncSerial*) noexcept
 
 void SerialPortDeinit(AsyncSerial*) noexcept
 {
-	pinMode(PortDPin(26), INPUT_PULLUP);
+	SetPinMode(PortDPin(26), INPUT_PULLUP);
 }
 
 AsyncSerial uart0(UART2, UART2_IRQn, ID_UART2, 512, 512, SerialPortInit, SerialPortDeinit);
