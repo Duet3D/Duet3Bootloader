@@ -12,15 +12,23 @@
 #include <CanId.h>
 
 class CanMessageBuffer;
+class CanTiming;
 
 namespace CanInterface
 {
-	void Init(CanAddress defaultBoardAddress, bool doHardwareReset, bool useAlternatePins);
-	void Shutdown();
+	void Init(CanAddress defaultBoardAddress, bool doHardwareReset, bool useAlternatePins) noexcept;
+	void Shutdown() noexcept;
 
-	CanAddress GetCanAddress();
-	void Send(CanMessageBuffer *buf);
-	bool GetCanMessage(CanMessageBuffer *buf);
+	CanAddress GetCanAddress() noexcept;
+	void Send(CanMessageBuffer *buf) noexcept;
+	bool GetCanMessage(CanMessageBuffer *buf) noexcept;
+
+	void GetLocalCanTiming(CanTiming& timing) noexcept;
+	void SetLocalCanTiming(const CanTiming& timing) noexcept;
+
+#if !defined(CAN_IAP)
+	bool StoreLocalCanTiming(const CanTiming& timing) noexcept;
+#endif
 }
 
 #endif /* SRC_CAN_CANINTERFACE_H_ */

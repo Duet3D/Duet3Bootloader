@@ -264,77 +264,62 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 	} while (!done);
 }
 
-// Clock configuration:
-// SAME5x:
-//	XOSCn (n=0 on expansion boards, 1 on Duet 3 Mini) = 12MHz or 25MHz crystal oscillator
-//  DPLL0 120MHz locked to XOSCn
-//  DPLL1 96MHz locked to XOSCn
-//  DFLL48M no longer used because it has high jitter
-//  GCLK0 120MHz from DPLL0, for CPU and fast peripherals
-//  GCLK1 XOSCn divided by (32 * XOSCn_frequency_MHz) to give 31250Hz for SERCOM slow clock
-//  GCLK2 XOSCn direct, used by Ethernet PHY on Duet 3 Mini
-//  GCLK3: DPLL0 divided by 2, 60MHz for peripherals that need slower than 120MHz
-//  GCLK4: DPLL1 divided by 2, 48MHz for CAN and step timer
-//  GCLK5: For use by the application, e.g. TMC clock on EXP1HCL/M23CL, LDC1612 clock on TOOL1RR and SZP
-//  GCLK6: DPLL0 divided by 120 to give 1MHz, for EIC deglitching
-//  GCLK7: DPLL1 direct to give 96MHz for SDHC interface on Duet 3 Mini
-// SAMC21:
-//	XOSC1 12MHz or 25MHz crystal oscillator (16MHz on Sammy-C21 board)
-//	FDPLL 48MHz locked to XOSC1
-//	GCLK0 48MHz from FDPLL, used by CPU, CAN and most peripherals
-//  GCLK1 31250Hz (1MHz divided by 32) for e.g. SERCOM slow clock
-//  GCLK2 1MHz
-void AppMain()
+bool LookForClockMessages() noexcept
 {
-	// Initialise systick (needed for delay calls to work)
-	SysTick->LOAD = ((SystemCoreClockFreq/1000) - 1u) << SysTick_LOAD_RELOAD_Pos;
-	SysTick->CTRL = (1u << SysTick_CTRL_ENABLE_Pos) | (1u << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
-	NVIC_SetPriority(SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL);	// set Priority for Systick Interrupt
-
-#if 0				// we don't need to call CoreInit because we don't use DMA, EXINTs or the random number generator
-	CoreInit();
-#endif
-	DeviceInit();
-
-	// Establish the board type and initialise pins
-	CanAddress defaultAddress;
-	bool doHardwareReset;
-	bool useAlternateCanPins;
-	if (!IdentifyBoard(defaultAddress, doHardwareReset, useAlternateCanPins))
+	constexpr uint32_t millsecondsAllowed = 3000;					// how long we allow to receive four time sync messages
+	uint32_t whenStartedWaiting = millis();
+	unsigned int numTimeSyncMessagesReceived = 0;
+	do
 	{
-		ReportErrorAndRestart("Unknown board", FirmwareFlashErrorCode::unknownBoard);
-	}
+		CanMessageBuffer buf;
+		const bool ok = CanInterface::GetCanMessage(&buf);
+		if (ok && buf.id.MsgType() == CanMessageType::timeSync)
+		{
+			++numTimeSyncMessagesReceived;
+			if (numTimeSyncMessagesReceived == 4) { return true; }
+		}
+	} while (millis() - whenStartedWaiting < millsecondsAllowed);
+	return false;
+}
 
-	for (unsigned int ledNumber = 0; ledNumber < NumLedPins; ++ledNumber)
+// Establish the bit rate in use.
+// On entry the standard bit rate as read from flash memory has been set.
+// On return we are using the same bit rate as the master.
+void FindBitRate()
+{
+	if (LookForClockMessages()) { return; }					// initial bit rate is correct
+
+	CanTiming newTiming;
+	do
 	{
-		SetPinMode(GetLedPin(ledNumber), (GetLedActiveHigh()) ? OUTPUT_LOW : OUTPUT_HIGH);
-	}
+		newTiming.SetDefaults_1Mb();
+		CanInterface::SetLocalCanTiming(newTiming);
+		if (LookForClockMessages()) { break; }
 
-#ifdef DEBUG
-	uart0.begin(57600);
-# if defined(CAN_IAP)
-	SerialMessage("CAN IAP running");
-# else
-	SerialMessage("Bootloader running");
-# endif
-#endif
+		newTiming.SetDefaults_500kb();
+		CanInterface::SetLocalCanTiming(newTiming);
+		if (LookForClockMessages()) { break; }
+
+		newTiming.SetDefaults_250kb();
+		CanInterface::SetLocalCanTiming(newTiming);
+		if (LookForClockMessages()) { break; }
+
+		ReportErrorAndRestart("No time sync message received", FirmwareFlashErrorCode::noTimeSyncMessageSeen);
+	} while (false);
 
 #if !defined(CAN_IAP)
-	if (!doHardwareReset && CheckValidFirmware())
-	{
-		// Relocate the vector table and jump into the firmware. If it returns then we execute the bootloader.
-		StartFirmware();
-	}
+	// If we get here then we've seen a time sync message that is probably at a bit rate different from the original
+	(void)CanInterface::StoreLocalCanTiming(newTiming);		// store the new timing in NVRAM
 #endif
+}
 
-	// If we get here then we are staying in the bootloader
-	// Initialise the CAN subsystem
+// Request data from the master and program the flash memory
+void ProgramFlash()
+{
 	if (!Flash::Init())
 	{
 		ReportErrorAndRestart("Failed to initialize flash controller", FirmwareFlashErrorCode::flashInitFailed);
 	}
-
-	CanInterface::Init(defaultAddress, doHardwareReset, useAlternateCanPins);
 
 	// Loop requesting firmware from the main board and handling any firmware that it sends to us
 	uint32_t bufferStartOffset = 0;
@@ -425,7 +410,75 @@ void AppMain()
 	{
 		ReportErrorAndRestart("Failed to lock flash", FirmwareFlashErrorCode::lockFailed);
 	}
+}
 
+// Clock configuration:
+// SAME5x:
+//	XOSCn (n=0 on expansion boards, 1 on Duet 3 Mini) = 12MHz or 25MHz crystal oscillator
+//  DPLL0 120MHz locked to XOSCn
+//  DPLL1 96MHz locked to XOSCn
+//  DFLL48M no longer used because it has high jitter
+//  GCLK0 120MHz from DPLL0, for CPU and fast peripherals
+//  GCLK1 XOSCn divided by (32 * XOSCn_frequency_MHz) to give 31250Hz for SERCOM slow clock
+//  GCLK2 XOSCn direct, used by Ethernet PHY on Duet 3 Mini
+//  GCLK3: DPLL0 divided by 2, 60MHz for peripherals that need slower than 120MHz
+//  GCLK4: DPLL1 divided by 2, 48MHz for CAN and step timer
+//  GCLK5: For use by the application, e.g. TMC clock on EXP1HCL/M23CL, LDC1612 clock on TOOL1RR and SZP
+//  GCLK6: DPLL0 divided by 120 to give 1MHz, for EIC deglitching
+//  GCLK7: DPLL1 direct to give 96MHz for SDHC interface on Duet 3 Mini
+// SAMC21:
+//	XOSC1 12MHz or 25MHz crystal oscillator (16MHz on Sammy-C21 board)
+//	FDPLL 48MHz locked to XOSC1
+//	GCLK0 48MHz from FDPLL, used by CPU, CAN and most peripherals
+//  GCLK1 31250Hz (1MHz divided by 32) for e.g. SERCOM slow clock
+//  GCLK2 1MHz
+void AppMain()
+{
+	// Initialise systick (needed for delay calls to work)
+	SysTick->LOAD = ((SystemCoreClockFreq/1000) - 1u) << SysTick_LOAD_RELOAD_Pos;
+	SysTick->CTRL = (1u << SysTick_CTRL_ENABLE_Pos) | (1u << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
+	NVIC_SetPriority(SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL);	// set priority for Systick Interrupt
+
+#if 0				// we don't need to call CoreInit because we don't use DMA, EXINTs or the random number generator
+	CoreInit();
+#endif
+	DeviceInit();
+
+	// Establish the board type and initialise pins
+	CanAddress defaultAddress;
+	bool doHardwareReset;
+	bool useAlternateCanPins;
+	if (!IdentifyBoard(defaultAddress, doHardwareReset, useAlternateCanPins))
+	{
+		ReportErrorAndRestart("Unknown board", FirmwareFlashErrorCode::unknownBoard);
+	}
+
+	for (unsigned int ledNumber = 0; ledNumber < NumLedPins; ++ledNumber)
+	{
+		SetPinMode(GetLedPin(ledNumber), (GetLedActiveHigh()) ? OUTPUT_LOW : OUTPUT_HIGH);
+	}
+
+#ifdef DEBUG
+	uart0.begin(57600);
+# if defined(CAN_IAP)
+	SerialMessage("CAN IAP running");
+# else
+	SerialMessage("Bootloader running");
+# endif
+#endif
+
+#if !defined(CAN_IAP)
+	if (!doHardwareReset && CheckValidFirmware())
+	{
+		// Relocate the vector table and jump into the firmware. If it returns then we execute the bootloader.
+		StartFirmware();
+	}
+#endif
+
+	// If we get here then we are staying in the bootloader
+	CanInterface::Init(defaultAddress, doHardwareReset, useAlternateCanPins);		// initialise CAN subsystem
+	FindBitRate();																	// establish the bit rate by listening for clock messages at the standard speeds
+	ProgramFlash();																	// fetch and the firmware file and program it into flash
 	CanInterface::Shutdown();
 
 	delay(2);

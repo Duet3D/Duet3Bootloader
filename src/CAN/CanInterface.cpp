@@ -21,7 +21,15 @@
 static CanDevice *can0dev = nullptr;
 
 #if !defined(CAN_IAP)
+
+# if SAME5x
+constexpr uint32_t CanUserAreaDataOffset = CanUserAreaDataOffset_SAME5x;
+# elif SAMC21
+constexpr uint32_t CanUserAreaDataOffset = CanUserAreaDataOffset_SAMC21;
+# endif
+
 static CanUserAreaData canConfigData;
+
 #endif
 
 static CanAddress boardAddress;
@@ -35,7 +43,7 @@ constexpr CanDevice::Config Can0Config =
 	.rxFifo0Size = 16,
 	.rxFifo1Size = 16,
 	.numShortFilterElements = 0,
-	.numExtendedFilterElements = 3,
+	.numExtendedFilterElements = 2,
 	.txEventFifoSize = 2
 };
 
@@ -49,12 +57,6 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 {
 #if !defined(CAN_IAP)
 	// Read the CAN timing data from the top part of the NVM User Row
-# if SAME5x
-	const uint32_t CanUserAreaDataOffset = 512 - sizeof(CanUserAreaData);
-# elif SAMC21
-	const uint32_t CanUserAreaDataOffset = 256 - sizeof(CanUserAreaData);
-# endif
-
 	canConfigData = *reinterpret_cast<CanUserAreaData*>(NVMCTRL_USER + CanUserAreaDataOffset);
 
 	if (doHardwareReset)
@@ -129,7 +131,11 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 	can0dev->SetExtendedFilterElement(0, CanDevice::RxBufferNumber::fifo0,
 										(uint32_t)boardAddress << CanId::DstAddressShift,
 										CanId::BoardAddressMask << CanId::DstAddressShift);
-	// We ignore broadcast messages so no need to set up a filter for them
+	// Set up a CAN receive filter to receive clock messages
+	can0dev->SetExtendedFilterElement(1, CanDevice::RxBufferNumber::fifo0,
+										((uint32_t)CanId::BroadcastAddress << CanId::DstAddressShift) | ((uint32_t)CanMessageType::timeSync << CanId::MessageTypeShift),
+										(CanId::BoardAddressMask << CanId::DstAddressShift) | (CanId::MessageTypeMask << CanId::MessageTypeShift));
+
 	can0dev->Enable();
 }
 
@@ -158,5 +164,31 @@ void CanInterface::Send(CanMessageBuffer *buf)
 {
 	(void)can0dev->SendMessage(CanDevice::TxBufferNumber::fifo, 1000, buf);
 }
+
+void CanInterface::GetLocalCanTiming(CanTiming& timing) noexcept
+{
+	can0dev->GetLocalCanTiming(timing);
+}
+
+void CanInterface::SetLocalCanTiming(const CanTiming& timing) noexcept
+{
+	can0dev->SetLocalCanTiming(timing);
+}
+
+#if !defined(CAN_IAP)
+
+bool CanInterface::StoreLocalCanTiming(const CanTiming& timing) noexcept
+{
+#if RP2040
+	NonVolatileMemory mem(NvmPage::common);
+	mem.SetCanSettings(canConfigData);
+	mem.EnsureWritten();
+	return true;
+#elif SAMC21 || SAME5x
+	return _user_area_write(reinterpret_cast<void*>(NVMCTRL_USER), CanUserAreaDataOffset, reinterpret_cast<const uint8_t*>(&canConfigData), sizeof(canConfigData)) == 0;
+#endif
+}
+
+#endif
 
 // End
