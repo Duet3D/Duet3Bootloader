@@ -179,6 +179,7 @@ void CanInterface::SetLocalCanTiming(const CanTiming& timing) noexcept
 
 bool CanInterface::StoreLocalCanTiming(const CanTiming& timing) noexcept
 {
+	canConfigData.SetTiming(timing);
 #if RP2040
 	NonVolatileMemory mem(NvmPage::common);
 	mem.SetCanSettings(canConfigData);
