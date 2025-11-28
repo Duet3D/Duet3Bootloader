@@ -292,15 +292,15 @@ void FindBitRate()
 	CanTiming newTiming;
 	do
 	{
-		newTiming.SetDefaults_1Mb();
+		newTiming.SetDefaults(CanTiming::DefaultCanBitRate);
 		CanInterface::SetLocalCanTiming(newTiming);
 		if (LookForClockMessages()) { break; }
 
-		newTiming.SetDefaults_500kb();
+		newTiming.SetDefaults(CanTiming::DefaultCanBitRate/2);
 		CanInterface::SetLocalCanTiming(newTiming);
 		if (LookForClockMessages()) { break; }
 
-		newTiming.SetDefaults_250kb();
+		newTiming.SetDefaults(CanTiming::DefaultCanBitRate/4);
 		CanInterface::SetLocalCanTiming(newTiming);
 		if (LookForClockMessages()) { break; }
 
