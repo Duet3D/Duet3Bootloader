@@ -309,7 +309,12 @@ void FindBitRate()
 
 #if !defined(CAN_IAP)
 	// If we get here then we've seen a time sync message that is probably at a bit rate different from the original
-	(void)CanInterface::StoreLocalCanTiming(newTiming);		// store the new timing in NVRAM
+	if (!Flash::Init())
+	{
+		ReportErrorAndRestart("Failed to initialize flash controller", FirmwareFlashErrorCode::flashInitFailed);
+	}
+	(void)CanInterface::StoreLocalCanTiming(newTiming);		// store the new timing in NVRAM. CAUTION: this allocates a 512-byte buffer on the stack!
+	Flash::Deinit();
 #endif
 }
 
@@ -410,6 +415,7 @@ void ProgramFlash()
 	{
 		ReportErrorAndRestart("Failed to lock flash", FirmwareFlashErrorCode::lockFailed);
 	}
+	Flash::Deinit();
 }
 
 // Clock configuration:

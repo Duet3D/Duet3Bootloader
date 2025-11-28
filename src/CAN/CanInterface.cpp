@@ -69,7 +69,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 	CanTiming timing;
 
 #if defined(CAN_IAP)
-	timing.SetDefaults_1Mb();									// we only support default timing when a main board is used as an expansion board
+	timing.SetDefaults(CanTiming::DefaultCanBitRate);
 #else
 	canConfigData.GetTiming(timing);
 #endif
