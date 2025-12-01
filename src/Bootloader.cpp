@@ -159,21 +159,27 @@ void SerialMessage(const char *text)
 #endif
 }
 
-void ReportError(const char *text, FirmwareFlashErrorCode err)
+// Flash the red LED the specified number of times
+void FlashLed(unsigned int numFlashes)
 {
-	SerialMessage(text);
-
-	for (unsigned int i = 0; i < (unsigned int)err; ++i)
+	for (unsigned int i = 0; i < numFlashes; ++i)
 	{
 		WriteLed(0, true);
 		delay(200);
 		WriteLed(0, false);
 		delay(200);
 	}
+}
 
+// Report an error via the serial port (if enabled) and by flashing the red LED
+void ReportError(const char *text, FirmwareFlashErrorCode err)
+{
+	SerialMessage(text);
+	FlashLed((unsigned int)err);
 	delay(1000);
 }
 
+// Report an error and start from the beginning again
 [[noreturn]] void ReportErrorAndRestart(const char *text, FirmwareFlashErrorCode err)
 {
 	CanInterface::Shutdown();
@@ -266,8 +272,9 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 
 bool LookForClockMessages() noexcept
 {
-	constexpr uint32_t millsecondsAllowed = 3000;					// how long we allow to receive four time sync messages
+	constexpr uint32_t millsecondsAllowed = 2500;					// how long we allow to receive three time sync messages (we should receive about four every second)
 	uint32_t whenStartedWaiting = millis();
+	FlashLed(1);													// flash the LED once to indicate that we are trying a new bit rate
 	unsigned int numTimeSyncMessagesReceived = 0;
 	do
 	{
@@ -276,9 +283,31 @@ bool LookForClockMessages() noexcept
 		if (ok && buf.id.MsgType() == CanMessageType::timeSync)
 		{
 			++numTimeSyncMessagesReceived;
-			if (numTimeSyncMessagesReceived == 4) { return true; }
+			if (numTimeSyncMessagesReceived == 3) { return true; }
 		}
 	} while (millis() - whenStartedWaiting < millsecondsAllowed);
+	return false;
+}
+
+// Set the bit rate and listed for CAN time sync messages. Return true if we heard enough of them,.
+bool TryBitRate(uint32_t bitRate)
+{
+	CanTiming timing;
+	timing.SetDefaults(bitRate);
+	CanInterface::SetLocalCanTiming(timing);
+	if (LookForClockMessages())
+	{
+#if !defined(CAN_IAP)
+		// If we get here then we've seen a time sync message that is probably at a bit rate different from the original
+		if (!Flash::Init())
+		{
+			ReportErrorAndRestart("Failed to initialize flash controller", FirmwareFlashErrorCode::flashInitFailed);
+		}
+		(void)CanInterface::StoreLocalCanTiming(timing);		// store the new timing in NVRAM. CAUTION: this allocates a 512-byte buffer on the stack!
+		Flash::Deinit();
+#endif
+		return true;
+	}
 	return false;
 }
 
@@ -287,35 +316,17 @@ bool LookForClockMessages() noexcept
 // On return we are using the same bit rate as the master.
 void FindBitRate()
 {
-	if (LookForClockMessages()) { return; }					// initial bit rate is correct
-
-	CanTiming newTiming;
-	do
-	{
-		newTiming.SetDefaults(CanTiming::DefaultCanBitRate);
-		CanInterface::SetLocalCanTiming(newTiming);
-		if (LookForClockMessages()) { break; }
-
-		newTiming.SetDefaults(CanTiming::DefaultCanBitRate/2);
-		CanInterface::SetLocalCanTiming(newTiming);
-		if (LookForClockMessages()) { break; }
-
-		newTiming.SetDefaults(CanTiming::DefaultCanBitRate/4);
-		CanInterface::SetLocalCanTiming(newTiming);
-		if (LookForClockMessages()) { break; }
-
-		ReportErrorAndRestart("No time sync message received", FirmwareFlashErrorCode::noTimeSyncMessageSeen);
-	} while (false);
-
 #if !defined(CAN_IAP)
-	// If we get here then we've seen a time sync message that is probably at a bit rate different from the original
-	if (!Flash::Init())
-	{
-		ReportErrorAndRestart("Failed to initialize flash controller", FirmwareFlashErrorCode::flashInitFailed);
-	}
-	(void)CanInterface::StoreLocalCanTiming(newTiming);		// store the new timing in NVRAM. CAUTION: this allocates a 512-byte buffer on the stack!
-	Flash::Deinit();
+	// Try the bit rate stored in NVM first
+	if (LookForClockMessages()) { return; }
 #endif
+
+	// Try the standard bit rates
+	if (TryBitRate(CanTiming::DefaultCanBitRate)) { return; }
+	if (TryBitRate(CanTiming::DefaultCanBitRate/2)) { return; }
+	if (TryBitRate(CanTiming::DefaultCanBitRate/4)) { return; }
+
+	ReportErrorAndRestart("No time sync message seen", FirmwareFlashErrorCode::noTimeSyncMessageSeen);
 }
 
 // Request data from the master and program the flash memory
