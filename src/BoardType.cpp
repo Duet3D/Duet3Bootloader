@@ -40,7 +40,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 // Board ID analog pin handling
 constexpr uint32_t AdcRange = 1u << AnalogIn::AdcBits;
 
-// Currently we support three boards: EXP3HC, EXP1HCL, and M23CL
+// List of the board names we support indexed by board type number
 constexpr const char* BoardTypeNames[] =
 {
 	"EXP3HC",

@@ -188,6 +188,13 @@ void ReportError(const char *text, FirmwareFlashErrorCode err)
 	ResetProcessor();
 }
 
+// Make sure there are no received messages
+void FlushCanMessages()
+{
+	CanMessageBuffer buf;
+	while (CanInterface::GetCanMessage(&buf)) { }
+}
+
 void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes, CanMessageBuffer& buf)
 {
 	CanMessageFirmwareUpdateRequest * const msg = buf.SetupRequestMessageNoRid<CanMessageFirmwareUpdateRequest>(CanInterface::GetCanAddress(), CanId::MasterAddress);
@@ -213,6 +220,8 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 	WriteLed(CanLedNumber, true);
 	delay(25);														// flash the LED briefly to indicate we are requesting a new flash block
 	WriteLed(CanLedNumber, false);
+
+	FlushCanMessages();												// flush the receive buffer in case it's full of time sync messages
 
 	CanMessageBuffer buf;
 	RequestFirmwareBlock(startingOffset, FlashBlockWriteSize, buf);	// ask for 16K or 64K from the starting offset
@@ -272,8 +281,10 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 
 bool LookForClockMessages() noexcept
 {
+	FlushCanMessages();												// make sure there are no old messages in the buffer
+
 	constexpr uint32_t millsecondsAllowed = 2500;					// how long we allow to receive three time sync messages (we should receive about four every second)
-	uint32_t whenStartedWaiting = millis();
+	const uint32_t whenStartedWaiting = millis();
 	FlashLed(1);													// flash the LED once to indicate that we are trying a new bit rate
 	unsigned int numTimeSyncMessagesReceived = 0;
 	do
@@ -299,12 +310,8 @@ bool TryBitRate(uint32_t bitRate)
 	{
 #if !defined(CAN_IAP)
 		// If we get here then we've seen a time sync message that is probably at a bit rate different from the original
-		if (!Flash::Init())
-		{
-			ReportErrorAndRestart("Failed to initialize flash controller", FirmwareFlashErrorCode::flashInitFailed);
-		}
-		(void)CanInterface::StoreLocalCanTiming(timing);		// store the new timing in NVRAM. CAUTION: this allocates a 512-byte buffer on the stack!
-		Flash::Deinit();
+		(void)CanInterface::StoreLocalCanTiming(timing);			// store the new timing in NVRAM. CAUTION: this allocates a 512-byte buffer on the stack!
+		delay(100);													// see if a delay at this point helps
 #endif
 		return true;
 	}
@@ -340,6 +347,7 @@ void ProgramFlash()
 	// Loop requesting firmware from the main board and handling any firmware that it sends to us
 	uint32_t bufferStartOffset = 0;
 	uint32_t roundedUpLength;
+
 	for (;;)
 	{
 		uint32_t fileSize;
