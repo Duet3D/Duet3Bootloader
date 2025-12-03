@@ -266,16 +266,24 @@ void GetBlock(uint32_t startingOffset, uint32_t& fileSize)
 
 // Clock configuration:
 // SAME5x:
-//	XOSC1 = 12MHz or 25MHz crystal oscillator
-//	FDPLL0 = takes XOSC1 divide by 4 (3MHz), multiplies by 40 to get 120MHz main clock
-//	FDPLL1 = takes XOSC1 divide by 4 (3MHz), multiplies by 12 to get 48MHz CAN clock
-//	GCLK0 = takes FDPLL0 output, no divisor, giving 120MHz main clock used by CPU
-//	GCLK1 = takes FDPLL0 output, divided by 2 to get 60MHz clock used by most peripherals
-//	GCLK2 = takes FDPLL1 output, no divisor, giving 48MHz CAN clock
+//	XOSCn (n=0 on expansion boards, 1 on Duet 3 Mini) = 12MHz or 25MHz crystal oscillator
+//  DPLL0 120MHz locked to XOSCn
+//  DPLL1 96MHz locked to XOSCn
+//  DFLL48M no longer used because it has high jitter
+//  GCLK0 120MHz from DPLL0, for CPU and fast peripherals
+//  GCLK1 XOSCn divided by (32 * XOSCn_frequency_MHz) to give 31250Hz for SERCOM slow clock
+//  GCLK2 XOSCn direct, used by Ethernet PHY on Duet 3 Mini
+//  GCLK3: DPLL0 divided by 2, 60MHz for peripherals that need slower than 120MHz
+//  GCLK4: DPLL1 divided by 2, 48MHz for CAN and step timer
+//  GCLK5: For use by the application, e.g. TMC clock on EXP1HCL/M23CL, LDC1612 clock on TOOL1RR and SZP
+//  GCLK6: DPLL0 divided by 120 to give 1MHz, for EIC deglitching
+//  GCLK7: DPLL1 direct to give 96MHz for SDHC interface on Duet 3 Mini
 // SAMC21:
-//	XOSC1 = 12MHz or 25MHz crystal oscillator (16MHz on Sammy-C21 board)
-//	FDPLL = takes XOSC1 divide by 6 (8 for Sammy-C21) (2MHz), multiplied by 24 to get 48MHz main clock
-//	GCLK0 = takes FDPLL output, no divisor, giving 48MHz main clock used by CPU and most peripherals
+//	XOSC1 12MHz or 25MHz crystal oscillator (16MHz on Sammy-C21 board)
+//	FDPLL 48MHz locked to XOSC1
+//	GCLK0 48MHz from FDPLL, used by CPU, CAN and most peripherals
+//  GCLK1 31250Hz (1MHz divided by 32) for e.g. SERCOM slow clock
+//  GCLK2 1MHz
 void AppMain()
 {
 	// Initialise systick (needed for delay calls to work)
