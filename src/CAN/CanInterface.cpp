@@ -21,7 +21,15 @@
 static CanDevice *can0dev = nullptr;
 
 #if !defined(CAN_IAP)
+
+# if SAME5x
+constexpr uint32_t CanUserAreaDataOffset = CanUserAreaDataOffset_SAME5x;
+# elif SAMC21
+constexpr uint32_t CanUserAreaDataOffset = CanUserAreaDataOffset_SAMC21;
+# endif
+
 static CanUserAreaData canConfigData;
+
 #endif
 
 static CanAddress boardAddress;
@@ -49,12 +57,6 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 {
 #if !defined(CAN_IAP)
 	// Read the CAN timing data from the top part of the NVM User Row
-# if SAME5x
-	const uint32_t CanUserAreaDataOffset = 512 - sizeof(CanUserAreaData);
-# elif SAMC21
-	const uint32_t CanUserAreaDataOffset = 256 - sizeof(CanUserAreaData);
-# endif
-
 	canConfigData = *reinterpret_cast<CanUserAreaData*>(NVMCTRL_USER + CanUserAreaDataOffset);
 
 	if (doHardwareReset)
