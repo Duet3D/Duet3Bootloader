@@ -9,9 +9,7 @@
 #define SRC_REPRAPFIRMWARE_H_
 
 #include <CoreIO.h>
-#include "ecv.h"
-#undef array
-#undef value			// needed because we include <optional>
+#include <ecv_duet3d.h>
 
 #include <cmath>
 #include <cinttypes>
