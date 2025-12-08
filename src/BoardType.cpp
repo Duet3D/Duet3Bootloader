@@ -40,7 +40,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 // Board ID analog pin handling
 constexpr uint32_t AdcRange = 1u << AnalogIn::AdcBits;
 
-// Currently we support three boards: EXP3HC, EXP1HCL, and M23CL
+// List of the board names we support indexed by board type number
 constexpr const char* BoardTypeNames[] =
 {
 	"EXP3HC",
@@ -477,12 +477,12 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 constexpr const char* BoardTypeNames[] = { "MB6HC", "MB6HC" };
 constexpr unsigned int BoardTypeVersions[] = { 0, 1 };
 constexpr const Pin *LedPinsTables[] = { LedPins_MB6HC_pre102, LedPins_MB6HC_102 };
-constexpr const bool *LedActiveHigh[] = { LedActiveHigh_MB6HC_pre102, LedActiveHigh_MB6HC_102 };
+constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6HC_pre102, LedActiveHigh_MB6HC_102 };
 # elif defined(MB6XD)
 constexpr const char* BoardTypeNames[] = { "MB6XD" };
 constexpr unsigned int BoardTypeVersions[] = { 0 };
 constexpr const Pin *LedPinsTables[] = { LedPins_MB6XD };
-constexpr const bool *LedActiveHigh[] = { LedActiveHigh_MB6XD };
+constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6XD };
 # endif
 
 bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useAlternateCanPins)
@@ -516,8 +516,12 @@ static_assert(ARRAY_SIZE(CanResetPins) == ARRAY_SIZE(BoardTypeNames));
 Pin GetLedPin(unsigned int ledNumber)
 {
 	const Pin p = LedPinsTables[boardTypeIndex][ledNumber];
-#if defined(DEBUG) && (SAME5x || SAMC21)
+#if defined(DEBUG)
+# if SAME5x || SAMC21
 	if (p == PortAPin(30) || p == PortAPin(31))
+# elif SAME70
+	if (p == PortBPin(6) || p == PortBPin(7))
+#endif
 	{
 		// Using the SWD pins to drive the LEDs. Don't allow this in a debug build because it prevents debugging.
 		return NoPin;
