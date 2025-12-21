@@ -25,11 +25,12 @@ constexpr unsigned int BoardTypeVersions[] = { 0 };
 constexpr const Pin *LedPinsTables[] = { LedPins_DUET3MINI };
 constexpr bool LedActiveHigh[] = { LedActiveHigh_DUET3MINI };
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useAlternateCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
 {
 	defaultAddress = CanId::Exp3HCFirmwareUpdateAddress;				// we use the same reserved CAN address as the 3HC board
 	doHardwareReset = false;
-	useAlternateCanPins = false;
+	whichCanPort = 1;
+	useLaterCanPins = true;
 	return true;
 }
 
@@ -43,12 +44,18 @@ constexpr uint32_t AdcRange = 1u << AnalogIn::AdcBits;
 // List of the board names we support indexed by board type number
 constexpr const char* BoardTypeNames[] =
 {
+	// SAME51N19 boards
 	"EXP3HC",
+
+	// SAME51G19 boards
 	"M23CL",
 	"F3PTB",
 	"TOOL1RR",
 	"EXP1HCL",
 	"EXP1HCL",
+
+	// SAME51J19 boards
+	"TOOLINDX",
 };
 
 constexpr unsigned int BoardTypeVersions[] =
@@ -58,7 +65,8 @@ constexpr unsigned int BoardTypeVersions[] =
 	0,
 	0,
 	1,		// EXP1HCL version 2.x
-	0		// EXP1HCL version 1.x
+	0,		// EXP1HCL version 1.x
+	0,
 };
 
 constexpr CanAddress DefaultCanAddresses[] =
@@ -69,6 +77,7 @@ constexpr CanAddress DefaultCanAddresses[] =
 	CanId::ToolBoardDefaultAddress,			// TOOL1RR
 	CanId::Exp1HCLBoardDefaultAddress,		// EXP1HCL v1.x
 	CanId::Exp1HCLBoardDefaultAddress,		// EXP1HCL v2.x
+	CanId::ToolBoardDefaultAddress,			// TOOLINDX
 };
 
 constexpr const Pin *LedPinsTables[] =
@@ -79,6 +88,7 @@ constexpr const Pin *LedPinsTables[] =
 	LedPins_TOOL1RR,
 	LedPins_EXP1HCL,
 	LedPins_EXP1HCL,
+	LedPins_TOOLINDX,
 };
 
 constexpr bool LedActiveHigh[] =
@@ -89,6 +99,7 @@ constexpr bool LedActiveHigh[] =
 	LedActiveHigh_TOOL1RR,
 	LedActiveHigh_EXP1HCL,
 	LedActiveHigh_EXP1HCL,
+	LedActiveHigh_TOOLINDX,
 };
 
 constexpr Pin CanResetPins[] =
@@ -99,10 +110,11 @@ constexpr Pin CanResetPins[] =
 	CanResetPin_TOOL1RR,
 	CanResetPin_EXP1HCL_v2,
 	CanResetPin_EXP1HCL_v1,
+	CanResetPin_TOOLINDX,
 };
 
 // This table of floats is only used at compile time, so it shouldn't cause the floating point library to be pulled in
-constexpr float BoardTypeFractions[] =
+constexpr float BoardTypeFractions_SAME51G[] =
 {
 	4.7/(4.7 + 60.4),						// M23CL has 4K7 lower resistor, 60K4 upper
 	2.4/(2.4 + 15.0),						// F3PTB has 2K4 lower, 15K upper
@@ -111,18 +123,22 @@ constexpr float BoardTypeFractions[] =
 	10.0/(1.0 + 10.0),						// EXP1HCL 1.x has 10K lower resistor, 1K upper
 };
 
-static_assert(IsIncreasing(BoardTypeFractions, ARRAY_SIZE(BoardTypeFractions)));
+constexpr unsigned int NumBoardTypes_SAME51N = 1;			// just EXP3HC
+constexpr unsigned int NumBoardTypes_SAME51G = ARRAY_SIZE(BoardTypeFractions_SAME51G);
+constexpr unsigned int NumBoardTypes_SAME51J = 1;			// just TOOLINDX for now
+
+static_assert(IsIncreasing(BoardTypeFractions_SAME51G, NumBoardTypes_SAME51G));
 
 // Table of halfway points that we use to decide what board type a reading corresponds to
-constexpr uint16_t BoardIdDecisionPoints[] =
+constexpr uint16_t BoardIdDecisionPoints_SAME51G[] =
 {
-	(uint16_t)((BoardTypeFractions[0] + BoardTypeFractions[1]) * (AdcRange/2)),
-	(uint16_t)((BoardTypeFractions[1] + BoardTypeFractions[2]) * (AdcRange/2)),
-	(uint16_t)((BoardTypeFractions[2] + BoardTypeFractions[3]) * (AdcRange/2)),
-	(uint16_t)((BoardTypeFractions[3] + BoardTypeFractions[4]) * (AdcRange/2)),
+	(uint16_t)((BoardTypeFractions_SAME51G[0] + BoardTypeFractions_SAME51G[1]) * (AdcRange/2)),
+	(uint16_t)((BoardTypeFractions_SAME51G[1] + BoardTypeFractions_SAME51G[2]) * (AdcRange/2)),
+	(uint16_t)((BoardTypeFractions_SAME51G[2] + BoardTypeFractions_SAME51G[3]) * (AdcRange/2)),
+	(uint16_t)((BoardTypeFractions_SAME51G[3] + BoardTypeFractions_SAME51G[4]) * (AdcRange/2)),
 };
 
-static_assert(ARRAY_SIZE(BoardIdDecisionPoints) + 1 == ARRAY_SIZE(BoardTypeFractions));
+static_assert(ARRAY_SIZE(BoardIdDecisionPoints_SAME51G) + 1 == NumBoardTypes_SAME51G);
 
 // Function to read a pin and scan a table of decision points to find the corresponding index
 static unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[], size_t numDecisionPoints)
@@ -165,7 +181,7 @@ uint8_t ReadBoardAddress()
 	uint8_t rslt = 0;
 	for (unsigned int i = 0; i < 4; ++i)
 	{
-		if (!digitalRead(BoardAddressPins[i]))
+		if (!digitalRead(BoardAddressPins_EXP3HC[i]))
 		{
 			rslt |= 1u << i;
 		}
@@ -173,17 +189,15 @@ uint8_t ReadBoardAddress()
 	return rslt;
 }
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useAlternateCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
 {
-	useAlternateCanPins = false;
-
 	// Determine the board type
 	const uint32_t deviceId = REG_DSU_DID & DeviceIdMask;
 	if (deviceId >= SAME51N_min && deviceId <= SAME51N_max)
 	{
 		// If a SAME51N processor, assume EXP3HC
 		boardTypeIndex = 0;
-		for (Pin p : BoardAddressPins)
+		for (Pin p : BoardAddressPins_EXP3HC)
 		{
 			SetPinMode(p, INPUT_PULLUP, false);
 		}
@@ -192,6 +206,8 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		const CanAddress switches = ReadBoardAddress();
 		doHardwareReset = (switches == 0);
 		defaultAddress = (doHardwareReset) ? CanId::Exp3HCFirmwareUpdateAddress : switches;
+		whichCanPort = 1;
+		useLaterCanPins = false;
 		return true;
 	}
 
@@ -200,15 +216,38 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		// Read the board type pin, which is an analog input fed from a resistor network
 		AnalogIn::Init(CommonAdcDevice);
 		SetPinFunction(BoardTypePin, GpioPinFunction::B);
-		boardTypeIndex = ReadAndQuantise(BoardTypeAdcChannel, BoardIdDecisionPoints, ARRAY_SIZE(BoardIdDecisionPoints)) + 1;
+		boardTypeIndex = ReadAndQuantise(BoardTypeAdcChannel, BoardIdDecisionPoints_SAME51G, ARRAY_SIZE(BoardIdDecisionPoints_SAME51G)) + NumBoardTypes_SAME51N;
 		AnalogIn::Disable(CommonAdcDevice);						// finished using the ADC
 		ClearPinFunction(BoardTypePin);
 
-		useAlternateCanPins = true;								// all boards with the smaller processor use the alternate CAN pins
 		defaultAddress = DefaultCanAddresses[boardTypeIndex];
 		SetPinMode(CanResetPins[boardTypeIndex], INPUT_PULLUP, false);
 		delayMicroseconds(100);
 		doHardwareReset = !digitalRead(CanResetPins[boardTypeIndex]);
+		whichCanPort = 0;
+		useLaterCanPins = false;
+		return true;
+	}
+
+	if (deviceId >= SAME51J_min && deviceId <= SAME51J_max)
+	{
+#if 1
+		// For now, assume the board is a TOOLINDX because no other board uses a SAME51J
+		boardTypeIndex = NumBoardTypes_SAME51N + NumBoardTypes_SAME51G;
+#else
+		// Read the board type pin, which is an analog input fed from a resistor network
+		AnalogIn::Init(CommonAdcDevice);
+		SetPinFunction(BoardTypePin, GpioPinFunction::B);
+		boardTypeIndex = ReadAndQuantise(BoardTypeAdcChannel, BoardIdDecisionPoints_SAME51J, ARRAY_SIZE(BoardIdDecisionPoint_SAME51J)) + NumBoardTypes_SAME51N + NumBoardTypes_SAME51G;
+		AnalogIn::Disable(CommonAdcDevice);						// finished using the ADC
+		ClearPinFunction(BoardTypePin);
+#endif
+		defaultAddress = DefaultCanAddresses[boardTypeIndex];
+		SetPinMode(CanResetPins[boardTypeIndex], INPUT_PULLUP, false);
+		delayMicroseconds(100);
+		doHardwareReset = !digitalRead(CanResetPins[boardTypeIndex]);
+		whichCanPort = 1;
+		useLaterCanPins = true;
 		return true;
 	}
 
@@ -226,10 +265,11 @@ constexpr unsigned int BoardTypeVersions[] = { 0 };
 constexpr const Pin *LedPinsTables[] = { LedPins_SAMMYC21 };
 constexpr bool LedActiveHigh[] = { LedActiveHigh_SAMMYC21 };
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useAlternateCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
 {
 	defaultAddress = CanId::SammyC21DefaultAddress;
-	useAlternateCanPins = true;
+	whichCanPort = 0;
+	useLaterCanPins = true;
 	SetPinMode(ButtonPins[0], INPUT_PULLUP, false);
 	delayMicroseconds(100);
 	doHardwareReset = !digitalRead(ButtonPins[0]);
@@ -392,7 +432,7 @@ static unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[
 	return ainState;
 }
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useAlternateCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
 {
 	// Read the board type pin, which is an analog input fed from a resistor network
 	AnalogIn::Init(CommonAdcDevice);
@@ -413,7 +453,8 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 	// Set up the hardware and default CAN address as appropriate
 	// Determine whether we need to do a hardware reset
 	doHardwareReset = false;
-	useAlternateCanPins = false;
+	whichCanPort = 0;
+	useLaterCanPins = false;
 
 	const Pin canResetPin = CanResetPins[boardTypeIndex];
 	if (canResetPin != NoPin)
@@ -430,7 +471,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		defaultAddress = CanId::ToolBoardDefaultAddress;
 		SetPinMode(OutPins_Tool1LC[0], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
 		SetPinMode(OutPins_Tool1LC[1], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
-		SetPinMode(OutPins_Tool1LC[2], OUTPUT_HIGH);					// this is intended for the hot end fan, so turn it on just as the tool board firmware does
+		SetPinMode(OutPins_Tool1LC[2], OUTPUT_HIGH);				// this is intended for the hot end fan, so turn it on just as the tool board firmware does
 		SetPinMode(GlobalTmc22xxEnablePin_Tool1LC, OUTPUT_HIGH);
 		break;
 
@@ -447,7 +488,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 		break;
 
 	case BoardId::ate_cm:
-		useAlternateCanPins = true;
+		useLaterCanPins = true;
 		// ATE CM board has the reset jumper fitted between AteCmZeroPin and AteCmJumperPin
 		defaultAddress = CanId::ATECMBoardDefaultAddress;
 		SetPinMode(AteCmZeroPin, OUTPUT_LOW);
@@ -461,7 +502,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useA
 	case BoardId::ate_io_v02:
 	case BoardId::ate:
 	default:
-		useAlternateCanPins = true;
+		useLaterCanPins = true;
 		defaultAddress = CanId::ATEIOBoardDefaultAddress;
 		break;
 	}
@@ -485,11 +526,12 @@ constexpr const Pin *LedPinsTables[] = { LedPins_MB6XD };
 constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6XD };
 # endif
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, bool& useAlternateCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
 {
-	defaultAddress = CanId::Exp3HCFirmwareUpdateAddress;				// we use the same reserved CAN address as the 3HC board
+	defaultAddress = CanId::Exp3HCFirmwareUpdateAddress;		// we use the same reserved CAN address as the 3HC board
 	doHardwareReset = false;
-	useAlternateCanPins = false;
+	whichCanPort = 1;											// we use CAN1 on the 6HC and 6XD
+	useLaterCanPins = false;									// we currently always use the same set of pins
 
 # if defined(MB6HC)
 	// Test whether the board is version 1.02 or later. Version 1.02 boards have a pulldown resistor on a direction pin.

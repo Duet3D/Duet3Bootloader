@@ -53,7 +53,7 @@ static_assert(Can0Config.IsValid());
 static uint32_t can0Memory[Can0Config.GetMemorySize()] __attribute__ ((section (".CanMessage")));
 
 // Initialise the CAN interface
-void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bool useAlternatePins)
+void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, unsigned int whichPort, bool useLaterPins)
 {
 #if !defined(CAN_IAP)
 	// Read the CAN timing data from the top part of the NVM User Row
@@ -76,41 +76,53 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, bo
 
 	// Set up the CAN pins
 #if SAME5x
-# if defined(CAN_IAP)
-	// Duet 3 Mini uses PB14 and PB15, CAN 1
-	SetPinFunction(PortBPin(15), GpioPinFunction::H);
-	SetPinFunction(PortBPin(14), GpioPinFunction::H);
-	constexpr unsigned int whichPort = 1;
-# else
-	unsigned int whichPort;
-	if (useAlternatePins)
+	if (whichPort == 0)		// if using CAN0
 	{
-		SetPinFunction(PortAPin(23), GpioPinFunction::I);
-		SetPinFunction(PortAPin(22), GpioPinFunction::I);
-		whichPort = 0;											// use CAN0
+		if (useLaterPins)
+		{
+			SetPinFunction(PortAPin(25), GpioPinFunction::I);
+			SetPinFunction(PortAPin(24), GpioPinFunction::I);
+		}
+		else
+		{
+			SetPinFunction(PortAPin(23), GpioPinFunction::I);
+			SetPinFunction(PortAPin(22), GpioPinFunction::I);
+		}
 	}
-	else
+	else					// using CAN1
 	{
-		SetPinFunction(PortBPin(13), GpioPinFunction::H);
-		SetPinFunction(PortBPin(12), GpioPinFunction::H);
-		whichPort = 1;											// use CAN1
+		if (useLaterPins)
+		{
+			SetPinFunction(PortBPin(15), GpioPinFunction::H);
+			SetPinFunction(PortBPin(14), GpioPinFunction::H);
+		}
+		else
+		{
+			SetPinFunction(PortBPin(13), GpioPinFunction::H);
+			SetPinFunction(PortBPin(12), GpioPinFunction::H);
+		}
 	}
-# endif
 #elif SAMC21
-	if (useAlternatePins)
+	if (whichPort == 0)		// if using CAN0
 	{
-		SetPinFunction(PortBPin(23), GpioPinFunction::G);
-		SetPinFunction(PortBPin(22), GpioPinFunction::G);
+		if (useLaterPins)
+		{
+			SetPinFunction(PortBPin(23), GpioPinFunction::G);
+			SetPinFunction(PortBPin(22), GpioPinFunction::G);
+		}
+		else
+		{
+			SetPinFunction(PortAPin(25), GpioPinFunction::G);
+			SetPinFunction(PortAPin(24), GpioPinFunction::G);
+		}
 	}
-	else
+	else					// using CAN1 (only one set of pins available on SAMC21G)
 	{
-		SetPinFunction(PortAPin(25), GpioPinFunction::G);
-		SetPinFunction(PortAPin(24), GpioPinFunction::G);
+		SetPinFunction(PortBPin(11), GpioPinFunction::G);
+		SetPinFunction(PortBPin(10), GpioPinFunction::G);
 	}
-	constexpr unsigned int whichPort = 0;						// we always use CAN0 on the SAMC21
 #elif SAME70
-	constexpr unsigned int whichPort = 1;						// we always use MCAN1 for Can-FD on the SAME70
-	SetPinFunction(PortDPin(12), GpioPinFunction::B);
+	SetPinFunction(PortDPin(12), GpioPinFunction::B);			// currently we always use MCAN1 for CAN-FD on the SAME70 and we use a mixture of earlier and later pins
 	SetPinFunction(PortCPin(12), GpioPinFunction::C);
 #endif
 
