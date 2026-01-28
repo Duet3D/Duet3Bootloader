@@ -32,10 +32,10 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 SEARCH_DIR(.)
 
-/* Memory Spaces Definitions. We allow up to 64K for the SAME51 bootloader. This version is relocated to sit 16K from the start of flash, so we have 48K available. */
+/* Memory Spaces Definitions. The bootloader must not overflow the first 16Kb. This version is relocated to sit 4Kb from the start of flash, so we have 12Kb available. */
 MEMORY
 {
-  rom      (rx)  : ORIGIN = 0x00004000, LENGTH = 0x0000C000
+  rom      (rx)  : ORIGIN = 0x00001000, LENGTH = 0x00003000
   ram      (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00030000
   bkupram  (rwx) : ORIGIN = 0x47000000, LENGTH = 0x00002000
   qspi     (rwx) : ORIGIN = 0x04000000, LENGTH = 0x01000000
