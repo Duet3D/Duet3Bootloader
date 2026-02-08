@@ -13,6 +13,8 @@
 
 #if defined(CAN_IAP)
 extern const char VersionText[] = "Duet 3 Mini CAN IAP version " VERSION_TEXT;
+#elif defined(COMPOSITE)
+extern const char VersionText[] = "SAME5x composite bootloader version " VERSION_TEXT;
 #else
 extern const char VersionText[] = "SAME5x bootloader version " VERSION_TEXT;
 #endif
