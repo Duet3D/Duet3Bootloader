@@ -592,9 +592,7 @@ bool CheckValidFirmware()
 		return true;
 	}
 
-	String<100> message;
-	message.printf("CRC error: stored %08" PRIx32 ", actual %" PRIx32, storedCRC, actualCRC);
-	ReportError(message.c_str(), FirmwareFlashErrorCode::badCRC);
+	ReportError("CRC mismatch", FirmwareFlashErrorCode::badCRC);
 	return false;
 }
 
