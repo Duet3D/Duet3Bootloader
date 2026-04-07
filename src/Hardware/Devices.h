@@ -10,13 +10,6 @@
 
 #include <CoreIO.h>
 
-#ifdef DEBUG
-
-#include <AsyncSerial.h>
-extern AsyncSerial uart0;
-
-#endif
-
 void DeviceInit();
 
 #endif /* SRC_HARDWARE_DEVICES_H_ */
