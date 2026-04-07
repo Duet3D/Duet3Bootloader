@@ -430,7 +430,7 @@ uint32_t ProgramFlash()
 #if SAME5x && !defined(CAN_IAP)
 			// Find the address of the CRC at the end of the file, and compare it with the file size
 			static_assert(FirmwareFlashStart1 < FirmwareFlashStart2);	// the following code assumes this
-			const uint32_t crcAddr = reinterpret_cast<const uint32_t*>(blockBuffer)[3];
+			const uint32_t crcAddr = reinterpret_cast<const uint32_t*>(blockBuffer)[7];
 			if (crcAddr - FirmwareFlashStart1 < fileSize)				// should have crcAddr - FirmwareFlashStart1 == fileSize - 4 if the firmware starts at this address
 			{
 				startAddress = FirmwareFlashStart1;
