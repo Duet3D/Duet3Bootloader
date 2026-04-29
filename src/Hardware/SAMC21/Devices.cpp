@@ -21,52 +21,6 @@ extern const char VersionText[] =
 	"SAMC21 bootloader version " VERSION_TEXT;
 #endif
 
-#ifdef DEBUG
-
-// UART support for debugging
-
-# ifdef SAMMYC21
-
-void SerialPortInit(AsyncSerial*) noexcept
-{
-	SetPinFunction(PortBPin(2), GpioPinFunction::D);		// TxD
-}
-
-void SerialPortDeinit(AsyncSerial*) noexcept
-{
-	SetPinMode(PortBPin(2), INPUT_PULLUP);
-}
-
-AsyncSerial uart0(5, 3, 512, 512, SerialPortInit, SerialPortDeinit);
-
-extern "C" void SERCOM5_Handler()
-{
-	uart0.Interrupt();
-}
-
-# else
-
-void SerialPortInit(AsyncSerial*) noexcept
-{
-	SetPinFunction(PortAPin(12), GpioPinFunction::D);		// TxD
-}
-
-void SerialPortDeinit(AsyncSerial*) noexcept
-{
-	SetPinMode(PortAPin(12), INPUT_PULLUP);
-}
-
-AsyncSerial uart0(4, 3, 512, 512, SerialPortInit, SerialPortDeinit);
-
-extern "C" void SERCOM4_Handler()
-{
-	uart0.Interrupt();
-}
-
-# endif
-
-#endif
-
 void DeviceInit() noexcept
 {
 #ifndef SAMMYC21
