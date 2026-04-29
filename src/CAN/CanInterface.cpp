@@ -184,7 +184,7 @@ void CanInterface::GetLocalCanTiming(CanTiming& timing) noexcept
 
 void CanInterface::SetLocalCanTiming(const CanTiming& timing) noexcept
 {
-	can0dev->SetLocalCanTiming(timing);
+	can0dev->ChangeLocalCanTiming(timing);
 }
 
 #if !defined(CAN_IAP)
