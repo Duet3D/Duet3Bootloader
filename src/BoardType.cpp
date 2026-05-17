@@ -22,8 +22,8 @@ inline constexpr bool IsIncreasing(const float *arr, size_t length)
 
 constexpr const char* BoardTypeNames[] = { "Mini5plus" };
 constexpr unsigned int BoardTypeVersions[] = { 0 };
-constexpr const Pin *LedPinsTables[] = { LedPins_DUET3MINI };
-constexpr bool LedActiveHigh[] = { LedActiveHigh_DUET3MINI };
+constexpr const Pin *LedPinsTables[] = { LedPins_standard };
+constexpr bool LedActiveHigh[] = { LedActiveHigh_standard };
 
 bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
 {
@@ -56,17 +56,21 @@ constexpr const char* BoardTypeNames[] =
 
 	// SAME51J19 boards
 	"TOOLINDX",
+
+	// SAME54P20 boards
+	"EXP3HC"
 };
 
 constexpr unsigned int BoardTypeVersions[] =
 {
-	0,
+	0,		// EXP3HC version 1.02 or earlier
 	0,
 	0,
 	0,
 	1,		// EXP1HCL version 2.x
 	0,		// EXP1HCL version 1.x
 	0,
+	1,		// EXP3HC version 1.03
 };
 
 constexpr CanAddress DefaultCanAddresses[] =
@@ -78,28 +82,31 @@ constexpr CanAddress DefaultCanAddresses[] =
 	CanId::Exp1HCLBoardDefaultAddress,		// EXP1HCL v1.x
 	CanId::Exp1HCLBoardDefaultAddress,		// EXP1HCL v2.x
 	CanId::ToolBoardDefaultAddress,			// TOOLINDX
+	CanId::Exp3HCFirmwareUpdateAddress,		// 3HC 1.03
 };
 
 constexpr const Pin *LedPinsTables[] =
 {
-	LedPins_EXP3HC,
+	LedPins_EXP3HC,							// EXP3HC 1.02 and earlier
 	LedPins_M23CL,
-	LedPins_F3PTB,
-	LedPins_TOOL1RR,
-	LedPins_EXP1HCL,
-	LedPins_EXP1HCL,
-	LedPins_TOOLINDX,
+	LedPins_standard,						// F3PTB
+	LedPins_standard,						// TOOL1RR
+	LedPins_standard,						// EXP1HCL 1.x
+	LedPins_standard,						// EXP1HCL 2.x
+	LedPins_standard,						// TOOLINDX
+	LedPins_standard,						// EXP3HC 1.03
 };
 
 constexpr bool LedActiveHigh[] =
 {
-	LedActiveHigh_EXP3HC,
+	LedActiveHigh_EXP3HC,					// EXP3HC 1.02 and earlier
 	LedActiveHigh_M23CL,
-	LedActiveHigh_F3PTB,
-	LedActiveHigh_TOOL1RR,
-	LedActiveHigh_EXP1HCL,
-	LedActiveHigh_EXP1HCL,
-	LedActiveHigh_TOOLINDX,
+	LedActiveHigh_standard,					// F3PTB
+	LedActiveHigh_standard,					// TOOL1RR
+	LedActiveHigh_standard,					// EXP1HCL 1.x
+	LedActiveHigh_standard,					// EXP1HCL 2.x
+	LedActiveHigh_standard,					// TOOLINDX
+	LedActiveHigh_standard,					// EXP3HC 1.03
 };
 
 constexpr Pin CanResetPins[] =
@@ -111,6 +118,7 @@ constexpr Pin CanResetPins[] =
 	CanResetPin_EXP1HCL_v2,
 	CanResetPin_EXP1HCL_v1,
 	CanResetPin_TOOLINDX,
+	NoPin,
 };
 
 // This table of floats is only used at compile time, so it shouldn't cause the floating point library to be pulled in
@@ -123,9 +131,10 @@ constexpr float BoardTypeFractions_SAME51G[] =
 	10.0/(1.0 + 10.0),						// EXP1HCL 1.x has 10K lower resistor, 1K upper
 };
 
-constexpr unsigned int NumBoardTypes_SAME51N = 1;			// just EXP3HC
+constexpr unsigned int NumBoardTypes_SAME51N = 1;			// just EXP3HC version 1.02 and earlier
 constexpr unsigned int NumBoardTypes_SAME51G = ARRAY_SIZE(BoardTypeFractions_SAME51G);
 constexpr unsigned int NumBoardTypes_SAME51J = 1;			// just TOOLINDX for now
+constexpr unsigned int NumBoardTypes_SAME54P = 1;			// just EXP3HC version 1.03
 
 static_assert(IsIncreasing(BoardTypeFractions_SAME51G, NumBoardTypes_SAME51G));
 
@@ -161,12 +170,15 @@ static unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[
 //	0x61810304	SAME51J20A
 //	0x61810305	SAME51G19A	EXP1HCL or M23CL or TOOL1RR or F3PTB
 //	0x61810306	SAME51G18A	EXP1HCL or M23CL or TOOL1RR or F3PTB
+//  0x61849399	SAME54P20A	EXP3HC 1.03
 // Bits 8-15 (03 in the above) identify the die and revision number, so may be subject to change
 
 constexpr uint32_t DeviceIdMask = 0xFFFF00FF;
 
 enum DeviceId : uint32_t
 {
+	SAME54P_min = 0x61840300 & DeviceIdMask,
+	SAME54P_max = 0x61840303 & DeviceIdMask,
 	SAME51N_min = 0x61810300 & DeviceIdMask,
 	SAME51N_max = 0x61810301 & DeviceIdMask,
 	SAME51J_min = 0x61810302 & DeviceIdMask,
@@ -248,6 +260,24 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned i
 		doHardwareReset = !digitalRead(CanResetPins[boardTypeIndex]);
 		whichCanPort = 1;
 		useLaterCanPins = true;
+		return true;
+	}
+
+	if (deviceId >= SAME54P_min && deviceId <= SAME54P_max)
+	{
+		// Currently only the EXP3HC version 1.03 uses a SAME54P
+		boardTypeIndex = NumBoardTypes_SAME51N + NumBoardTypes_SAME51G + NumBoardTypes_SAME51J;
+		for (Pin p : BoardAddressPins_EXP3HC)
+		{
+			SetPinMode(p, INPUT_PULLUP, false);
+		}
+
+		// Check whether address switches are set to zero. If so then reset and load new firmware
+		const CanAddress switches = ReadBoardAddress();
+		doHardwareReset = (switches == 0);
+		defaultAddress = (doHardwareReset) ? CanId::Exp3HCFirmwareUpdateAddress : switches;
+		whichCanPort = 1;
+		useLaterCanPins = false;
 		return true;
 	}
 

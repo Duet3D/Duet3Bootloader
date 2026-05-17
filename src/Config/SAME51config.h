@@ -5,8 +5,8 @@
  *      Author: David
  */
 
-#ifndef SRC_CONFIG_EXPANSION1_V09_H_
-#define SRC_CONFIG_EXPANSION1_V09_H_
+#ifndef SRC_CONFIG_SAME51CONFIG_H_
+#define SRC_CONFIG_SAME51CONFIG_H_
 
 #include "RepRapFirmware.h"
 
@@ -22,26 +22,16 @@ constexpr uint8_t BoardTypeAdcChannel = 1;				// the ADC channel that the board 
 // Diagnostic LED
 constexpr unsigned int NumLedPins = 2;
 
+// Standard assignment of LED pins used by most boards
+constexpr Pin LedPins_standard[NumLedPins] =  { PortAPin(30), PortAPin(31) };
+constexpr Pin LedActiveHigh_standard = false;
+
+// Assignment used by boards that don't use the standard assignment
 constexpr Pin LedPins_EXP3HC[NumLedPins] = { PortCPin(10), PortCPin(7) };
 constexpr bool LedActiveHigh_EXP3HC = true;
 
-constexpr Pin LedPins_EXP1HCL[NumLedPins] = { PortAPin(30), PortAPin(31) };
-constexpr bool LedActiveHigh_EXP1HCL = false;
-
-constexpr Pin LedPins_DUET3MINI[NumLedPins] = { PortAPin(30), PortAPin(31) };
-constexpr bool LedActiveHigh_DUET3MINI = false;
-
 constexpr Pin LedPins_M23CL[NumLedPins] = { PortAPin(12), PortAPin(13) };
 constexpr bool LedActiveHigh_M23CL = true;
-
-constexpr Pin LedPins_TOOL1RR[NumLedPins] = { PortAPin(30), PortAPin(31) };
-constexpr bool LedActiveHigh_TOOL1RR = false;
-
-constexpr Pin LedPins_F3PTB[NumLedPins] = { PortAPin(30), PortAPin(31) };
-constexpr bool LedActiveHigh_F3PTB = false;
-
-constexpr Pin LedPins_TOOLINDX[NumLedPins] = { PortAPin(30), PortAPin(31) };
-constexpr bool LedActiveHigh_TOOLINDX = false;
 
 constexpr Pin CanResetPin_EXP1HCL_v1 = PortAPin(0);
 constexpr Pin CanResetPin_EXP1HCL_v2 = PortAPin(27);	// same as DRIVER_DIR pin
@@ -60,4 +50,4 @@ const uint32_t NvicPriorityPins = 3;					// priority for GPIO pin interrupts
 const uint32_t NvicPriorityCan = 4;
 const uint32_t NvicPriorityDmac = 5;					// priority for DMA complete interrupts
 
-#endif /* SRC_CONFIG_EXPANSION1_V09_H_ */
+#endif /* SRC_CONFIG_SAME51CONFIG_H_ */
