@@ -33,7 +33,7 @@ AsyncSerial *uart0;
 
 #if SAME5x
 
-#include <same51.h>
+#include <sam.h>
 
 constexpr uint32_t FlashBlockWriteSize = 0x00004000;					// the block write size we use for flash (16K)
 constexpr uint32_t FlashBlockEraseSize = 0x00004000;					// the block erase size we use for flash (16K)

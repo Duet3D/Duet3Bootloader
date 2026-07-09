@@ -8,14 +8,14 @@ BOARD := Duet3_Mini5plus
 BINARY := Duet3_CANiap32_Mini5plus
 
 # MCU configuration
-MCU := SAME51N19A
+MCU := SAME54P20A
 MCU_ARCH := cortex-m4
 LINK_ARCH := cortex-m4
 
 # Compiler defines
 # C files also get the noexcept define so shared headers compile as C
-C_DEFINES := -D__SAME51N19A__ -DCAN_IAP -Dnoexcept=
-CXX_DEFINES := -D__SAME51N19A__ -DCAN_IAP
+C_DEFINES := -D__SAME54P20A__ -DCAN_IAP -Dnoexcept=
+CXX_DEFINES := -D__SAME54P20A__ -DCAN_IAP
 
 # Optimization and debug
 OPT := -Os
@@ -39,7 +39,7 @@ C_INCLUDES := \
 	-I$(CURDIR)/src \
 	-I$(CURDIR)/src/Hardware/SAME51 \
 	-I$(WORKSPACE)/CoreN2G/src \
-	-I$(WORKSPACE)/CoreN2G/src/atmel/SAME51_DFP/1.1.139/include \
+	-I$(WORKSPACE)/CoreN2G/src/atmel/SAME54_DFP/1.1.134/include \
 	-I$(WORKSPACE)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include
 
 # Include paths for C++ files (full set)
@@ -52,7 +52,7 @@ CXX_INCLUDES := \
 	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAME5x/hal/include \
 	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAME5x/hal/utils/include \
 	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAME5x/hri \
-	-I$(WORKSPACE)/CoreN2G/src/atmel/SAME51_DFP/1.1.139/include \
+	-I$(WORKSPACE)/CoreN2G/src/atmel/SAME54_DFP/1.1.134/include \
 	-I$(WORKSPACE)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include \
 	-I$(WORKSPACE)/CANlib/src \
 	-I$(WORKSPACE)/RRFLibraries/src
