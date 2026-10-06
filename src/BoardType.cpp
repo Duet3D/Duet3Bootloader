@@ -573,6 +573,23 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned i
 	return true;
 }
 
+#elif STM32H5
+
+constexpr const char* BoardTypeNames[] = { "NodeTrix" };
+constexpr unsigned int BoardTypeVersions[] = { 0 };
+constexpr const Pin *LedPinsTables[] = { LedPins_NodeTrix};
+constexpr bool LedActiveHigh[] = { LedActiveHigh_NodeTrix };
+
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
+{
+	defaultAddress = CanId::NodeTrixDefaultAddress;
+	whichCanPort = 0;
+	useLaterCanPins = true;
+	delayMicroseconds(100);
+	doHardwareReset = !digitalRead(ButtonPins[0]);
+	return true;
+}
+
 #else
 # error Unsupported board
 #endif
@@ -593,7 +610,9 @@ Pin GetLedPin(unsigned int ledNumber)
 	if (p == PortAPin(30) || p == PortAPin(31))
 # elif SAME70
 	if (p == PortBPin(6) || p == PortBPin(7))
-#endif
+# elif STM32H5
+	if (p == PortAPin(13) || p == PortAPin(14))
+# endif
 	{
 		// Using the SWD pins to drive the LEDs. Don't allow this in a debug build because it prevents debugging.
 		return NoPin;

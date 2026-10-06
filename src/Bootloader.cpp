@@ -137,6 +137,15 @@ constexpr UartParameters Serial0Params =
 };
 # endif
 
+#elif STM32H5
+
+# include <stm32h523xx.h>
+
+# define CAN0		FDCAN1
+# define CAN1		FDCAN2
+# define CAN0_IRQn	FDCAN1_IT0_IRQn
+# define CAN1_IRQn	FDCAN2_IT0_IRQn
+
 #else
 # error Unsupported board
 #endif
@@ -623,10 +632,17 @@ void AppMain()
 #else
 	NVIC_DisableIRQ(CAN0_IRQn);
 	NVIC_DisableIRQ(CAN1_IRQn);
+# if STM32
+	CAN0->IR = 0xFFFFFFFF;				// clear all interrupt sources for when the device gets enabled by the main firmware
+	CAN0->ILE = 0;
+	CAN1->IR = 0xFFFFFFFF;				// clear all interrupt sources for when the device gets enabled by the main firmware
+	CAN1->ILE = 0;
+# else
 	CAN0->IR.reg = 0xFFFFFFFF;			// clear all interrupt sources for when the device gets enabled by the main firmware
 	CAN0->ILE.reg = 0;
 	CAN1->IR.reg = 0xFFFFFFFF;			// clear all interrupt sources for when the device gets enabled by the main firmware
 	CAN1->ILE.reg = 0;
+#endif
 
 	SerialMessage("Finished firmware update");
 	delay(1000);
@@ -789,7 +805,7 @@ bool CheckValidFirmware(uint32_t startAddress, bool doReportError)
 	__enable_irq();
 
 	__asm volatile ("ldr r1, [r3, #4]");
-# if SAME5x
+# if SAME5x || STM32
 	__asm volatile ("orr r1, r1, #1");
 # elif SAMC21
 	__asm volatile ("movs r2, #1");
