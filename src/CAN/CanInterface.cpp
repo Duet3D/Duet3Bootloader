@@ -14,7 +14,7 @@
 #define SUPPORT_CAN		1		// needed by CanDevice.h
 #include <CanDevice.h>
 
-#if !SAME70
+#if SAME5x || SAMC21
 # include <hpl_user_area.h>
 #endif
 
