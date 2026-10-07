@@ -37,6 +37,16 @@ static CanAddress boardAddress;
 constexpr CanDevice::Config Can0Config =
 {
 	.dataSize = 64,									// must be one of: 8, 12, 16, 20, 24, 32, 48, 64
+#if STM32H5											// STM32H5 has reduced CAN functionality
+	.numTxBuffers = 0,
+	.txFifoSize = 3,
+	.numRxBuffers = 0,
+	.rxFifo0Size = 3,
+	.rxFifo1Size = 3,
+	.numShortFilterElements = 0,
+	.numExtendedFilterElements = 2,
+	.txEventFifoSize = 3
+#else
 	.numTxBuffers = 2,
 	.txFifoSize = 4,
 	.numRxBuffers = 0,
@@ -45,6 +55,7 @@ constexpr CanDevice::Config Can0Config =
 	.numShortFilterElements = 0,
 	.numExtendedFilterElements = 2,
 	.txEventFifoSize = 2
+#endif
 };
 
 static_assert(Can0Config.IsValid());

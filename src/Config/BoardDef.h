@@ -20,6 +20,10 @@
 # include "SAME70config.h"
 #endif
 
+#if STM32H5
+# include "STM32H5config.h"
+#endif
+
 #define SUPPORT_CAN_EXPANSION	1
 
 #endif /* SRC_CONFIG_BOARDDEF_H_ */

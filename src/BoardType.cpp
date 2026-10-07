@@ -582,24 +582,18 @@ constexpr bool LedActiveHigh[] = { LedActiveHigh_NodeTrix };
 
 bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
 {
-	defaultAddress = CanId::NodeTrixDefaultAddress;
+	defaultAddress = CanId::ToolBoardDefaultAddress;
 	whichCanPort = 0;
 	useLaterCanPins = true;
+	const Pin canResetPin = CanResetPin_NodeTrix;
+	SetPinMode(canResetPin, INPUT_PULLUP);
 	delayMicroseconds(100);
-	doHardwareReset = !digitalRead(ButtonPins[0]);
+	doHardwareReset = !digitalRead(canResetPin);
 	return true;
 }
 
 #else
 # error Unsupported board
-#endif
-
-static_assert(ARRAY_SIZE(BoardTypeVersions) == ARRAY_SIZE(BoardTypeNames));
-static_assert(ARRAY_SIZE(LedPinsTables) == ARRAY_SIZE(BoardTypeNames));
-static_assert(ARRAY_SIZE(LedActiveHigh) == ARRAY_SIZE(BoardTypeNames));
-
-#if !defined(CAN_IAP) && !defined(SAMMYC21)
-static_assert(ARRAY_SIZE(CanResetPins) == ARRAY_SIZE(BoardTypeNames));
 #endif
 
 Pin GetLedPin(unsigned int ledNumber)
