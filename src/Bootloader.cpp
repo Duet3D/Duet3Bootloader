@@ -140,11 +140,16 @@ constexpr UartParameters Serial0Params =
 #elif STM32H5
 
 # include <stm32h523xx.h>
+# include <Vectors.h>
 
-# define CAN0		FDCAN1
-# define CAN1		FDCAN2
-# define CAN0_IRQn	FDCAN1_IT0_IRQn
-# define CAN1_IRQn	FDCAN2_IT0_IRQn
+# define CAN0			FDCAN1
+# define CAN1			FDCAN2
+# define CAN0_IRQn		FDCAN1_IT0_IRQn
+# define CAN1_IRQn		FDCAN2_IT0_IRQn
+
+# define FLASH_ADDR		FLASH_BASE_NS
+# define HSRAM_ADDR		SRAM1_BASE_NS
+# define HSRAM_SIZE		(0x00044000)			// 272kb
 
 #else
 # error Unsupported board
