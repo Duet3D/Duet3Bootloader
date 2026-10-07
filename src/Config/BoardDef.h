@@ -8,6 +8,8 @@
 #ifndef SRC_CONFIG_BOARDDEF_H_
 #define SRC_CONFIG_BOARDDEF_H_
 
+#include <CanParameters.h>
+
 #if SAME5x
 # include "SAME51config.h"
 #endif
@@ -22,6 +24,10 @@
 
 #if STM32H5
 # include "STM32H5config.h"
+#endif
+
+#if STM32H7
+# include "STM32H7config.h"
 #endif
 
 #define SUPPORT_CAN_EXPANSION	1

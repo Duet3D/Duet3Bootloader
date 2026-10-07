@@ -25,12 +25,11 @@ constexpr unsigned int BoardTypeVersions[] = { 0 };
 constexpr const Pin *LedPinsTables[] = { LedPins_standard };
 constexpr bool LedActiveHigh[] = { LedActiveHigh_standard };
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, const CanParameters*& canParams)
 {
 	defaultAddress = CanId::Exp3HCFirmwareUpdateAddress;				// we use the same reserved CAN address as the 3HC board
 	doHardwareReset = false;
-	whichCanPort = 1;
-	useLaterCanPins = true;
+	canParams = &CanParams_Mini5Plus_TOOLINDX;
 	return true;
 }
 
@@ -201,7 +200,7 @@ uint8_t ReadBoardAddress()
 	return rslt;
 }
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, const CanParameters*& canParams)
 {
 	// Determine the board type
 	const uint32_t deviceId = REG_DSU_DID & DeviceIdMask;
@@ -218,8 +217,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned i
 		const CanAddress switches = ReadBoardAddress();
 		doHardwareReset = (switches == 0);
 		defaultAddress = (doHardwareReset) ? CanId::Exp3HCFirmwareUpdateAddress : switches;
-		whichCanPort = 1;
-		useLaterCanPins = false;
+		canParams = &CanParams_EXP3HC;
 		return true;
 	}
 
@@ -236,8 +234,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned i
 		SetPinMode(CanResetPins[boardTypeIndex], INPUT_PULLUP, false);
 		delayMicroseconds(100);
 		doHardwareReset = !digitalRead(CanResetPins[boardTypeIndex]);
-		whichCanPort = 0;
-		useLaterCanPins = false;
+		canParams = &CanParams_TOOL1RR_F3PTB_EXP1HCL_M23CL;
 		return true;
 	}
 
@@ -258,8 +255,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned i
 		SetPinMode(CanResetPins[boardTypeIndex], INPUT_PULLUP, false);
 		delayMicroseconds(100);
 		doHardwareReset = !digitalRead(CanResetPins[boardTypeIndex]);
-		whichCanPort = 1;
-		useLaterCanPins = true;
+		canParams = &CanParams_Mini5Plus_TOOLINDX;
 		return true;
 	}
 
@@ -276,8 +272,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned i
 		const CanAddress switches = ReadBoardAddress();
 		doHardwareReset = (switches == 0);
 		defaultAddress = (doHardwareReset) ? CanId::Exp3HCFirmwareUpdateAddress : switches;
-		whichCanPort = 1;
-		useLaterCanPins = false;
+		canParams = &CanParams_EXP3HC;
 		return true;
 	}
 
@@ -295,11 +290,10 @@ constexpr unsigned int BoardTypeVersions[] = { 0 };
 constexpr const Pin *LedPinsTables[] = { LedPins_SAMMYC21 };
 constexpr bool LedActiveHigh[] = { LedActiveHigh_SAMMYC21 };
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, const CanParameters*& canParams)
 {
 	defaultAddress = CanId::SammyC21DefaultAddress;
-	whichCanPort = 0;
-	useLaterCanPins = true;
+	canParams = &CanParams_SAMMYC21;
 	SetPinMode(ButtonPins[0], INPUT_PULLUP, false);
 	delayMicroseconds(100);
 	doHardwareReset = !digitalRead(ButtonPins[0]);
@@ -462,7 +456,7 @@ static unsigned int ReadAndQuantise(uint8_t chan, const uint16_t decisionPoints[
 	return ainState;
 }
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, const CanParameters*& canParams)
 {
 	// Read the board type pin, which is an analog input fed from a resistor network
 	AnalogIn::Init(CommonAdcDevice);
@@ -483,8 +477,6 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned i
 	// Set up the hardware and default CAN address as appropriate
 	// Determine whether we need to do a hardware reset
 	doHardwareReset = false;
-	whichCanPort = 0;
-	useLaterCanPins = false;
 
 	const Pin canResetPin = CanResetPins[boardTypeIndex];
 	if (canResetPin != NoPin)
@@ -503,22 +495,26 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned i
 		SetPinMode(OutPins_Tool1LC[1], OUTPUT_LOW);					// V0.6 tool boards don't have pulldown resistors on the outputs, so turn them off
 		SetPinMode(OutPins_Tool1LC[2], OUTPUT_HIGH);				// this is intended for the hot end fan, so turn it on just as the tool board firmware does
 		SetPinMode(GlobalTmc22xxEnablePin_Tool1LC, OUTPUT_HIGH);
+		canParams = &CanParams_TOOL1LC_EXP1XD_SZP;
 		break;
 
 	case BoardId::exp1xd_v0:
 		defaultAddress = CanId::Exp1XDBoardDefaultAddress;
+		canParams = &CanParams_TOOL1LC_EXP1XD_SZP;
 		break;
 
 	case BoardId::exp1hce_v0:										// no longer supported
 		defaultAddress = CanId::Exp1HCLBoardDefaultAddress;
+		canParams = &CanParams_TOOL1LC_EXP1XD_SZP;
 		break;
 
 	case BoardId::szp:
 		defaultAddress = CanId::SZPDefaultAddress;
+		canParams = &CanParams_TOOL1LC_EXP1XD_SZP;
 		break;
 
 	case BoardId::ate_cm:
-		useLaterCanPins = true;
+		canParams = &CanParams_ATECM_ATEIO;
 		// ATE CM board has the reset jumper fitted between AteCmZeroPin and AteCmJumperPin
 		defaultAddress = CanId::ATECMBoardDefaultAddress;
 		SetPinMode(AteCmZeroPin, OUTPUT_LOW);
@@ -532,7 +528,7 @@ bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned i
 	case BoardId::ate_io_v02:
 	case BoardId::ate:
 	default:
-		useLaterCanPins = true;
+		canParams = &CanParams_ATECM_ATEIO;
 		defaultAddress = CanId::ATEIOBoardDefaultAddress;
 		break;
 	}
@@ -556,12 +552,11 @@ constexpr const Pin *LedPinsTables[] = { LedPins_MB6XD };
 constexpr bool LedActiveHigh[] = { LedActiveHigh_MB6XD };
 # endif
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, const CanParameters*& canParams)
 {
 	defaultAddress = CanId::Exp3HCFirmwareUpdateAddress;		// we use the same reserved CAN address as the 3HC board
 	doHardwareReset = false;
-	whichCanPort = 1;											// we use CAN1 on the 6HC and 6XD
-	useLaterCanPins = false;									// we currently always use the same set of pins
+	canParams = &CanParams_6HC_6XD;
 
 # if defined(MB6HC)
 	// Test whether the board is version 1.02 or later. Version 1.02 boards have a pulldown resistor on a direction pin.
@@ -580,11 +575,10 @@ constexpr unsigned int BoardTypeVersions[] = { 0 };
 constexpr const Pin *LedPinsTables[] = { LedPins_NodeTrix};
 constexpr bool LedActiveHigh[] = { LedActiveHigh_NodeTrix };
 
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins)
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, const CanParameters*& canParams)
 {
 	defaultAddress = CanId::ToolBoardDefaultAddress;
-	whichCanPort = 0;
-	useLaterCanPins = true;
+	canParams = &CanParameters_NodeTrix;
 	const Pin canResetPin = CanResetPin_NodeTrix;
 	SetPinMode(canResetPin, INPUT_PULLUP);
 	delayMicroseconds(100);

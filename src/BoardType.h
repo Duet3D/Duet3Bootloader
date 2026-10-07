@@ -9,9 +9,10 @@
 #define SRC_BOARDTYPE_H_
 
 #include <RepRapFirmware.h>
+#include <CanParameters.h>
 
 // Identify the board and set the parameters, returning true if successful, false if we could not identify the board
-bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, unsigned int& whichCanPort, bool& useLaterCanPins);
+bool IdentifyBoard(CanAddress& defaultAddress, bool& doHardwareReset, const CanParameters*& canParams);
 
 Pin GetLedPin(unsigned int ledNumber);
 bool GetLedActiveHigh();

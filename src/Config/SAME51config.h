@@ -40,6 +40,30 @@ constexpr Pin CanResetPin_TOOL1RR = PortAPin(10);		// same as DRIVER_DIR pin
 constexpr Pin CanResetPin_F3PTB = PortAPin(10);			// same as DRIVER_DIR pin
 constexpr Pin CanResetPin_TOOLINDX = PortBPin(23);		// same as DRIVER_DIR pin
 
+constexpr CanParameters CanParams_EXP3HC =
+{
+	.instanceNumber = 1,
+	.txPin = PortBPin(12),
+	.rxPin = PortBPin(13),
+	.pinsFunction = GpioPinFunction::H
+};
+
+constexpr CanParameters CanParams_TOOL1RR_F3PTB_EXP1HCL_M23CL =
+{
+	.instanceNumber = 0,
+	.txPin = PortAPin(22),
+	.rxPin = PortAPin(23),
+	.pinsFunction = GpioPinFunction::I
+};
+
+constexpr CanParameters CanParams_Mini5Plus_TOOLINDX =
+{
+	.instanceNumber = 1,
+	.txPin = PortBPin(14),
+	.rxPin = PortBPin(15),
+	.pinsFunction = GpioPinFunction::H
+};
+
 // Available UART ports
 constexpr IRQn Serial0_IRQn = SERCOM3_0_IRQn;
 

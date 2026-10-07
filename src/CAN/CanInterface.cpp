@@ -64,7 +64,7 @@ static_assert(Can0Config.IsValid());
 static uint32_t can0Memory[Can0Config.GetMemorySize()] __attribute__ ((section (".CanMessage")));
 
 // Initialise the CAN interface
-void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, unsigned int whichPort, bool useLaterPins)
+void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, const CanParameters& params)
 {
 #if !defined(CAN_IAP)
 	// Read the CAN timing data from the top part of the NVM User Row
@@ -86,59 +86,22 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, un
 #endif
 
 	// Set up the CAN pins
-#if SAME5x
-	if (whichPort == 0)		// if using CAN0
-	{
-		if (useLaterPins)
-		{
-			SetPinFunction(PortAPin(25), GpioPinFunction::I);
-			SetPinFunction(PortAPin(24), GpioPinFunction::I);
-		}
-		else
-		{
-			SetPinFunction(PortAPin(23), GpioPinFunction::I);
-			SetPinFunction(PortAPin(22), GpioPinFunction::I);
-		}
-	}
-	else					// using CAN1
-	{
-		if (useLaterPins)
-		{
-			SetPinFunction(PortBPin(15), GpioPinFunction::H);
-			SetPinFunction(PortBPin(14), GpioPinFunction::H);
-		}
-		else
-		{
-			SetPinFunction(PortBPin(13), GpioPinFunction::H);
-			SetPinFunction(PortBPin(12), GpioPinFunction::H);
-		}
-	}
-#elif SAMC21
-	if (whichPort == 0)		// if using CAN0
-	{
-		if (useLaterPins)
-		{
-			SetPinFunction(PortBPin(23), GpioPinFunction::G);
-			SetPinFunction(PortBPin(22), GpioPinFunction::G);
-		}
-		else
-		{
-			SetPinFunction(PortAPin(25), GpioPinFunction::G);
-			SetPinFunction(PortAPin(24), GpioPinFunction::G);
-		}
-	}
-	else					// using CAN1 (only one set of pins available on SAMC21G)
-	{
-		SetPinFunction(PortBPin(11), GpioPinFunction::G);
-		SetPinFunction(PortBPin(10), GpioPinFunction::G);
-	}
-#elif SAME70
-	SetPinFunction(PortDPin(12), GpioPinFunction::B);			// currently we always use MCAN1 for CAN-FD on the SAME70 and we use a mixture of earlier and later pins
-	SetPinFunction(PortCPin(12), GpioPinFunction::C);
+#if SAME70
+	SetPinFunction(params.txPin, params.txPinFunction);
+	SetPinFunction(params.rxPin, params.rxPinFunction);
+#else
+	SetPinFunction(params.txPin, params.pinsFunction);
+	SetPinFunction(params.rxPin, params.pinsFunction);
 #endif
 
 	// Initialise the CAN hardware, using the timing data if it was valid
-	can0dev = CanDevice::Init(0, whichPort, Can0Config, can0Memory, timing, nullptr);
+	can0dev = CanDevice::Init(0,
+# if STM32
+								params.instanceNumber - 1,				// STM numbers instances from 1, our driver numbers them from zero
+# else
+								params.instanceNumber,
+# endif
+								Can0Config, can0Memory, timing, nullptr);
 
 #ifdef SAMMYC21
 	SetPinMode(CanStandbyPin, OUTPUT_LOW);						// take the CAN drivers out of standby

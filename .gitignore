@@ -49,3 +49,6 @@
 /Duet3_Mini5plus-Debug/
 /SAME5x_composite/
 /STM32H5/
+/SAME70/
+/SAME70_CAN/
+/SAME70_nonRTOS/

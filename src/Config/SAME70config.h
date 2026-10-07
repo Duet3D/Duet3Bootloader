@@ -27,6 +27,15 @@ constexpr bool LedActiveHigh_MB6XD = false;
 
 constexpr Pin VersionTestPin_MB6HC = PortAPin(04);		// this pin has a pulldown resistor on version 1.02 boards
 
+constexpr CanParameters CanParams_6HC_6XD =
+{
+	.instanceNumber = 1,
+	.txPin = PortDPin(12),
+	.rxPin = PortCPin(12),
+	.txPinFunction = GpioPinFunction::B,
+	.rxPinFunction = GpioPinFunction::C
+};
+
 // Available UART ports
 //constexpr IRQn Serial0_IRQn = SERCOM3_0_IRQn;
 

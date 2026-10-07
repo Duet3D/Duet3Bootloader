@@ -52,6 +52,14 @@ constexpr unsigned int NumLedPins = 2;
 constexpr Pin LedPins_SAMMYC21[NumLedPins] = { PortAPin(28), NoPin };
 constexpr bool LedActiveHigh_SAMMYC21 = true;
 
+constexpr CanParameters CanParams_SAMMYC21 =
+{
+	.instanceNumber = 0,
+	.txPin = PortBPin(22),
+	.rxPin = PortBPin(23),
+	.pinsFunction = GpioPinFunction::G
+};
+
 #else
 
 constexpr Pin LedPins_Tool1LC_v0[NumLedPins] = { PortAPin(0), PortAPin(1) };
@@ -71,6 +79,22 @@ constexpr bool LedActiveHigh_Ate = false;
 
 constexpr Pin LedPins_Exp1HCE[NumLedPins] = { PortAPin(30), PortAPin(31) };
 constexpr bool LedActiveHigh_Exp1HCE = false;
+
+constexpr CanParameters CanParams_TOOL1LC_EXP1XD_SZP =
+{
+	.instanceNumber = 0,
+	.txPin = PortAPin(24),
+	.rxPin = PortAPin(25),
+	.pinsFunction = GpioPinFunction::G
+};
+
+constexpr CanParameters CanParams_ATECM_ATEIO =
+{
+	.instanceNumber = 0,
+	.txPin = PortBPin(22),
+	.rxPin = PortBPin(23),
+	.pinsFunction = GpioPinFunction::G
+};
 
 #endif
 

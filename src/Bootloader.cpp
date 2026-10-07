@@ -572,9 +572,8 @@ void AppMain()
 	// Establish the board type and initialise pins
 	CanAddress defaultAddress;
 	bool doHardwareReset;
-	unsigned int whichCanPort;
-	bool useLaterCanPins;
-	if (!IdentifyBoard(defaultAddress, doHardwareReset, whichCanPort, useLaterCanPins))
+	const CanParameters *canParams;
+	if (!IdentifyBoard(defaultAddress, doHardwareReset, canParams))
 	{
 		ReportErrorAndRestart("Unknown board", FirmwareFlashErrorCode::unknownBoard);
 	}
@@ -616,9 +615,9 @@ void AppMain()
 #endif
 
 	// If we get here then we are staying in the bootloader
-	CanInterface::Init(defaultAddress, doHardwareReset, whichCanPort, useLaterCanPins);		// initialise CAN subsystem
-	FindBitRate();																			// establish the bit rate by listening for clock messages at the standard speeds
-	const uint32_t startAddress = ProgramFlash();											// fetch and the firmware file and program it into flash, return the start address
+	CanInterface::Init(defaultAddress, doHardwareReset, *canParams);	// initialise CAN subsystem
+	FindBitRate();														// establish the bit rate by listening for clock messages at the standard speeds
+	const uint32_t startAddress = ProgramFlash();						// fetch and the firmware file and program it into flash, return the start address
 	CanInterface::Shutdown();
 
 	delay(2);

@@ -16,7 +16,7 @@ class CanTiming;
 
 namespace CanInterface
 {
-	void Init(CanAddress defaultBoardAddress, bool doHardwareReset, unsigned int whichPort, bool useLaterPins) noexcept;
+	void Init(CanAddress defaultBoardAddress, bool doHardwareReset, const CanParameters& params) noexcept;
 	void Shutdown() noexcept;
 
 	CanAddress GetCanAddress() noexcept;
