@@ -33,6 +33,8 @@ static CanUserAreaData canConfigData;
 #endif
 
 static CanAddress boardAddress;
+static uint8_t fastDataRate = 0;											// the fast data phase bit rate multiplier minus one. 0 means don't use BRS.
+static uint8_t dTseg1MinusOne = 0;											// the fast data rate sample point minus one
 
 constexpr CanDevice::Config Can0Config =
 {
@@ -66,7 +68,7 @@ static uint32_t can0Memory[Can0Config.GetMemorySize()] __attribute__ ((section (
 // Initialise the CAN interface
 void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, const CanParameters& params)
 {
-#if !defined(CAN_IAP)
+#if !defined(CAN_IAP) && !defined(STM32H5)		//TODO support getting timing data on STM MCUs
 	// Read the CAN timing data from the top part of the NVM User Row
 	canConfigData = *reinterpret_cast<CanUserAreaData*>(NVMCTRL_USER + CanUserAreaDataOffset);
 
@@ -79,7 +81,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, co
 
 	CanTiming timing;
 
-#if defined(CAN_IAP)
+#if defined(CAN_IAP) || defined(STM32H5)		//TODO support getting timing data on STM MCUs
 	timing.SetDefaults(CanTiming::DefaultCanBitRate);
 #else
 	canConfigData.GetTiming(timing);
@@ -101,7 +103,10 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, co
 # else
 								params.instanceNumber,
 # endif
-								Can0Config, can0Memory, timing, nullptr);
+								Can0Config,
+								can0Memory,
+								timing
+							 );
 
 #ifdef SAMMYC21
 	SetPinMode(CanStandbyPin, OUTPUT_LOW);						// take the CAN drivers out of standby
@@ -151,6 +156,21 @@ void CanInterface::Send(CanMessageBuffer *buf)
 	(void)can0dev->SendMessage(CanDevice::TxBufferNumber::fifo, 1000, buf);
 }
 
+// Check that the BRS setting we are using matches the one in the time sync message and change it if necessary
+void CanInterface::CheckBrs(const CanMessageTimeSync& msg) noexcept
+{
+	if (msg.fastDataRate != fastDataRate || msg.tseg1Minus1 != dTseg1MinusOne)
+	{
+		CanTiming timing;
+		can0dev->GetLocalCanTiming(timing);
+		timing.EnableBrs(msg.fastDataRate + 1);
+		timing.SetDataSamplePointDirect(msg.tseg1Minus1);
+		can0dev->ChangeLocalCanTiming(timing);
+		fastDataRate = msg.fastDataRate;
+		dTseg1MinusOne = msg.tseg1Minus1;
+	}
+}
+
 void CanInterface::GetLocalCanTiming(CanTiming& timing) noexcept
 {
 	can0dev->GetLocalCanTiming(timing);
@@ -161,7 +181,7 @@ void CanInterface::SetLocalCanTiming(const CanTiming& timing) noexcept
 	can0dev->ChangeLocalCanTiming(timing);
 }
 
-#if !defined(CAN_IAP)
+#if !defined(CAN_IAP) && !STM32H5		//TODO support getting timing data on STM MCUs
 
 bool CanInterface::StoreLocalCanTiming(const CanTiming& timing) noexcept
 {

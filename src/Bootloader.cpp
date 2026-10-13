@@ -142,6 +142,9 @@ constexpr UartParameters Serial0Params =
 # include <stm32h523xx.h>
 # include <Vectors.h>
 
+constexpr uint32_t FlashBlockWriteSize = 0x00004000;						// the block write size we use for flash (16K)
+constexpr uint32_t FlashBlockEraseSize = 0x00004000;						// the block erase size we use for flash (16K)
+
 # define CAN0			FDCAN1
 # define CAN1			FDCAN2
 # define CAN0_IRQn		FDCAN1_IT0_IRQn
@@ -149,10 +152,15 @@ constexpr UartParameters Serial0Params =
 
 # define FLASH_ADDR		FLASH_BASE_NS
 # define HSRAM_ADDR		SRAM1_BASE_NS
-# define HSRAM_SIZE		(0x00044000)			// 272kb
+# define HSRAM_SIZE		(0x00044000)										// 272kb
 
-#else
-# error Unsupported board
+#elif STM32H7
+
+constexpr uint32_t FlashBlockWriteSize = 0x00004000;						// the block write size we use for flash (16K)
+constexpr uint32_t FlashBlockEraseSize = 0x00020000;						// the block erase size we use for flash (16K)
+
+//TODO add other definitions
+
 #endif
 
 constexpr uint32_t BlockReceiveTimeout = 2000;								// block receive timeout milliseconds
@@ -166,6 +174,8 @@ constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + 0x4000;				// the amount of
 #elif SAME5x
 constexpr uint32_t FirmwareFlashStart1 = FLASH_ADDR + 0x04000;				// the amount of space we reserve for the CAN bootloader on the SAME5x-based expansion boards except INDX
 constexpr uint32_t FirmwareFlashStart2 = FLASH_ADDR + 0x10000;				// the amount of space we reserve for the CAN bootloader on the SAME5x-based expansion boards except INDX
+#elif STM32H5
+constexpr uint32_t FirmwareFlashStart = 0x04000;							// assume a 16kb bootloader
 #endif
 
 #if SAME70
@@ -292,6 +302,7 @@ void RequestFirmwareBlock(uint32_t fileOffset, uint32_t numBytes, CanMessageBuff
 	msg->fileOffset = fileOffset;
 	msg->lengthRequested = numBytes;
 	buf.dataLength = msg->GetActualDataLength();
+	buf.useBrs = 0;
 	CanInterface::Send(&buf);
 }
 
@@ -376,7 +387,11 @@ bool LookForClockMessages() noexcept
 		if (ok && buf.id.MsgType() == CanMessageType::timeSync)
 		{
 			++numTimeSyncMessagesReceived;
-			if (numTimeSyncMessagesReceived == 3) { return true; }
+			if (numTimeSyncMessagesReceived == 3)
+			{
+				CanInterface::CheckBrs(buf.msg.sync);
+				return true;
+			}
 		}
 	} while (millis() - whenStartedWaiting < millsecondsAllowed);
 	return false;
@@ -462,18 +477,23 @@ uint32_t ProgramFlash()
 										fileSize;			// using binary format
 #endif
 			roundedUpLength = ((firmwareSize + (FlashBlockEraseSize - 1))/FlashBlockEraseSize) * FlashBlockEraseSize;
+
+#if !STM32								// not needed for STM32
 			SerialMessage("Unlocking flash");
 			if (!Flash::Unlock(startAddress, roundedUpLength))
 			{
 				ReportErrorAndRestart("Failed to unlock flash", FirmwareFlashErrorCode::unlockFailed);
 			}
+#endif
 
 			SerialMessage("Erasing flash");
-#if SAME70
+# if SAME70
 			if (!EraseFlash(roundedUpLength))
-#else
+# elif SAMC21 || SAME5x || STM32
 			if (!Flash::Erase(startAddress, roundedUpLength))
-#endif
+# else
+#  error Unsupported processor
+# endif
 			{
 				ReportErrorAndRestart("Failed to erase flash", FirmwareFlashErrorCode::eraseFailed);
 			}
@@ -529,11 +549,13 @@ uint32_t ProgramFlash()
 	}
 
 	// If we get here, firmware update is complete
+#if !STM32
 	SerialMessage("Locking flash");
 	if (!Flash::Lock(startAddress, roundedUpLength))
 	{
 		ReportErrorAndRestart("Failed to lock flash", FirmwareFlashErrorCode::lockFailed);
 	}
+#endif
 	Flash::Deinit();
 	return startAddress;
 }
@@ -666,6 +688,7 @@ void AppMain()
 // This assumes the caller has exclusive use of the DMAC
 uint32_t ComputeCRC32(const uint32_t *start, const uint32_t *end)
 {
+#if SAME5x || SAMC21
 # if SAME5x
 	DMAC->CRCCTRL.reg = DMAC_CRCCTRL_CRCBEATSIZE_WORD | DMAC_CRCCTRL_CRCSRC_DISABLE | DMAC_CRCCTRL_CRCPOLY_CRC32;	// disable the CRC unit
 # elif SAMC21
@@ -688,6 +711,18 @@ uint32_t ComputeCRC32(const uint32_t *start, const uint32_t *end)
 	DMAC->CRCSTATUS.reg = DMAC_CRCSTATUS_CRCBUSY;
 	asm volatile("nop");
 	return DMAC->CRCCHKSUM.reg;
+#elif STM32H5
+	CRC->POL = 0x04c11db7;
+	CRC->INIT = 0xFFFFFFFF;
+	CRC->CR = CRC_CR_REV_OUT | CRC_CR_RESET;
+	while (start < end)
+	{
+		CRC->DR =  *start++;
+		asm volatile("nop");
+		asm volatile("nop");
+	}
+	return CRC->DR;
+#endif
 }
 
 // Check whether valid firmware is installed at the specified address. If not, report the error if asked to, then return false.
@@ -786,6 +821,17 @@ bool CheckValidFirmware(uint32_t startAddress, bool doReportError)
 	// Disable the DPLL so that it can be reprogrammed by the main firmware
 	OSCCTRL->DPLLCTRLA.bit.ENABLE = 0;
 	while (OSCCTRL->DPLLSYNCBUSY.bit.ENABLE) { }
+# elif STM32H5
+
+	for (size_t i = 0; i < 16; i++)
+	{
+		NVIC->ICER[i] = 0xFFFFFFFF;						// Disable IRQs
+		NVIC->ICPR[i] = 0xFFFFFFFF;						// Clear pending IRQs
+	}
+
+	// Switch back to the RC oscillator
+#  error TODO
+
 # else
 #  error Unsupported processor
 # endif

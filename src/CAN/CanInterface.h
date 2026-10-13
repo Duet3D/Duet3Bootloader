@@ -13,6 +13,7 @@
 
 class CanMessageBuffer;
 class CanTiming;
+class CanMessageTimeSync;
 
 namespace CanInterface
 {
@@ -22,6 +23,7 @@ namespace CanInterface
 	CanAddress GetCanAddress() noexcept;
 	void Send(CanMessageBuffer *buf) noexcept;
 	bool GetCanMessage(CanMessageBuffer *buf) noexcept;
+	void CheckBrs(const CanMessageTimeSync& msg) noexcept;
 
 	void GetLocalCanTiming(CanTiming& timing) noexcept;
 	void SetLocalCanTiming(const CanTiming& timing) noexcept;
