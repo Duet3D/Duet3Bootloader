@@ -68,7 +68,9 @@ static uint32_t can0Memory[Can0Config.GetMemorySize()] __attribute__ ((section (
 // Initialise the CAN interface
 void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, const CanParameters& params)
 {
-#if !defined(CAN_IAP) && !defined(STM32H5)		//TODO support getting timing data on STM MCUs
+#if defined(CANIAP) || STM32									//TODO support getting timing data on STM MCUs
+	canConfigData.Clear();
+#else
 	// Read the CAN timing data from the top part of the NVM User Row
 	canConfigData = *reinterpret_cast<CanUserAreaData*>(NVMCTRL_USER + CanUserAreaDataOffset);
 
@@ -81,7 +83,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, co
 
 	CanTiming timing;
 
-#if defined(CAN_IAP) || defined(STM32H5)		//TODO support getting timing data on STM MCUs
+#if defined(CAN_IAP) || STM32									//TODO support getting timing data on STM MCUs
 	timing.SetDefaults(CanTiming::DefaultCanBitRate);
 #else
 	canConfigData.GetTiming(timing);
@@ -99,7 +101,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, co
 	// Initialise the CAN hardware, using the timing data if it was valid
 	can0dev = CanDevice::Init(0,
 # if STM32
-								params.instanceNumber - 1,				// STM numbers instances from 1, our driver numbers them from zero
+								params.instanceNumber - 1,		// STM numbers instances from 1, our driver numbers them from zero
 # else
 								params.instanceNumber,
 # endif
@@ -112,7 +114,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, co
 	SetPinMode(CanStandbyPin, OUTPUT_LOW);						// take the CAN drivers out of standby
 #endif
 
-#if defined(CAN_IAP)
+#if defined(CAN_IAP) || STM32									//TODO support CAN config data on STM32
 	boardAddress = defaultBoardAddress;
 #else
 	boardAddress = canConfigData.GetCanAddress(defaultBoardAddress);
