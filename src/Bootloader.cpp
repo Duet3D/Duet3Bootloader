@@ -23,7 +23,7 @@
 #include <Duet3Common.h>
 #include "BoardType.h"
 
-#ifdef DEBUG
+#if defined(DEBUG) && !STM32H5						// we don't yet support a serial port on STM32H5 tool boards
 # include <UART/UartParameters.h>
 # include <AsyncSerial.h>
 
@@ -235,7 +235,7 @@ extern "C" void SysTick_Handler()
 
 void SerialMessage(const char *text)
 {
-#ifdef DEBUG
+#if defined(DEBUG) && !STM32H5						// we don't yet support a serial port on STM32H5 tool boards
 # ifdef SAMMYC21
 	// Messages go to the USB port, so send them raw
 	uart0->print(text);
@@ -592,7 +592,7 @@ void AppMain()
 #endif
 	DeviceInit();
 
-#ifdef DEBUG
+#if defined(DEBUG) && !STM32H5						// we don't yet support a serial port on STM32H5 tool boards
 	uart0 = new AsyncSerial(Serial0Params);
 #endif
 
@@ -610,7 +610,7 @@ void AppMain()
 		SetPinMode(GetLedPin(ledNumber), (GetLedActiveHigh()) ? OUTPUT_LOW : OUTPUT_HIGH);
 	}
 
-#ifdef DEBUG
+#if defined(DEBUG) && !STM32H5						// we don't yet support a serial port on STM32H5 tool boards
 	uart0->begin(57600);
 # if defined(CAN_IAP)
 	SerialMessage("CAN IAP running");
@@ -773,7 +773,7 @@ bool CheckValidFirmware(uint32_t startAddress, bool doReportError)
 		WriteLed(i, false);
 	}
 
-# ifdef DEBUG
+# if defined(DEBUG) && !STM32H5						// we don't yet support a serial port on STM32H5 tool boards
 	SerialMessage("Bootloader transferring control to main firmware");
 	uart0->end();										// disable serial port so that main firmware can initialise it
 # endif

@@ -62,8 +62,10 @@ constexpr CanDevice::Config Can0Config =
 
 static_assert(Can0Config.IsValid());
 
+#if !STM32
 // CAN buffer memory must be in the first 64Kb of RAM (SAME5x) or in non-cached RAM (SAME70), so put it in its own segment
 static uint32_t can0Memory[Can0Config.GetMemorySize()] __attribute__ ((section (".CanMessage")));
+#endif
 
 // Initialise the CAN interface
 void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, const CanParameters& params)
@@ -106,7 +108,11 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, co
 								params.instanceNumber,
 # endif
 								Can0Config,
+#if STM32H5
+								reinterpret_cast<uint32_t *>(SRAMCAN_BASE_NS + 0x0350 * (params.instanceNumber - 1)),			// STM32H5 has fixed message buffer allocation
+#else
 								can0Memory,
+#endif
 								timing
 							 );
 
@@ -128,6 +134,10 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, co
 	can0dev->SetExtendedFilterElement(1, CanDevice::RxBufferNumber::fifo0,
 										((uint32_t)CanId::BroadcastAddress << CanId::DstAddressShift) | ((uint32_t)CanMessageType::timeSync << CanId::MessageTypeShift),
 										(CanId::BoardAddressMask << CanId::DstAddressShift) | (CanId::MessageTypeMask << CanId::MessageTypeShift));
+#if !(RPXXXX)
+	// For receiving into a dedicated buffer (and on the STM32H5 into a fifo), the mask is ignored and only the extended ID mask is applied. We need to ignore the source address.
+	can0dev->SetExtendedIdMask(0x1FFFFFFF & ~(CanId::BoardAddressMask << CanId::SrcAddressShift));
+#endif
 
 	can0dev->Enable();
 }
