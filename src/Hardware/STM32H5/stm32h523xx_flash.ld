@@ -40,7 +40,7 @@ ENTRY(Reset_Handler)
 MEMORY
 {
   ram    (xrw)   : ORIGIN = 0x20000000,   LENGTH = 272K
-  rom    (rx)    : ORIGIN = 0x08000000,   LENGTH = 16K			/* assume we will fot the bootloader in 16kb */
+  rom    (rx)    : ORIGIN = 0x08000000,   LENGTH = 16K			/* assume we will fit the bootloader in 16kb */
 }
 
 /* Section Definitions */
