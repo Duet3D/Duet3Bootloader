@@ -168,14 +168,14 @@ constexpr uint32_t BlockReceiveTimeout = 2000;								// block receive timeout m
 #if SAME70
 constexpr uint32_t FirmwareFlashStart = FLASH_ADDR;							// no bootloader on SAME70
 #elif SAMC21
-constexpr uint32_t FirmwareFlashStart = 0x04000;							// 16K bootloader on SAMC21
+constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + 0x04000;				// 16K bootloader on SAMC21
 #elif SAME5x && defined(CAN_IAP)
 constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + 0x4000;				// the amount of space we reserve for the USB bootloader on the Duet 3 Mini and for the CAN bootloader on the INDX
 #elif SAME5x
 constexpr uint32_t FirmwareFlashStart1 = FLASH_ADDR + 0x04000;				// the amount of space we reserve for the CAN bootloader on the SAME5x-based expansion boards except INDX
 constexpr uint32_t FirmwareFlashStart2 = FLASH_ADDR + 0x10000;				// the amount of space we reserve for the CAN bootloader on the SAME5x-based expansion boards except INDX
 #elif STM32H5
-constexpr uint32_t FirmwareFlashStart = 0x04000;							// assume a 16kb bootloader
+constexpr uint32_t FirmwareFlashStart = FLASH_ADDR + 0x04000;				// assume a 16kb bootloader
 #endif
 
 #if SAME70
