@@ -1,5 +1,5 @@
-# Makefile for the SAME5x bootloader configuration
-# Bootloader for SAME5x expansion and tool boards
+# Makefile for the STM32H5 bootloader configuration
+# Bootloader for STM32H5 expansion and tool boards
 
 # Board name
 BOARD := STM32H5
@@ -68,7 +68,7 @@ LIB_DEPS := \
 
 # Common flags
 COMMON_FLAGS := -c -mcpu=$(MCU_ARCH) -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mfp16-format=ieee \
-	-ffunction-sections -fdata-sections -nostdlib -Wundef -Wdouble-promotion -Werror=return-type \
+	-fno-math-errno -ffunction-sections -fdata-sections -nostdlib -Wundef -Wdouble-promotion -Werror=return-type \
 	-fsingle-precision-constant
 
 # C flags
@@ -83,7 +83,7 @@ CXXFLAGS := $(COMMON_FLAGS) $(OPT) $(CXX_DEFINES) $(CXX_INCLUDES) -std=c++20 \
 
 # Linker flags
 LDFLAGS := $(LDOPT) --specs=nano.specs -Wl,--gc-sections -Wl,--entry=Reset_Handler \
-	-Wl,--fatal-warnings -Wl,--no-warn-rwx-segment -mcpu=$(LINK_ARCH) -mfpu=fpv4-sp-d16 -mfloat-abi=hard \
+	-Wl,--fatal-warnings -mcpu=$(LINK_ARCH) -mfpu=fpv5-sp-d16 -mfloat-abi=hard \
 	-T$(LINKER_SCRIPT) -Wl,-Map,$(CURDIR)/$(BUILD_DIR)/$(BINARY).map,--cref
 
 # Find all source files
