@@ -64,7 +64,8 @@ export Q VERBOSE
 # Use DEBUG=1 to build with debug symbols and reduced optimization
 ifeq ($(DEBUG),1)
 	DEBUG_FLAGS := -g3 -Og
-	$(info Building with debug symbols enabled)
+# DC commented out the following line because VSCode makefile tools won't do a Debug bulid otherwise
+#	$(info Building with debug symbols enabled)
 else
 	DEBUG_FLAGS :=
 endif
