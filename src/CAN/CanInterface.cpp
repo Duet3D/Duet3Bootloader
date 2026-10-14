@@ -181,7 +181,7 @@ void CanInterface::SetLocalCanTiming(const CanTiming& timing) noexcept
 	can0dev->ChangeLocalCanTiming(timing);
 }
 
-#if !defined(CAN_IAP) && !STM32H5		//TODO support getting timing data on STM MCUs
+#if !defined(CAN_IAP)
 
 bool CanInterface::StoreLocalCanTiming(const CanTiming& timing) noexcept
 {
@@ -193,6 +193,8 @@ bool CanInterface::StoreLocalCanTiming(const CanTiming& timing) noexcept
 	return true;
 #elif SAMC21 || SAME5x
 	return _user_area_write(reinterpret_cast<void*>(NVMCTRL_USER), CanUserAreaDataOffset, reinterpret_cast<const uint8_t*>(&canConfigData), sizeof(canConfigData)) == 0;
+#elif STM32H5
+	return true;				//TODO support storing timing data on STM MCUs
 #endif
 }
 

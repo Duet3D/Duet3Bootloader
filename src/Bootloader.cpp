@@ -830,7 +830,44 @@ bool CheckValidFirmware(uint32_t startAddress, bool doReportError)
 	}
 
 	// Switch back to the RC oscillator
-#  error TODO
+
+    /*--------------------------------------------------
+      Ensure HSI is ON
+    --------------------------------------------------*/
+    RCC_OscInitTypeDef osc = {0};
+    osc.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+    osc.HSIState       = RCC_HSI_ON;
+    osc.PLL.PLLState   = RCC_PLL_NONE;
+
+    (void)HAL_RCC_OscConfig(&osc);
+
+    /*--------------------------------------------------
+      Switch SYSCLK to HSI
+    --------------------------------------------------*/
+    RCC_ClkInitTypeDef clk = {0};
+    clk.ClockType      = RCC_CLOCKTYPE_SYSCLK |
+                         RCC_CLOCKTYPE_HCLK   |
+                         RCC_CLOCKTYPE_PCLK1  |
+                         RCC_CLOCKTYPE_PCLK2  |
+                         RCC_CLOCKTYPE_PCLK3;
+    clk.SYSCLKSource   = RCC_SYSCLKSOURCE_HSI;
+    clk.AHBCLKDivider  = RCC_HCLK_DIV1;
+    clk.APB1CLKDivider = RCC_HCLK_DIV1;
+    clk.APB2CLKDivider = RCC_HCLK_DIV1;
+    clk.APB3CLKDivider = RCC_HCLK_DIV1;
+
+    (void)HAL_RCC_ClockConfig(&clk, FLASH_LATENCY_2);
+
+    /*--------------------------------------------------
+      Disable HSE and PLLs
+    --------------------------------------------------*/
+    osc.OscillatorType = RCC_OSCILLATORTYPE_HSE |
+                         RCC_OSCILLATORTYPE_HSI;
+    osc.HSEState       = RCC_HSE_OFF;
+    osc.HSIState       = RCC_HSI_ON;
+    osc.PLL.PLLState   = RCC_PLL_OFF;
+
+    (void)HAL_RCC_OscConfig(&osc);
 
 # else
 #  error Unsupported processor
