@@ -1,9 +1,38 @@
 # Duet3Bootloader Master Makefile
 # Builds the bootloader and CAN in-application programmer for the Duet 3 boards
 
-# Cross-compiler toolchain (relative to project root)
-#CROSS_COMPILE ?= ../arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-
-CROSS_COMPILE ?= ../arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-
+# Cross-compiler toolchain.
+# RepRapFirmware exports CROSS_COMPILE when building this as a submodule.
+# When building CoreN2G standalone, fall back to a toolchain on PATH.
+ARM_GNU_TOOLCHAIN_VERSION ?= 15.2.rel1
+ifeq ($(OS),Windows_NT)
+HOST_ARCH_RAW := $(subst AMD64,x86_64,$(subst ARM64,aarch64,$(PROCESSOR_ARCHITECTURE)))
+else
+HOST_ARCH_RAW := $(shell uname -m)
+HOST_OS_RAW := $(shell uname -s)
+endif
+
+ifeq ($(HOST_ARCH_RAW),aarch64)
+ARM_GNU_TOOLCHAIN_HOST_ARCH := aarch64
+else ifeq ($(HOST_ARCH_RAW),arm64)
+ARM_GNU_TOOLCHAIN_HOST_ARCH := aarch64
+else ifeq ($(HOST_ARCH_RAW),x86_64)
+ARM_GNU_TOOLCHAIN_HOST_ARCH := x86_64
+else ifeq ($(HOST_ARCH_RAW),amd64)
+ARM_GNU_TOOLCHAIN_HOST_ARCH := x86_64
+else
+ARM_GNU_TOOLCHAIN_HOST_ARCH := $(HOST_ARCH_RAW)
+endif
+
+ifeq ($(OS),Windows_NT)
+ARM_GNU_TOOLCHAIN_HOST := mingw-w64-$(ARM_GNU_TOOLCHAIN_HOST_ARCH)
+else ifeq ($(HOST_OS_RAW),Darwin)
+ARM_GNU_TOOLCHAIN_HOST := darwin-$(subst aarch64,arm64,$(ARM_GNU_TOOLCHAIN_HOST_ARCH))
+else
+ARM_GNU_TOOLCHAIN_HOST := $(ARM_GNU_TOOLCHAIN_HOST_ARCH)
+endif
+
+CROSS_COMPILE ?= $(abspath ../arm-gnu-toolchain-$(ARM_GNU_TOOLCHAIN_VERSION)-$(ARM_GNU_TOOLCHAIN_HOST)-arm-none-eabi/bin/arm-none-eabi-)
 export CROSS_COMPILE
 
 # Toolchain programs
@@ -45,7 +74,7 @@ export DEBUG_FLAGS
 .DEFAULT_GOAL := help
 
 # Available build configurations
-CONFIGS := SAME5x SAME5x_composite SAMC21 SAMMYC21 Duet3_MB6HC Duet3_MB6XD Duet3_Mini5plus
+CONFIGS := SAME5x SAME5x_composite SAMC21 SAMMYC21 STM32H5 Duet3_MB6HC Duet3_MB6XD Duet3_Mini5plus
 
 # Declare all board targets as phony
 .PHONY: $(CONFIGS)
@@ -62,6 +91,7 @@ help:
 	$(Q)echo "  SAME5x_composite    - Composite SAME5x bootloader, linked at offset 0x1000"
 	$(Q)echo "  SAMC21              - Bootloader for SAMC21 expansion and tool boards"
 	$(Q)echo "  SAMMYC21            - Bootloader for the Sammy C21 board"
+	$(Q)echo "  STM32H5             - Bootloader for the STM32H5 expansion and tool boards"
 	$(Q)echo "  Duet3_MB6HC         - CAN in-application programmer for the MB6HC main board"
 	$(Q)echo "  Duet3_MB6XD         - CAN in-application programmer for the MB6XD main board"
 	$(Q)echo "  Duet3_Mini5plus     - CAN in-application programmer for the Mini 5+ main board"
@@ -139,6 +169,18 @@ $(WORKSPACE)/CANlib/SAME70_nonRTOS/libCANlib.a:
 	$(Q)echo "  BUILD   CANlib/SAME70_nonRTOS"
 	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CANlib SAME70_nonRTOS
 
+$(WORKSPACE)/CoreN2G/STM32H5_CAN/libCoreN2G.a:
+	$(Q)echo "  BUILD   CoreN2G/STM32H5_CAN"
+	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CoreN2G STM32H5_CAN
+
+$(WORKSPACE)/RRFLibraries/STM32H5/libRRFLibraries.a:
+	$(Q)echo "  BUILD   RRFLibraries/STM32H5"
+	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/RRFLibraries STM32H5
+
+$(WORKSPACE)/CANlib/STM32H5_nonRTOS/libCANlib.a:
+	$(Q)echo "  BUILD   CANlib/STM32H5_nonRTOS"
+	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CANlib STM32H5_nonRTOS
+
 # Include the specific makefile based on the target
 # Only include one at a time to avoid conflicts
 ifneq ($(MAKECMDGOALS),)
@@ -159,6 +201,9 @@ ifeq ($(MAKECMDGOALS),SAMC21)
 endif
 ifeq ($(MAKECMDGOALS),SAMMYC21)
 -include Makefiles/SAMMYC21.mk
+endif
+ifeq ($(MAKECMDGOALS),STM32H5)
+-include Makefiles/STM32H5.mk
 endif
 ifeq ($(MAKECMDGOALS),Duet3_MB6HC)
 -include Makefiles/Duet3_MB6HC.mk
