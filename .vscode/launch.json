@@ -1,0 +1,60 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "cortex-debug",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/STM32H5-Debug/Duet3Bootloader-STM32H5-Debug.elf",
+            "name": "Debug with ST-Link (Debug)",
+            "request": "launch",
+            "runToEntryPoint": "Reset_Handler",
+            "showDevDebugOutput": "none",
+            "svdFile": "${workspaceFolder}/../CoreN2G/src/STMCubeMX/STM32H523.svd",
+            "servertype": "stlink",
+            "device": "STM32H523RETx",
+            "interface": "swd",
+            "serverArgs": [ "-m 1" ],
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+//            "preLaunchTask": "build",
+        },
+        {
+            "type": "cortex-debug",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/STM32H5/Duet3Bootloader-STM32H5.elf",
+            "name": "Debug with ST-Link (Release)",
+            "request": "launch",
+            "runToEntryPoint": "Reset_Handler",
+            "showDevDebugOutput": "none",
+            "svdFile": "${workspaceFolder}/../CoreN2G/src/STMCubeMX/STM32H523.svd",
+            "servertype": "stlink",
+            "device": "STM32H523RETx",
+            "interface": "swd",
+            "serverArgs": [ "-m 1" ],
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+//            "preLaunchTask": "build",
+        },
+        {
+            "type": "stlinkgdbtarget",
+            "request": "launch",
+            "name": "STM32Cube: Launch ST-Link GDB Server",
+            "cwd": "${workspaceFolder}",
+            "preBuild": "${command:st-stm32-ide-debug-launch.build}",
+            "runEntry": "main",
+            "origin": "snippet",
+            "imagesAndSymbols": [
+                {
+                    "imageFileName": "${command:st-stm32-ide-debug-launch.get-projects-binary-from-context1}"
+                }
+            ],
+        }
+    ]
+}
