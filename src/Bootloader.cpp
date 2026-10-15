@@ -23,7 +23,15 @@
 #include <Duet3Common.h>
 #include "BoardType.h"
 
-#if defined(DEBUG) && !STM32H5						// we don't yet support a serial port on STM32H5 tool boards
+// Debug messages go to a serial port on the boards that have room for the driver and support one.
+// The STM32H5 tool boards don't support one yet, and the buffered serial driver does not fit in the 16 KiB of flash reserved for the SAME5x expansion board bootloader
+#if defined(DEBUG) && !STM32H5 && !(SAME5x && !defined(CAN_IAP))
+# define HAVE_DEBUG_SERIAL	1
+#else
+# define HAVE_DEBUG_SERIAL	0
+#endif
+
+#if HAVE_DEBUG_SERIAL
 # include <UART/UartParameters.h>
 # include <AsyncSerial.h>
 
@@ -59,7 +67,7 @@ struct UF2_Block
 	static constexpr uint32_t MagicEndVal = 0x0AB16F30;
 };
 
-# ifdef DEBUG
+# if HAVE_DEBUG_SERIAL
 constexpr UartParameters Serial0Params =
 {
 	.sercomNumber = 2,
@@ -76,7 +84,7 @@ constexpr UartParameters Serial0Params =
 
 #else
 
-# ifdef DEBUG
+# if HAVE_DEBUG_SERIAL
 constexpr UartParameters Serial0Params =
 {
 	.sercomNumber = 3,
@@ -98,7 +106,7 @@ constexpr UartParameters Serial0Params =
 constexpr uint32_t FlashBlockWriteSize = 0x00004000;							// the block write size we use for flash (16K)
 constexpr uint32_t FlashBlockEraseSize = 0x00004000;							// the block erase size we use for flash (16K)
 
-# ifdef DEBUG
+# if HAVE_DEBUG_SERIAL
 constexpr UartParameters Serial0Params =
 {
 	.sercomNumber = 4,
@@ -125,7 +133,7 @@ constexpr UartParameters Serial0Params =
 constexpr uint32_t FlashBlockWriteSize = 0x00010000;
 constexpr uint32_t FlashBlockEraseSize = 0x00020000;
 
-# ifdef DEBUG
+# if HAVE_DEBUG_SERIAL
 constexpr UartParameters Serial0Params =
 {
 	.uartOrUsartInstance = 2,
@@ -140,6 +148,7 @@ constexpr UartParameters Serial0Params =
 #elif STM32H5
 
 # include <stm32h523xx.h>
+# include <stm32h5xx_hal.h>
 # include <Vectors.h>
 
 constexpr uint32_t FlashBlockWriteSize = 0x00004000;						// the block write size we use for flash (16K)
@@ -224,6 +233,9 @@ static inline void WriteLed(uint8_t ledNumber, bool turnOn)
 extern "C" void SysTick_Handler()
 {
 	CoreSysTick();
+#if STM32
+	HAL_IncTick();										// the HAL's timeouts never expire without this
+#endif
 #if defined(CAN_IAP)
 	// The watchdog is enabled, so we need to reset that too
 	WatchdogReset();
@@ -235,7 +247,7 @@ extern "C" void SysTick_Handler()
 
 void SerialMessage(const char *text)
 {
-#if defined(DEBUG) && !STM32H5						// we don't yet support a serial port on STM32H5 tool boards
+#if HAVE_DEBUG_SERIAL
 # ifdef SAMMYC21
 	// Messages go to the USB port, so send them raw
 	uart0->print(text);
@@ -587,12 +599,12 @@ void AppMain()
 	SysTick->CTRL = (1u << SysTick_CTRL_ENABLE_Pos) | (1u << SysTick_CTRL_TICKINT_Pos) | (1 << SysTick_CTRL_CLKSOURCE_Pos);
 	NVIC_SetPriority(SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL);	// set priority for Systick Interrupt
 
-#ifdef DEBUG				// we don't need to call CoreInit in non-debug builds because we don't use DMA, EXINTs or the random number generator
+#if defined(DEBUG) || STM32	// on STM32 CoreInit enables the GPIO clocks, without which no pin can be configured; elsewhere we only need it to set up the debug serial port
 	CoreInit();
 #endif
 	DeviceInit();
 
-#if defined(DEBUG) && !STM32H5						// we don't yet support a serial port on STM32H5 tool boards
+#if HAVE_DEBUG_SERIAL
 	uart0 = new AsyncSerial(Serial0Params);
 #endif
 
@@ -610,7 +622,7 @@ void AppMain()
 		SetPinMode(GetLedPin(ledNumber), (GetLedActiveHigh()) ? OUTPUT_LOW : OUTPUT_HIGH);
 	}
 
-#if defined(DEBUG) && !STM32H5						// we don't yet support a serial port on STM32H5 tool boards
+#if HAVE_DEBUG_SERIAL
 	uart0->begin(57600);
 # if defined(CAN_IAP)
 	SerialMessage("CAN IAP running");
@@ -712,16 +724,18 @@ uint32_t ComputeCRC32(const uint32_t *start, const uint32_t *end)
 	asm volatile("nop");
 	return DMAC->CRCCHKSUM.reg;
 #elif STM32H5
+	RCC->AHB1ENR |= RCC_AHB1ENR_CRCEN;									// the CRC unit has no clock at reset
+	(void)RCC->AHB1ENR;													// delay after an RCC peripheral clock enabling
 	CRC->POL = 0x04c11db7;
 	CRC->INIT = 0xFFFFFFFF;
-	CRC->CR = CRC_CR_REV_OUT | CRC_CR_RESET;
+	CRC->CR = CRC_CR_REV_IN | CRC_CR_REV_OUT | CRC_CR_RESET;			// reverse whole words in and the result out, to get the reflected CRC-32 that CrcAppender writes
 	while (start < end)
 	{
 		CRC->DR =  *start++;
 		asm volatile("nop");
 		asm volatile("nop");
 	}
-	return CRC->DR;
+	return CRC->DR ^ 0xFFFFFFFF;										// the hardware does not apply the final inversion
 #endif
 }
 
@@ -773,7 +787,7 @@ bool CheckValidFirmware(uint32_t startAddress, bool doReportError)
 		WriteLed(i, false);
 	}
 
-# if defined(DEBUG) && !STM32H5						// we don't yet support a serial port on STM32H5 tool boards
+# if HAVE_DEBUG_SERIAL
 	SerialMessage("Bootloader transferring control to main firmware");
 	uart0->end();										// disable serial port so that main firmware can initialise it
 # endif
@@ -869,6 +883,8 @@ bool CheckValidFirmware(uint32_t startAddress, bool doReportError)
 
     (void)HAL_RCC_OscConfig(&osc);
 
+    SysTick->CTRL = 0;								// the HAL re-enables the system tick exception whenever it reconfigures the clocks
+
 # else
 #  error Unsupported processor
 # endif
@@ -881,6 +897,10 @@ bool CheckValidFirmware(uint32_t startAddress, bool doReportError)
 	SCB->VTOR = startAddress & SCB_VTOR_TBLOFF_Msk;
 	__DSB();
 	__ISB();
+
+#if STM32H5
+	__set_MSPLIM(0);									// our stack limit may be above the firmware's initial stack pointer, and the firmware sets its own
+#endif
 
 	__asm volatile ("mov r3, %0" : : "r" (startAddress) : "r3");
 

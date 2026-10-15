@@ -63,9 +63,9 @@ export Q VERBOSE
 # Debug build support
 # Use DEBUG=1 to build with debug symbols and reduced optimization
 ifeq ($(DEBUG),1)
-	DEBUG_FLAGS := -g3 -Og
+DEBUG_FLAGS := -g3 -Og -DDEBUG
 else
-	DEBUG_FLAGS :=
+DEBUG_FLAGS :=
 endif
 export DEBUG_FLAGS
 
@@ -97,9 +97,7 @@ help:
 	$(Q)echo ""
 	$(Q)echo "Other targets:"
 	$(Q)echo "  all                 - Build all configurations"
-	$(Q)echo "  clean               - Clean all build outputs"
-	$(Q)echo "  clean-all           - Clean all build outputs and libraries"
-	$(Q)echo "  clean-<config>      - Clean specific configuration"
+	$(Q)echo "  clean               - Clean all build outputs and libraries"
 	$(Q)echo "  test-toolchain      - Verify toolchain is accessible"
 	$(Q)echo ""
 	$(Q)echo "Environment variables:"
@@ -132,6 +130,20 @@ test-toolchain:
 	$(Q)echo "Toolchain OK"
 
 # Common library build rules (to avoid duplicate recipes in board makefiles)
+# Phony so the sub-make always gets to decide: an archive left behind by a failed library build is otherwise never retried
+.PHONY: $(WORKSPACE)/CoreN2G/SAME5x_CAN/libCoreN2G.a \
+        $(WORKSPACE)/CoreN2G/SAMC21_CAN/libCoreN2G.a \
+        $(WORKSPACE)/CoreN2G/SAME70_CAN/libCoreN2G.a \
+        $(WORKSPACE)/CoreN2G/STM32H5_CAN/libCoreN2G.a \
+        $(WORKSPACE)/RRFLibraries/SAME51/libRRFLibraries.a \
+        $(WORKSPACE)/RRFLibraries/SAMC21/libRRFLibraries.a \
+        $(WORKSPACE)/RRFLibraries/SAME70/libRRFLibraries.a \
+        $(WORKSPACE)/RRFLibraries/STM32H5/libRRFLibraries.a \
+        $(WORKSPACE)/CANlib/SAME51_nonRTOS/libCANlib.a \
+        $(WORKSPACE)/CANlib/SAMC21_nonRTOS/libCANlib.a \
+        $(WORKSPACE)/CANlib/SAME70_nonRTOS/libCANlib.a \
+        $(WORKSPACE)/CANlib/STM32H5_nonRTOS/libCANlib.a
+
 $(WORKSPACE)/CoreN2G/SAME5x_CAN/libCoreN2G.a:
 	$(Q)echo "  BUILD   CoreN2G/SAME5x_CAN"
 	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CoreN2G SAME5x_CAN
@@ -221,6 +233,7 @@ endif
 endif
 
 # Generic clean target
+# The objects do not depend on DEBUG_FLAGS, so switching DEBUG on or off only takes effect after the libraries have been cleaned too
 .PHONY: clean
 clean:
 	$(Q)echo "Cleaning all build outputs..."
@@ -230,13 +243,11 @@ clean:
 			rm -rf "$$config"; \
 		fi; \
 	done
-	$(Q)echo "Clean complete"
-
-# Clean all including libraries
-.PHONY: clean-all
-clean-all: clean
 	$(Q)echo "Cleaning library dependencies..."
 	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CoreN2G clean
 	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/RRFLibraries clean
 	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CANlib clean
-	$(Q)echo "Clean all complete"
+	$(Q)echo "Clean complete"
+
+.PHONY: clean-all
+clean-all: clean

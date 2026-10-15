@@ -70,9 +70,10 @@ static uint32_t can0Memory[Can0Config.GetMemorySize()] __attribute__ ((section (
 // Initialise the CAN interface
 void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, const CanParameters& params)
 {
-#if defined(CANIAP) || STM32									//TODO support getting timing data on STM MCUs
+#if !defined(CAN_IAP)											// CAN IAP builds keep no CAN configuration data, see the declaration of canConfigData
+# if STM32														//TODO support getting timing data on STM MCUs
 	canConfigData.Clear();
-#else
+# else
 	// Read the CAN timing data from the top part of the NVM User Row
 	canConfigData = *reinterpret_cast<CanUserAreaData*>(NVMCTRL_USER + CanUserAreaDataOffset);
 
@@ -81,6 +82,7 @@ void CanInterface::Init(CanAddress defaultBoardAddress, bool doHardwareReset, co
 		canConfigData.Clear();
 		_user_area_write(reinterpret_cast<void*>(NVMCTRL_USER), CanUserAreaDataOffset, reinterpret_cast<const uint8_t*>(&canConfigData), sizeof(canConfigData));
 	}
+# endif
 #endif
 
 	CanTiming timing;
