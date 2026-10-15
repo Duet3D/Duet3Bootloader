@@ -148,7 +148,6 @@ constexpr UartParameters Serial0Params =
 #elif STM32H5
 
 # include <stm32h523xx.h>
-# include <stm32h5xx_hal.h>
 # include <Vectors.h>
 
 constexpr uint32_t FlashBlockWriteSize = 0x00004000;						// the block write size we use for flash (16K)
@@ -233,9 +232,6 @@ static inline void WriteLed(uint8_t ledNumber, bool turnOn)
 extern "C" void SysTick_Handler()
 {
 	CoreSysTick();
-#if STM32
-	HAL_IncTick();										// the HAL's timeouts never expire without this
-#endif
 #if defined(CAN_IAP)
 	// The watchdog is enabled, so we need to reset that too
 	WatchdogReset();

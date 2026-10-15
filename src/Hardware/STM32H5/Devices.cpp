@@ -11,7 +11,7 @@
 
 #include <Version.h>
 
-extern const char VersionText[] = "Duet 3 STM32H5 CAN IAP version " VERSION_TEXT;
+extern const char VersionText[] = "STM32H5 bootloader version " VERSION_TEXT;
 
 void DeviceInit() noexcept
 {
