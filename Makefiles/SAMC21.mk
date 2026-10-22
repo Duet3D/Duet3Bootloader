@@ -35,40 +35,40 @@ SRC_DIRS := \
 
 # Include paths for C files (minimal set)
 C_INCLUDES := \
-	-I$(WORKSPACE)/CoreN2G \
+	-I$(LIBRARIES_DIR)/CoreN2G \
 	-I$(CURDIR)/src \
 	-I$(CURDIR)/src/Hardware/SAMC21 \
-	-I$(WORKSPACE)/CoreN2G/src \
-	-I$(WORKSPACE)/CoreN2G/src/atmel/SAMC21_DFP/1.2.176/samc21/include \
-	-I$(WORKSPACE)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include
+	-I$(LIBRARIES_DIR)/CoreN2G/src \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/atmel/SAMC21_DFP/1.2.176/samc21/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include
 
 # Include paths for C++ files (full set)
 CXX_INCLUDES := \
-	-I$(WORKSPACE)/CoreN2G \
+	-I$(LIBRARIES_DIR)/CoreN2G \
 	-I$(CURDIR)/src \
 	-I$(CURDIR)/src/Hardware/SAMC21 \
-	-I$(WORKSPACE)/CoreN2G/src \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21 \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAMC21/hal/include \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAMC21/hal/utils/include \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAMC21/hri \
-	-I$(WORKSPACE)/CoreN2G/src/atmel/SAMC21_DFP/1.2.176/samc21/include \
-	-I$(WORKSPACE)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include \
-	-I$(WORKSPACE)/CANlib/src \
-	-I$(WORKSPACE)/RRFLibraries/src
+	-I$(LIBRARIES_DIR)/CoreN2G/src \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21 \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21/SAMC21/hal/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21/SAMC21/hal/utils/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21/SAMC21/hri \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/atmel/SAMC21_DFP/1.2.176/samc21/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include \
+	-I$(LIBRARIES_DIR)/CANlib/src \
+	-I$(LIBRARIES_DIR)/RRFLibraries/src
 
 # Libraries
 LIBS := \
-	-L$(WORKSPACE)/CoreN2G/SAMC21_CAN \
-	-L$(WORKSPACE)/RRFLibraries/SAMC21 \
-	-L$(WORKSPACE)/CANlib/SAMC21_nonRTOS \
+	-L$(LIBRARIES_DIR)/CoreN2G/SAMC21_CAN \
+	-L$(LIBRARIES_DIR)/RRFLibraries/SAMC21 \
+	-L$(LIBRARIES_DIR)/CANlib/SAMC21_nonRTOS \
 	-lCoreN2G -lRRFLibraries -lCANlib
 
 # Library dependencies
 LIB_DEPS := \
-	$(WORKSPACE)/CoreN2G/SAMC21_CAN/libCoreN2G.a \
-	$(WORKSPACE)/RRFLibraries/SAMC21/libRRFLibraries.a \
-	$(WORKSPACE)/CANlib/SAMC21_nonRTOS/libCANlib.a
+	$(LIBRARIES_DIR)/CoreN2G/SAMC21_CAN/libCoreN2G.a \
+	$(LIBRARIES_DIR)/RRFLibraries/SAMC21/libRRFLibraries.a \
+	$(LIBRARIES_DIR)/CANlib/SAMC21_nonRTOS/libCANlib.a
 
 # Common flags
 COMMON_FLAGS := -c -mcpu=$(MCU_ARCH) -mthumb -mfp16-format=ieee \

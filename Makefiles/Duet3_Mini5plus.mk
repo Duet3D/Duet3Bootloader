@@ -35,40 +35,40 @@ SRC_DIRS := \
 
 # Include paths for C files (minimal set)
 C_INCLUDES := \
-	-I$(WORKSPACE)/CoreN2G \
+	-I$(LIBRARIES_DIR)/CoreN2G \
 	-I$(CURDIR)/src \
 	-I$(CURDIR)/src/Hardware/SAME51 \
-	-I$(WORKSPACE)/CoreN2G/src \
-	-I$(WORKSPACE)/CoreN2G/src/atmel/SAME54_DFP/1.1.134/include \
-	-I$(WORKSPACE)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include
+	-I$(LIBRARIES_DIR)/CoreN2G/src \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/atmel/SAME54_DFP/1.1.134/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include
 
 # Include paths for C++ files (full set)
 CXX_INCLUDES := \
-	-I$(WORKSPACE)/CoreN2G \
+	-I$(LIBRARIES_DIR)/CoreN2G \
 	-I$(CURDIR)/src \
 	-I$(CURDIR)/src/Hardware/SAME51 \
-	-I$(WORKSPACE)/CoreN2G/src \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21 \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAME5x/hal/include \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAME5x/hal/utils/include \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAME5x/hri \
-	-I$(WORKSPACE)/CoreN2G/src/atmel/SAME54_DFP/1.1.134/include \
-	-I$(WORKSPACE)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include \
-	-I$(WORKSPACE)/CANlib/src \
-	-I$(WORKSPACE)/RRFLibraries/src
+	-I$(LIBRARIES_DIR)/CoreN2G/src \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21 \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21/SAME5x/hal/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21/SAME5x/hal/utils/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21/SAME5x/hri \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/atmel/SAME54_DFP/1.1.134/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include \
+	-I$(LIBRARIES_DIR)/CANlib/src \
+	-I$(LIBRARIES_DIR)/RRFLibraries/src
 
 # Libraries
 LIBS := \
-	-L$(WORKSPACE)/CoreN2G/SAME5x_CAN \
-	-L$(WORKSPACE)/RRFLibraries/SAME51 \
-	-L$(WORKSPACE)/CANlib/SAME51_nonRTOS \
+	-L$(LIBRARIES_DIR)/CoreN2G/SAME5x_CAN \
+	-L$(LIBRARIES_DIR)/RRFLibraries/SAME51 \
+	-L$(LIBRARIES_DIR)/CANlib/SAME51_nonRTOS \
 	-lCoreN2G -lRRFLibraries -lCANlib
 
 # Library dependencies
 LIB_DEPS := \
-	$(WORKSPACE)/CoreN2G/SAME5x_CAN/libCoreN2G.a \
-	$(WORKSPACE)/RRFLibraries/SAME51/libRRFLibraries.a \
-	$(WORKSPACE)/CANlib/SAME51_nonRTOS/libCANlib.a
+	$(LIBRARIES_DIR)/CoreN2G/SAME5x_CAN/libCoreN2G.a \
+	$(LIBRARIES_DIR)/RRFLibraries/SAME51/libRRFLibraries.a \
+	$(LIBRARIES_DIR)/CANlib/SAME51_nonRTOS/libCANlib.a
 
 # Common flags
 COMMON_FLAGS := -c -mcpu=$(MCU_ARCH) -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mfp16-format=ieee \

@@ -35,44 +35,44 @@ SRC_DIRS := \
 
 # Include paths for C files (minimal set)
 C_INCLUDES := \
-	-I$(WORKSPACE)/CoreN2G \
-	-I$(WORKSPACE)/CANlib \
+	-I$(LIBRARIES_DIR)/CoreN2G \
+	-I$(LIBRARIES_DIR)/CANlib \
 	-I$(CURDIR)/src \
 	-I$(CURDIR)/src/Hardware/SAME70 \
-	-I$(WORKSPACE)/CoreN2G/src \
-	-I$(WORKSPACE)/CoreN2G/src/SAM4S_4E_E70/SAME70 \
-	-I$(WORKSPACE)/CoreN2G/src/SAM4S_4E_E70/asf/common/utils \
-	-I$(WORKSPACE)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include
+	-I$(LIBRARIES_DIR)/CoreN2G/src \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAM4S_4E_E70/SAME70 \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAM4S_4E_E70/asf/common/utils \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include
 
 # Include paths for C++ files (full set)
 CXX_INCLUDES := \
-	-I$(WORKSPACE)/CoreN2G \
-	-I$(WORKSPACE)/CANlib \
+	-I$(LIBRARIES_DIR)/CoreN2G \
+	-I$(LIBRARIES_DIR)/CANlib \
 	-I$(CURDIR)/src \
 	-I$(CURDIR)/src/Hardware/SAME70 \
-	-I$(WORKSPACE)/CoreN2G/src \
-	-I$(WORKSPACE)/CoreN2G/src/SAM4S_4E_E70 \
-	-I$(WORKSPACE)/CoreN2G/src/SAM4S_4E_E70/SAME70 \
-	-I$(WORKSPACE)/CoreN2G/src/SAM4S_4E_E70/asf \
-	-I$(WORKSPACE)/CoreN2G/src/SAM4S_4E_E70/asf/common/utils \
-	-I$(WORKSPACE)/CoreN2G/src/SAM4S_4E_E70/asf/sam/drivers \
-	-I$(WORKSPACE)/CoreN2G/src/SAM4S_4E_E70/asf/sam/utils/cmsis/same70/include \
-	-I$(WORKSPACE)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include \
-	-I$(WORKSPACE)/CANlib/src \
-	-I$(WORKSPACE)/RRFLibraries/src
+	-I$(LIBRARIES_DIR)/CoreN2G/src \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAM4S_4E_E70 \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAM4S_4E_E70/SAME70 \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAM4S_4E_E70/asf \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAM4S_4E_E70/asf/common/utils \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAM4S_4E_E70/asf/sam/drivers \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAM4S_4E_E70/asf/sam/utils/cmsis/same70/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include \
+	-I$(LIBRARIES_DIR)/CANlib/src \
+	-I$(LIBRARIES_DIR)/RRFLibraries/src
 
 # Libraries
 LIBS := \
-	-L$(WORKSPACE)/CoreN2G/SAME70_CAN \
-	-L$(WORKSPACE)/RRFLibraries/SAME70 \
-	-L$(WORKSPACE)/CANlib/SAME70_nonRTOS \
+	-L$(LIBRARIES_DIR)/CoreN2G/SAME70_CAN \
+	-L$(LIBRARIES_DIR)/RRFLibraries/SAME70 \
+	-L$(LIBRARIES_DIR)/CANlib/SAME70_nonRTOS \
 	-lCoreN2G -lRRFLibraries -lCANlib
 
 # Library dependencies
 LIB_DEPS := \
-	$(WORKSPACE)/CoreN2G/SAME70_CAN/libCoreN2G.a \
-	$(WORKSPACE)/RRFLibraries/SAME70/libRRFLibraries.a \
-	$(WORKSPACE)/CANlib/SAME70_nonRTOS/libCANlib.a
+	$(LIBRARIES_DIR)/CoreN2G/SAME70_CAN/libCoreN2G.a \
+	$(LIBRARIES_DIR)/RRFLibraries/SAME70/libRRFLibraries.a \
+	$(LIBRARIES_DIR)/CANlib/SAME70_nonRTOS/libCANlib.a
 
 # Common flags
 COMMON_FLAGS := -c -mcpu=$(MCU_ARCH) -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard -mfp16-format=ieee -mno-unaligned-access \

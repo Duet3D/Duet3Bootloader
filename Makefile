@@ -49,9 +49,8 @@ OBJCOPY := $(CROSS_COMPILE)objcopy
 SIZE := $(CROSS_COMPILE)size
 export CC CXX AS AR LD OBJCOPY SIZE
 
-# Workspace root
-WORKSPACE := ..
-export WORKSPACE
+# External library root
+LIBRARIES_DIR ?= ..
 
 # Quiet build support (Linux kernel style)
 # Use V=1 for verbose output
@@ -135,66 +134,66 @@ test-toolchain:
 
 # Common library build rules (to avoid duplicate recipes in board makefiles)
 # Phony so the sub-make always gets to decide: an archive left behind by a failed library build is otherwise never retried
-.PHONY: $(WORKSPACE)/CoreN2G/SAME5x_CAN/libCoreN2G.a \
-        $(WORKSPACE)/CoreN2G/SAMC21_CAN/libCoreN2G.a \
-        $(WORKSPACE)/CoreN2G/SAME70_CAN/libCoreN2G.a \
-        $(WORKSPACE)/CoreN2G/STM32H5_CAN/libCoreN2G.a \
-        $(WORKSPACE)/RRFLibraries/SAME51/libRRFLibraries.a \
-        $(WORKSPACE)/RRFLibraries/SAMC21/libRRFLibraries.a \
-        $(WORKSPACE)/RRFLibraries/SAME70/libRRFLibraries.a \
-        $(WORKSPACE)/RRFLibraries/STM32H5/libRRFLibraries.a \
-        $(WORKSPACE)/CANlib/SAME51_nonRTOS/libCANlib.a \
-        $(WORKSPACE)/CANlib/SAMC21_nonRTOS/libCANlib.a \
-        $(WORKSPACE)/CANlib/SAME70_nonRTOS/libCANlib.a \
-        $(WORKSPACE)/CANlib/STM32H5_nonRTOS/libCANlib.a
+.PHONY: $(LIBRARIES_DIR)/CoreN2G/SAME5x_CAN/libCoreN2G.a \
+        $(LIBRARIES_DIR)/CoreN2G/SAMC21_CAN/libCoreN2G.a \
+        $(LIBRARIES_DIR)/CoreN2G/SAME70_CAN/libCoreN2G.a \
+        $(LIBRARIES_DIR)/CoreN2G/STM32H5_CAN/libCoreN2G.a \
+        $(LIBRARIES_DIR)/RRFLibraries/SAME51/libRRFLibraries.a \
+        $(LIBRARIES_DIR)/RRFLibraries/SAMC21/libRRFLibraries.a \
+        $(LIBRARIES_DIR)/RRFLibraries/SAME70/libRRFLibraries.a \
+        $(LIBRARIES_DIR)/RRFLibraries/STM32H5/libRRFLibraries.a \
+        $(LIBRARIES_DIR)/CANlib/SAME51_nonRTOS/libCANlib.a \
+        $(LIBRARIES_DIR)/CANlib/SAMC21_nonRTOS/libCANlib.a \
+        $(LIBRARIES_DIR)/CANlib/SAME70_nonRTOS/libCANlib.a \
+        $(LIBRARIES_DIR)/CANlib/STM32H5_nonRTOS/libCANlib.a
 
-$(WORKSPACE)/CoreN2G/SAME5x_CAN/libCoreN2G.a:
+$(LIBRARIES_DIR)/CoreN2G/SAME5x_CAN/libCoreN2G.a:
 	$(Q)echo "  BUILD   CoreN2G/SAME5x_CAN"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CoreN2G SAME5x_CAN
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/CoreN2G SAME5x_CAN
 
-$(WORKSPACE)/RRFLibraries/SAME51/libRRFLibraries.a:
+$(LIBRARIES_DIR)/RRFLibraries/SAME51/libRRFLibraries.a:
 	$(Q)echo "  BUILD   RRFLibraries/SAME51"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/RRFLibraries SAME51
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/RRFLibraries SAME51
 
-$(WORKSPACE)/CANlib/SAME51_nonRTOS/libCANlib.a:
+$(LIBRARIES_DIR)/CANlib/SAME51_nonRTOS/libCANlib.a:
 	$(Q)echo "  BUILD   CANlib/SAME51_nonRTOS"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CANlib SAME51_nonRTOS
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/CANlib SAME51_nonRTOS
 
-$(WORKSPACE)/CoreN2G/SAMC21_CAN/libCoreN2G.a:
+$(LIBRARIES_DIR)/CoreN2G/SAMC21_CAN/libCoreN2G.a:
 	$(Q)echo "  BUILD   CoreN2G/SAMC21_CAN"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CoreN2G SAMC21_CAN
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/CoreN2G SAMC21_CAN
 
-$(WORKSPACE)/RRFLibraries/SAMC21/libRRFLibraries.a:
+$(LIBRARIES_DIR)/RRFLibraries/SAMC21/libRRFLibraries.a:
 	$(Q)echo "  BUILD   RRFLibraries/SAMC21"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/RRFLibraries SAMC21
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/RRFLibraries SAMC21
 
-$(WORKSPACE)/CANlib/SAMC21_nonRTOS/libCANlib.a:
+$(LIBRARIES_DIR)/CANlib/SAMC21_nonRTOS/libCANlib.a:
 	$(Q)echo "  BUILD   CANlib/SAMC21_nonRTOS"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CANlib SAMC21_nonRTOS
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/CANlib SAMC21_nonRTOS
 
-$(WORKSPACE)/CoreN2G/SAME70_CAN/libCoreN2G.a:
+$(LIBRARIES_DIR)/CoreN2G/SAME70_CAN/libCoreN2G.a:
 	$(Q)echo "  BUILD   CoreN2G/SAME70_CAN"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CoreN2G SAME70_CAN
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/CoreN2G SAME70_CAN
 
-$(WORKSPACE)/RRFLibraries/SAME70/libRRFLibraries.a:
+$(LIBRARIES_DIR)/RRFLibraries/SAME70/libRRFLibraries.a:
 	$(Q)echo "  BUILD   RRFLibraries/SAME70"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/RRFLibraries SAME70
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/RRFLibraries SAME70
 
-$(WORKSPACE)/CANlib/SAME70_nonRTOS/libCANlib.a:
+$(LIBRARIES_DIR)/CANlib/SAME70_nonRTOS/libCANlib.a:
 	$(Q)echo "  BUILD   CANlib/SAME70_nonRTOS"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CANlib SAME70_nonRTOS
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/CANlib SAME70_nonRTOS
 
-$(WORKSPACE)/CoreN2G/STM32H5_CAN/libCoreN2G.a:
+$(LIBRARIES_DIR)/CoreN2G/STM32H5_CAN/libCoreN2G.a:
 	$(Q)echo "  BUILD   CoreN2G/STM32H5_CAN"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CoreN2G STM32H5_CAN
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/CoreN2G STM32H5_CAN
 
-$(WORKSPACE)/RRFLibraries/STM32H5/libRRFLibraries.a:
+$(LIBRARIES_DIR)/RRFLibraries/STM32H5/libRRFLibraries.a:
 	$(Q)echo "  BUILD   RRFLibraries/STM32H5"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/RRFLibraries STM32H5
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/RRFLibraries STM32H5
 
-$(WORKSPACE)/CANlib/STM32H5_nonRTOS/libCANlib.a:
+$(LIBRARIES_DIR)/CANlib/STM32H5_nonRTOS/libCANlib.a:
 	$(Q)echo "  BUILD   CANlib/STM32H5_nonRTOS"
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CANlib STM32H5_nonRTOS
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/CANlib STM32H5_nonRTOS
 
 # Include the specific makefile based on the target
 # Only include one at a time to avoid conflicts
@@ -248,9 +247,9 @@ clean:
 		fi; \
 	done
 	$(Q)echo "Cleaning library dependencies..."
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CoreN2G clean
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/RRFLibraries clean
-	$(Q)$(MAKE) $(VERBOSE) -C $(WORKSPACE)/CANlib clean
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/CoreN2G clean
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/RRFLibraries clean
+	$(Q)$(MAKE) $(VERBOSE) -C $(LIBRARIES_DIR)/CANlib clean
 	$(Q)echo "Clean complete"
 
 .PHONY: clean-all
