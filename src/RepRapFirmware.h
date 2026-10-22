@@ -39,8 +39,12 @@ extern "C" void debugPrintf(const char* fmt, ...) __attribute__ ((format (printf
 # define SAME70		0
 #elif defined(__SAME70Q20B__)
 # define SAME5x		0
-//# define SAMC21		0
-//# define SAME70		1
+# ifndef SAMC21					// this is already defined in parts.h from the ASF library
+#  define SAMC21		0
+# endif
+# ifndef SAME70					// this is already defined in parts.h from the ASF library
+#  define SAME70		1
+# endif
 #endif
 
 // Classes to facilitate range-based for loops that iterate from 0 up to just below a limit
