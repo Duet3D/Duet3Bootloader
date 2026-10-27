@@ -18,6 +18,10 @@
 # include <hpl_user_area.h>
 #endif
 
+#if STM32H5
+# include <NonVolatileMemory.h>
+#endif
+
 static CanDevice *can0dev = nullptr;
 
 #if !defined(CAN_IAP)
@@ -200,15 +204,14 @@ void CanInterface::SetLocalCanTiming(const CanTiming& timing) noexcept
 bool CanInterface::StoreLocalCanTiming(const CanTiming& timing) noexcept
 {
 	canConfigData.SetTiming(timing);
-#if RP2040
+#if RPXXXX || STM32H5
 	NonVolatileMemory mem(NvmPage::common);
-	mem.SetCanSettings(canConfigData);
+	mem.SetCanSettings(canConfigData);					// this calls mem.EnsureRead() at the start, so we don't need to do it explicitly
 	mem.EnsureWritten();
 	return true;
 #elif SAMC21 || SAME5x
 	return _user_area_write(reinterpret_cast<void*>(NVMCTRL_USER), CanUserAreaDataOffset, reinterpret_cast<const uint8_t*>(&canConfigData), sizeof(canConfigData)) == 0;
-#elif STM32H5
-	return true;				//TODO support storing timing data on STM MCUs
+	return true;
 #endif
 }
 

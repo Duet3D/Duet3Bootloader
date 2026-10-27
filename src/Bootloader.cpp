@@ -405,7 +405,7 @@ bool LookForClockMessages() noexcept
 	return false;
 }
 
-// Set the bit rate and listed for CAN time sync messages. Return true if we heard enough of them,.
+// Set the bit rate and listen for CAN time sync messages. Return true if we heard enough of them.
 bool TryBitRate(uint32_t bitRate)
 {
 	CanTiming timing;
