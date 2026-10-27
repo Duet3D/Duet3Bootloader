@@ -69,7 +69,7 @@ LIB_DEPS := \
 # Common flags
 COMMON_FLAGS := -c -mcpu=$(MCU_ARCH) -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mfp16-format=ieee \
 	-fno-math-errno -ffunction-sections -fdata-sections -nostdlib -Wundef -Wdouble-promotion -Werror=return-type \
-	-fsingle-precision-constant
+	-fsingle-precision-constant -Wall -g3
 
 # C flags
 CFLAGS := $(COMMON_FLAGS) $(OPT) $(C_DEFINES) $(C_INCLUDES) -std=gnu99 $(CFLAGS_EXTRA)
@@ -79,7 +79,7 @@ BUILD_DIR := $(BOARD)
 
 # C++ flags
 CXXFLAGS := $(COMMON_FLAGS) $(OPT) $(CXX_DEFINES) $(CXX_INCLUDES) -std=c++20 \
-	-fno-threadsafe-statics -fno-rtti -fno-exceptions $(CXXFLAGS_EXTRA)
+	-fno-threadsafe-statics -fno-rtti -fno-exceptions -Werror -Wnoexcept -Wshadow -Wsign-promo $(CXXFLAGS_EXTRA)
 
 # Linker flags
 LDFLAGS := $(LDOPT) --specs=nano.specs -Wl,--gc-sections -Wl,--entry=Reset_Handler \

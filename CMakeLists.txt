@@ -30,13 +30,25 @@ target_compile_definitions(${DUET_BOARD} PRIVATE
     ${BL_DEFINES}
     $<$<COMPILE_LANGUAGE:C>:noexcept=>)
 
+set(_cxx_options
+    -fno-threadsafe-statics
+    -fno-rtti
+    -fno-exceptions
+    -Werror
+    -Wnoexcept
+    -Wshadow
+    -Wsign-promo)
+
+# The optimised builds keep their debug information too
 target_compile_options(${DUET_BOARD} PRIVATE
-    $<$<CONFIG:Release>:-Os>
+    "$<$<CONFIG:Release>:-Os;-g3>"
+    ${BL_COMPILE_OPTIONS}
     -fsingle-precision-constant
+    -Wall
     -Wundef
     -Wdouble-promotion
     -Werror=return-type
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics;-fno-rtti;-fno-exceptions>)
+    "$<$<COMPILE_LANGUAGE:CXX>:${_cxx_options}>")
 
 target_link_options(${DUET_BOARD} PRIVATE
     --specs=nano.specs

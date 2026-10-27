@@ -15,6 +15,7 @@
 #   BL_HARDWARE       directory under src/Hardware with the board's MCU support
 #   BL_LINKER_SCRIPT  linker script, under src/Hardware/<BL_HARDWARE>
 #   BL_HEX            also produce an Intel hex image
+#   BL_COMPILE_OPTIONS extra options for compiling the board's sources
 #   BL_LINK_OPTIONS   extra options for the link
 
 # The bootloaders run without an RTOS, need only CAN from CoreN2G, and are built for size
@@ -28,6 +29,7 @@ set(COREN2G_OPTIMISATION -Os)
 set(BL_OUTPUT Duet3Bootloader-${DUET_BOARD})
 set(BL_DEFINES)
 set(BL_HEX ON)
+set(BL_COMPILE_OPTIONS)
 set(BL_LINK_OPTIONS)
 
 if(DUET_BOARD MATCHES "^(SAME5x|SAME5x_composite)$")
@@ -53,6 +55,7 @@ elseif(DUET_BOARD STREQUAL "STM32H5")
     set(DUET_PART_DEFINE STM32H523xx)
     set(BL_HARDWARE STM32H5)
     set(BL_LINKER_SCRIPT stm32h523xx_flash.ld)
+    set(BL_COMPILE_OPTIONS -fno-math-errno)
     set(CANLIB_OPTIMISATION -Os)
 elseif(DUET_BOARD MATCHES "^(Duet3_MB6HC|Duet3_MB6XD)$")
     set(BL_MCU SAME70)
