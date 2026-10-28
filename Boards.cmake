@@ -1,7 +1,12 @@
 # The Duet3Bootloader boards - the bootloaders for the expansion and tool boards, and the CAN IAPs
 # that update a main board from its expansion boards - everything about DUET_BOARD apart from its
 # MCU's toolchain file, which its preset selects. Included by the top-level CMakeLists.txt before
-# the libraries are added, because it also sets the options they are built with.
+# the libraries are added, because it also sets the options they are built with. The bootloaders
+# for the expansion and tool boards are named by the MCU they are built for, as each serves every
+# board with that MCU; SAMMYC21 is the one board with a bootloader of its own.
+#
+# Variants of a board, which its presets set:
+#   BL_COMPOSITE      the SAME5x bootloader for composite boards, which is linked above the first 4K
 #
 # Library configuration:
 #   DUET_LIBRARIES    the libraries to build
@@ -26,17 +31,20 @@ set(RRFLIBRARIES_PRINTF_FLOAT OFF)
 set(RRFLIBRARIES_OPTIMISATION -Os)
 set(COREN2G_OPTIMISATION -Os)
 
+option(BL_COMPOSITE "Build the SAME5x bootloader for composite boards" OFF)
+
 set(BL_OUTPUT Duet3Bootloader-${DUET_BOARD})
 set(BL_DEFINES)
 set(BL_HEX ON)
 set(BL_COMPILE_OPTIONS)
 set(BL_LINK_OPTIONS)
 
-if(DUET_BOARD MATCHES "^(SAME5x|SAME5x_composite)$")
+if(DUET_BOARD STREQUAL "SAME5x")
     set(BL_MCU SAME5x)
     set(DUET_PART_DEFINE __SAME51N19A__)
     set(BL_HARDWARE SAME51)
-    if(DUET_BOARD STREQUAL "SAME5x_composite")
+    if(BL_COMPOSITE)
+        string(APPEND BL_OUTPUT _composite)
         set(BL_DEFINES COMPOSITE)
         set(BL_LINKER_SCRIPT same51n19a_flash_0x1000.ld)
     else()
@@ -69,7 +77,7 @@ elseif(DUET_BOARD MATCHES "^(Duet3_MB6HC|Duet3_MB6XD)$")
     set(COREN2G_OPTIMISATION -O3)
     # Linked against the Cortex-M4 runtime libraries, as the Eclipse project does - possibly a typo
     set(BL_LINK_OPTIONS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard)
-elseif(DUET_BOARD STREQUAL "Duet3_Mini5plus")
+elseif(DUET_BOARD STREQUAL "Duet3Mini5plus")
     set(BL_MCU SAME5x)
     set(DUET_PART_DEFINE __SAME54P20A__)
     set(BL_OUTPUT Duet3_CANiap32_Mini5plus)
@@ -79,6 +87,10 @@ elseif(DUET_BOARD STREQUAL "Duet3_Mini5plus")
     set(BL_HEX OFF)
 else()
     message(FATAL_ERROR "Unknown DUET_BOARD '${DUET_BOARD}': configure with a board's preset (cmake --list-presets)")
+endif()
+
+if(BL_COMPOSITE AND NOT DUET_BOARD STREQUAL "SAME5x")
+    message(FATAL_ERROR "BL_COMPOSITE is a variant of the SAME5x bootloader, not of ${DUET_BOARD}")
 endif()
 
 if(NOT DUET_MCU STREQUAL BL_MCU)
