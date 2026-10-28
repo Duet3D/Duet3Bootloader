@@ -55,10 +55,7 @@ target_link_options(${DUET_BOARD} PRIVATE
     LINKER:--no-warn-rwx-segment
     ${BL_LINK_OPTIONS})
 
-# The libraries in the order the linker scans them, which decides the layout of the image. As a
-# group, so that each archive appears once on the command line although they call each other.
-target_link_libraries(${DUET_BOARD} PRIVATE
-    "$<LINK_GROUP:RESCAN,Duet::CoreN2G,Duet::RRFLibraries,Duet::CANlib>")
+duet_link_libraries(${DUET_BOARD})
 
 if(BL_HEX)
     duet_firmware_images(${DUET_BOARD} CRC HEX)

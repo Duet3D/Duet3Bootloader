@@ -66,7 +66,7 @@ LIBS := \
 	-L$(LIBRARIES_DIR)/CoreN2G/SAME70_CAN \
 	-L$(LIBRARIES_DIR)/RRFLibraries/SAME70 \
 	-L$(LIBRARIES_DIR)/CANlib/SAME70_nonRTOS \
-	-lCoreN2G -lRRFLibraries -lCANlib
+	-lCANlib -lCoreN2G -lRRFLibraries
 
 # Library dependencies
 LIB_DEPS := \
@@ -122,7 +122,7 @@ $(BOARD): $(BIN)
 # Link
 $(ELF): $(OBJS) $(LIB_DEPS)
 	$(Q)echo "  LD      $(notdir $@)"
-	$(Q)$(LD) $(OBJS) $(LIBS) $(LDFLAGS) -o $@
+	$(Q)$(LD) $(OBJS) -Wl,--start-group $(LIBS) -Wl,--end-group $(LDFLAGS) -o $@
 
 # Generate binary and append CRC
 $(BIN): $(ELF)
