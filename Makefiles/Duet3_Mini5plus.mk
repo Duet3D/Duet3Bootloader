@@ -35,45 +35,45 @@ SRC_DIRS := \
 
 # Include paths for C files (minimal set)
 C_INCLUDES := \
-	-I$(WORKSPACE)/CoreN2G \
+	-I$(LIBRARIES_DIR)/CoreN2G \
 	-I$(CURDIR)/src \
 	-I$(CURDIR)/src/Hardware/SAME51 \
-	-I$(WORKSPACE)/CoreN2G/src \
-	-I$(WORKSPACE)/CoreN2G/src/atmel/SAME54_DFP/1.1.134/include \
-	-I$(WORKSPACE)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include
+	-I$(LIBRARIES_DIR)/CoreN2G/src \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/atmel/SAME54_DFP/1.1.134/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include
 
 # Include paths for C++ files (full set)
 CXX_INCLUDES := \
-	-I$(WORKSPACE)/CoreN2G \
+	-I$(LIBRARIES_DIR)/CoreN2G \
 	-I$(CURDIR)/src \
 	-I$(CURDIR)/src/Hardware/SAME51 \
-	-I$(WORKSPACE)/CoreN2G/src \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21 \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAME5x/hal/include \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAME5x/hal/utils/include \
-	-I$(WORKSPACE)/CoreN2G/src/SAME5x_C21/SAME5x/hri \
-	-I$(WORKSPACE)/CoreN2G/src/atmel/SAME54_DFP/1.1.134/include \
-	-I$(WORKSPACE)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include \
-	-I$(WORKSPACE)/CANlib/src \
-	-I$(WORKSPACE)/RRFLibraries/src
+	-I$(LIBRARIES_DIR)/CoreN2G/src \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21 \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21/SAME5x/hal/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21/SAME5x/hal/utils/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/SAME5x_C21/SAME5x/hri \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/atmel/SAME54_DFP/1.1.134/include \
+	-I$(LIBRARIES_DIR)/CoreN2G/src/arm/CMSIS/5.4.0/CMSIS/Core/Include \
+	-I$(LIBRARIES_DIR)/CANlib/src \
+	-I$(LIBRARIES_DIR)/RRFLibraries/src
 
 # Libraries
 LIBS := \
-	-L$(WORKSPACE)/CoreN2G/SAME5x_CAN \
-	-L$(WORKSPACE)/RRFLibraries/SAME51 \
-	-L$(WORKSPACE)/CANlib/SAME51_nonRTOS \
-	-lCoreN2G -lRRFLibraries -lCANlib
+	-L$(LIBRARIES_DIR)/CoreN2G/SAME5x_CAN \
+	-L$(LIBRARIES_DIR)/RRFLibraries/SAME51 \
+	-L$(LIBRARIES_DIR)/CANlib/SAME51_nonRTOS \
+	-lCANlib -lCoreN2G -lRRFLibraries
 
 # Library dependencies
 LIB_DEPS := \
-	$(WORKSPACE)/CoreN2G/SAME5x_CAN/libCoreN2G.a \
-	$(WORKSPACE)/RRFLibraries/SAME51/libRRFLibraries.a \
-	$(WORKSPACE)/CANlib/SAME51_nonRTOS/libCANlib.a
+	$(LIBRARIES_DIR)/CoreN2G/SAME5x_CAN/libCoreN2G.a \
+	$(LIBRARIES_DIR)/RRFLibraries/SAME51/libRRFLibraries.a \
+	$(LIBRARIES_DIR)/CANlib/SAME51_nonRTOS/libCANlib.a
 
 # Common flags
 COMMON_FLAGS := -c -mcpu=$(MCU_ARCH) -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mfp16-format=ieee \
 	-ffunction-sections -fdata-sections -nostdlib -Wundef -Wdouble-promotion -Werror=return-type \
-	-fsingle-precision-constant
+	-fsingle-precision-constant -Wall -g3
 
 # C flags
 CFLAGS := $(COMMON_FLAGS) $(OPT) $(C_DEFINES) $(C_INCLUDES) -std=gnu99 $(CFLAGS_EXTRA)
@@ -83,7 +83,7 @@ BUILD_DIR := $(BOARD)
 
 # C++ flags
 CXXFLAGS := $(COMMON_FLAGS) $(OPT) $(CXX_DEFINES) $(CXX_INCLUDES) -std=c++20 \
-	-fno-threadsafe-statics -fno-rtti -fno-exceptions $(CXXFLAGS_EXTRA)
+	-fno-threadsafe-statics -fno-rtti -fno-exceptions -Werror -Wnoexcept -Wshadow -Wsign-promo $(CXXFLAGS_EXTRA)
 
 # Linker flags
 LDFLAGS := $(LDOPT) --specs=nano.specs -Wl,--gc-sections -Wl,--entry=Reset_Handler \
@@ -91,8 +91,8 @@ LDFLAGS := $(LDOPT) --specs=nano.specs -Wl,--gc-sections -Wl,--entry=Reset_Handl
 	-T$(LINKER_SCRIPT) -Wl,-Map,$(CURDIR)/$(BUILD_DIR)/$(BINARY).map,--cref
 
 # Find all source files
-C_SRC := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
-CXX_SRC := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
+C_SRC := $(foreach dir,$(SRC_DIRS),$(sort $(wildcard $(dir)/*.c)))
+CXX_SRC := $(foreach dir,$(SRC_DIRS),$(sort $(wildcard $(dir)/*.cpp)))
 
 # Object files
 C_OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRC))
@@ -118,7 +118,7 @@ $(BOARD): $(BIN)
 # Link
 $(ELF): $(OBJS) $(LIB_DEPS)
 	$(Q)echo "  LD      $(notdir $@)"
-	$(Q)$(LD) $(OBJS) $(LIBS) $(LDFLAGS) -o $@
+	$(Q)$(LD) $(OBJS) -Wl,--start-group $(LIBS) -Wl,--end-group $(LDFLAGS) -o $@
 
 # Generate binary and append CRC
 $(BIN): $(ELF)
