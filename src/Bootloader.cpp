@@ -613,10 +613,18 @@ void AppMain()
 		ReportErrorAndRestart("Unknown board", FirmwareFlashErrorCode::unknownBoard);
 	}
 
-	for (unsigned int ledNumber = 0; ledNumber < NumLedPins; ++ledNumber)
+	// The LEDs are connected to the SWDIO and SWCLK pins on most boards, so don't activate them in a debug build or if a debugger is attached
+#ifndef DEBUG
+# if SAME5x || SAMC21
+	if (!DSU->STATUSB.bit.DBGPRES)
+# endif
 	{
-		SetPinMode(GetLedPin(ledNumber), (GetLedActiveHigh()) ? OUTPUT_LOW : OUTPUT_HIGH);
+		for (unsigned int ledNumber = 0; ledNumber < NumLedPins; ledNumber++)
+		{
+			SetPinMode(GetLedPin(ledNumber), GetLedActiveHigh() ? OUTPUT_LOW : OUTPUT_HIGH);
+		}
 	}
+#endif
 
 #if HAVE_DEBUG_SERIAL
 	uart0->begin(57600);
