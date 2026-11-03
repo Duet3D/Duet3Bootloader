@@ -783,6 +783,12 @@ bool CheckValidFirmware(uint32_t startAddress, bool doReportError)
 		WriteLed(i, false);
 	}
 
+# if STM32H5
+	// The NodeTrix LEDs are on PA13/PA14, so give them back to SWDIO/SWCLK for a debugger to reach the firmware
+	SetPinFunction(PortAPin(13), GpioPinFunction::AF0);
+	SetPinFunction(PortAPin(14), GpioPinFunction::AF0);
+# endif
+
 # if HAVE_DEBUG_SERIAL
 	SerialMessage("Bootloader transferring control to main firmware");
 	uart0->end();										// disable serial port so that main firmware can initialise it
