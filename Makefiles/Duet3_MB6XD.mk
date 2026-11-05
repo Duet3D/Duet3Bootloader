@@ -10,7 +10,7 @@ BINARY := Duet3_CANiap32_MB6XD
 # MCU configuration
 MCU := SAME70Q20B
 MCU_ARCH := cortex-m7
-LINK_ARCH := cortex-m4
+LINK_ARCH := cortex-m7
 
 # Compiler defines
 # C files also get the noexcept define so shared headers compile as C
@@ -91,7 +91,7 @@ CXXFLAGS := $(COMMON_FLAGS) $(OPT) $(CXX_DEFINES) $(CXX_INCLUDES) -std=c++20 \
 
 # Linker flags
 LDFLAGS := $(LDOPT) --specs=nano.specs -Wl,--gc-sections -Wl,--entry=Reset_Handler \
-	-Wl,--fatal-warnings -Wl,--no-warn-rwx-segment -mcpu=$(LINK_ARCH) -mfpu=fpv4-sp-d16 -mfloat-abi=hard \
+	-Wl,--fatal-warnings -Wl,--no-warn-rwx-segment -mcpu=$(LINK_ARCH) -mfpu=fpv5-d16 -mfloat-abi=hard \
 	-T$(LINKER_SCRIPT) -Wl,-Map,$(CURDIR)/$(BUILD_DIR)/$(BINARY).map,--cref
 
 # Find all source files

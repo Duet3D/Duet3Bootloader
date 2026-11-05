@@ -52,8 +52,7 @@ target_compile_options(${DUET_BOARD} PRIVATE
 
 target_link_options(${DUET_BOARD} PRIVATE
     --specs=nano.specs
-    LINKER:--no-warn-rwx-segment
-    ${BL_LINK_OPTIONS})
+    LINKER:--no-warn-rwx-segment)
 
 duet_link_libraries(${DUET_BOARD})
 

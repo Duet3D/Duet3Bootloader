@@ -21,7 +21,6 @@
 #   BL_LINKER_SCRIPT  linker script, under src/Hardware/<BL_HARDWARE>
 #   BL_HEX            also produce an Intel hex image
 #   BL_COMPILE_OPTIONS extra options for compiling the board's sources
-#   BL_LINK_OPTIONS   extra options for the link
 
 # The bootloaders run without an RTOS, need only CAN from CoreN2G, and are built for size
 set(DUET_LIBRARIES RRFLibraries CANlib CoreN2G)
@@ -37,7 +36,6 @@ set(BL_OUTPUT Duet3Bootloader-${DUET_BOARD})
 set(BL_DEFINES)
 set(BL_HEX ON)
 set(BL_COMPILE_OPTIONS)
-set(BL_LINK_OPTIONS)
 
 if(DUET_BOARD STREQUAL "SAME5x")
     set(BL_MCU SAME5x)
@@ -75,8 +73,6 @@ elseif(DUET_BOARD MATCHES "^(Duet3_MB6HC|Duet3_MB6XD)$")
     set(BL_LINKER_SCRIPT same70_iap_ram.ld)
     set(BL_HEX OFF)
     set(COREN2G_OPTIMISATION -O3)
-    # Linked against the Cortex-M4 runtime libraries, as the Eclipse project does - possibly a typo
-    set(BL_LINK_OPTIONS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard)
 elseif(DUET_BOARD STREQUAL "Duet3Mini5plus")
     set(BL_MCU SAME5x)
     set(DUET_PART_DEFINE __SAME54P20A__)
