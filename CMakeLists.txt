@@ -41,7 +41,7 @@ set(_cxx_options
 
 # The optimised builds keep their debug information too
 target_compile_options(${DUET_BOARD} PRIVATE
-    "$<$<CONFIG:Release>:-Os;-g3>"
+    $<$<CONFIG:Release>:-g3>
     ${BL_COMPILE_OPTIONS}
     -fsingle-precision-constant
     -Wall

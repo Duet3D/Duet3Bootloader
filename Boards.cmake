@@ -11,7 +11,7 @@
 # Library configuration:
 #   DUET_LIBRARIES    the libraries to build
 #   DUET_PART_DEFINE  macro naming the MCU part
-#   COREN2G_CAN, RRFLIBRARIES_PRINTF_FLOAT, and the libraries' optimisation
+#   COREN2G_CAN and RRFLIBRARIES_PRINTF_FLOAT
 #
 # Firmware:
 #   BL_MCU            the DUET_MCU the board is built for
@@ -22,13 +22,11 @@
 #   BL_HEX            also produce an Intel hex image
 #   BL_COMPILE_OPTIONS extra options for compiling the board's sources
 
-# The bootloaders run without an RTOS, need only CAN from CoreN2G, and are built for size
+# The bootloaders run without an RTOS, and need only CAN from CoreN2G
 set(DUET_LIBRARIES RRFLibraries CANlib CoreN2G)
 set(DUET_RTOS OFF)
 set(COREN2G_CAN ON)
 set(RRFLIBRARIES_PRINTF_FLOAT OFF)
-set(RRFLIBRARIES_OPTIMISATION -Os)
-set(COREN2G_OPTIMISATION -Os)
 
 option(BL_COMPOSITE "Build the SAME5x bootloader for composite boards" OFF)
 
@@ -62,7 +60,6 @@ elseif(DUET_BOARD STREQUAL "STM32H5")
     set(BL_HARDWARE STM32H5)
     set(BL_LINKER_SCRIPT stm32h523xx_flash.ld)
     set(BL_COMPILE_OPTIONS -fno-math-errno)
-    set(CANLIB_OPTIMISATION -Os)
 elseif(DUET_BOARD MATCHES "^(Duet3_MB6HC|Duet3_MB6XD)$")
     set(BL_MCU SAME70)
     set(DUET_PART_DEFINE __SAME70Q20B__)
@@ -72,7 +69,6 @@ elseif(DUET_BOARD MATCHES "^(Duet3_MB6HC|Duet3_MB6XD)$")
     set(BL_HARDWARE SAME70)
     set(BL_LINKER_SCRIPT same70_iap_ram.ld)
     set(BL_HEX OFF)
-    set(COREN2G_OPTIMISATION -O3)
 elseif(DUET_BOARD STREQUAL "Duet3Mini5plus")
     set(BL_MCU SAME5x)
     set(DUET_PART_DEFINE __SAME54P20A__)
